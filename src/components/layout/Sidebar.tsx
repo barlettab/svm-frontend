@@ -98,12 +98,12 @@ export function Sidebar({
           open ? "max-lg:translate-x-0" : "max-lg:-translate-x-full",
         )}
       >
-        <div className="flex h-[66px] shrink-0 items-center gap-3 bg-nav-brand px-[18px]">
-          {/* placeholder de marca — substituir pelo logotipo institucional */}
-          <span className="flex h-8 w-8 items-center justify-center rounded-svm border border-white/45 text-micro font-semibold uppercase text-white/80">
-            logo
-          </span>
-          <span className="text-ident font-semibold text-white">SVM</span>
+        <div className="flex h-[66px] shrink-0 items-center bg-nav-brand px-[18px]">
+          <img
+            src="/logo-svm.png"
+            alt="SVM"
+            className="h-10 w-auto object-contain"
+          />
         </div>
 
         <nav aria-label="Navegação principal" className="flex flex-1 flex-col gap-0.5 overflow-y-auto p-2.5">
