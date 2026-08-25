@@ -119,10 +119,6 @@ export function Sidebar({
           {!collapsed[tree.key] && <div className="flex flex-col gap-0.5">{renderItems(tree.children, 1)}</div>}
         </nav>
 
-        <div className="shrink-0 border-t border-white/15 px-[18px] py-3.5">
-          <p className="text-body text-white">{currentUserNameByProfile[profile]}</p>
-          <p className="text-aux text-nav-footer">{PROFILE_LABELS[profile]}</p>
-        </div>
       </aside>
     </>
   );

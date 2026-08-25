@@ -8,6 +8,7 @@ import { Table, type TableColumn } from "../../components/ui/Table";
 import { Drawer } from "../../components/ui/Drawer";
 import { DetailRow } from "../../components/ui/DetailRow";
 import { InlineAlert } from "../../components/ui/ErrorState";
+import { IconButton } from "../../components/ui/Button";
 import type { SolicitacaoCancelada } from "../../types";
 
 const EMPTY_VALUE = "—";
@@ -85,14 +86,18 @@ export function CanceladoTab() {
     },
     {
       header: "Ação",
+      align: "center",
       render: (row) => (
-        <button
-          type="button"
-          onClick={() => setSelected(row)}
-          className="text-body font-semibold text-primary hover:underline"
-        >
-          Visualizar
-        </button>
+        <div className="flex items-center justify-center">
+          <IconButton
+            icon="eye"
+            label="Visualizar solicitação"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelected(row);
+            }}
+          />
+        </div>
       ),
     },
   ];
