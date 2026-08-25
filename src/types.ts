@@ -8,24 +8,44 @@ export const PROFILE_LABELS: Record<Profile, string> = {
 
 export type ModuleKey = "novo-modelo" | "consultar-modelo" | "gestao";
 
-export type NovoModeloTab = "submeter" | "inventariar";
+export const MODULES_BY_PROFILE: Record<Profile, ModuleKey[]> = {
+  solicitante: ["novo-modelo", "consultar-modelo"],
+  analista: ["novo-modelo", "consultar-modelo", "gestao"],
+  gestor: ["novo-modelo", "consultar-modelo", "gestao"],
+};
+
+export type NovoModeloTab =
+  | "submeter"
+  | "inventariar"
+  | "informacoes-adicionais"
+  | "implantacao"
+  | "metodologia-monitoramento";
 
 export const TABS_BY_PROFILE: Record<Profile, NovoModeloTab[]> = {
-  solicitante: ["submeter"],
-  analista: ["inventariar"],
-  gestor: ["inventariar"],
+  solicitante: [
+    "submeter",
+    "informacoes-adicionais",
+    "implantacao",
+    "metodologia-monitoramento",
+  ],
+  analista: [
+    "inventariar",
+    "informacoes-adicionais",
+    "implantacao",
+    "metodologia-monitoramento",
+  ],
+  gestor: [
+    "inventariar",
+    "informacoes-adicionais",
+    "implantacao",
+    "metodologia-monitoramento",
+  ],
 };
 
 export type ConsultarModeloTab = "em-andamento" | "inventariado" | "cancelado";
 
-export const CONSULTAR_TAB_LABELS: Record<ConsultarModeloTab, string> = {
-  "em-andamento": "Em andamento",
-  inventariado: "Inventariado",
-  cancelado: "Cancelado",
-};
-
 export const CONSULTAR_TABS_BY_PROFILE: Record<Profile, ConsultarModeloTab[]> = {
-  solicitante: ["em-andamento", "cancelado"],
+  solicitante: ["em-andamento"],
   analista: ["em-andamento", "inventariado", "cancelado"],
   gestor: ["em-andamento", "inventariado", "cancelado"],
 };
@@ -36,12 +56,26 @@ export type ParametrizacaoTab =
   | "expr-score-tier"
   | "expr-score-monitoramento";
 
+export const PARAMETRIZACAO_TABS: ParametrizacaoTab[] = [
+  "parametros-gerais",
+  "matriz-riscos",
+  "expr-score-tier",
+  "expr-score-monitoramento",
+];
+
 export const PARAMETRIZACAO_TAB_LABELS: Record<ParametrizacaoTab, string> = {
-  "parametros-gerais": "Parâmetros gerais",
-  "matriz-riscos": "Matriz de riscos",
-  "expr-score-tier": "Expr. score tier",
-  "expr-score-monitoramento": "Expr. score monitoramento",
+  "parametros-gerais": "Parâmetros Gerais",
+  "matriz-riscos": "Matriz de Riscos",
+  "expr-score-tier": "Expr. Score Tier",
+  "expr-score-monitoramento": "Expr. Score Monitoramento",
 };
+
+/** All sub-tab keys for a module, filtered by what the profile may access. */
+export function getModuleTabs(module: ModuleKey, profile: Profile): string[] {
+  if (module === "novo-modelo") return TABS_BY_PROFILE[profile];
+  if (module === "consultar-modelo") return CONSULTAR_TABS_BY_PROFILE[profile];
+  return PARAMETRIZACAO_TABS;
+}
 
 export type SolicitacaoStatus = "Submetido" | "Em análise" | "Em complementação";
 

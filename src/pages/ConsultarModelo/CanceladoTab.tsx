@@ -1,16 +1,13 @@
 import { useMemo, useState } from "react";
-import { useProfile } from "../../context/ProfileContext";
 import { mockCancelados } from "../../data/mockCancelados";
-import { currentSolicitante } from "../../data/currentUser";
 import { areaGestoraFilterOptions } from "../../data/filterOptions";
 import { FilterTextField } from "../../components/ui/FilterTextField";
 import { FilterSelectField } from "../../components/ui/FilterSelectField";
-import { PrimaryButton } from "../../components/ui/PrimaryButton";
-import { SecondaryButton } from "../../components/ui/SecondaryButton";
+import { FilterBar } from "../../components/ui/FilterBar";
 import { Table, type TableColumn } from "../../components/ui/Table";
 import { Drawer } from "../../components/ui/Drawer";
 import { DetailRow } from "../../components/ui/DetailRow";
-import { CancelarSolicitacaoForm } from "./CancelarSolicitacaoForm";
+import { InlineAlert } from "../../components/ui/ErrorState";
 import type { SolicitacaoCancelada } from "../../types";
 
 const EMPTY_VALUE = "—";
@@ -49,17 +46,13 @@ function matches(solicitacao: SolicitacaoCancelada, filters: Filters) {
 }
 
 export function CanceladoTab() {
-  const { profile } = useProfile();
-  const [cancelados, setCancelados] =
-    useState<SolicitacaoCancelada[]>(mockCancelados);
-  const [showCancelForm, setShowCancelForm] = useState(false);
   const [draft, setDraft] = useState<Filters>(DEFAULT_FILTERS);
   const [applied, setApplied] = useState<Filters>(DEFAULT_FILTERS);
   const [selected, setSelected] = useState<SolicitacaoCancelada | null>(null);
 
   const filtered = useMemo(
-    () => cancelados.filter((s) => matches(s, applied)),
-    [cancelados, applied],
+    () => mockCancelados.filter((s) => matches(s, applied)),
+    [applied],
   );
 
   function handleSearch() {
@@ -69,20 +62,6 @@ export function CanceladoTab() {
   function handleClear() {
     setDraft(DEFAULT_FILTERS);
     setApplied(DEFAULT_FILTERS);
-  }
-
-  if (profile === "solicitante") {
-    return (
-      <div className="mx-auto max-w-2xl">
-        <CancelarSolicitacaoForm
-          currentUser={currentSolicitante}
-          onSubmit={(record) =>
-            setCancelados((current) => [record, ...current])
-          }
-          onDone={() => {}}
-        />
-      </div>
-    );
   }
 
   const columns: TableColumn<SolicitacaoCancelada>[] = [
@@ -99,7 +78,7 @@ export function CanceladoTab() {
     {
       header: "Justificativa",
       render: (row) => (
-        <span className="line-clamp-2 max-w-xs text-slate-600">
+        <span className="line-clamp-2 max-w-xs text-ink-3">
           {row.justificativa}
         </span>
       ),
@@ -110,7 +89,7 @@ export function CanceladoTab() {
         <button
           type="button"
           onClick={() => setSelected(row)}
-          className="text-sm font-semibold text-blue-700 hover:text-blue-900"
+          className="text-body font-semibold text-primary hover:underline"
         >
           Visualizar
         </button>
@@ -120,62 +99,30 @@ export function CanceladoTab() {
 
   return (
     <div>
-      <div className="mb-6 flex justify-end">
-        <SecondaryButton
-          type="button"
-          onClick={() => setShowCancelForm((current) => !current)}
-        >
-          {showCancelForm ? "Fechar" : "Cancelar solicitação"}
-        </SecondaryButton>
-      </div>
-
-      {showCancelForm && (
-        <CancelarSolicitacaoForm
-          onSubmit={(record) =>
-            setCancelados((current) => [record, ...current])
-          }
-          onDone={() => setShowCancelForm(false)}
+      <FilterBar onSearch={handleSearch} onClear={handleClear}>
+        <FilterTextField
+          id="cancel-filtro-numero"
+          label="Nº da solicitação"
+          value={draft.numero}
+          onChange={(value) => setDraft((f) => ({ ...f, numero: value }))}
+          placeholder="Ex.: REQ-2026-001"
         />
-      )}
-
-      <div className="mb-6 rounded-lg border border-slate-200 bg-white p-5">
-        <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-          <FilterTextField
-            id="cancel-filtro-numero"
-            label="Nº da solicitação"
-            value={draft.numero}
-            onChange={(value) => setDraft((f) => ({ ...f, numero: value }))}
-            placeholder="Ex.: REQ-2026-001"
-          />
-          <FilterSelectField
-            id="cancel-filtro-area"
-            label="Área gestora"
-            value={draft.areaGestora}
-            onChange={(value) =>
-              setDraft((f) => ({ ...f, areaGestora: value }))
-            }
-            options={areaGestoraFilterOptions}
-          />
-          <FilterTextField
-            id="cancel-filtro-nome-modelo"
-            label="Nome do modelo"
-            value={draft.nomeModelo}
-            onChange={(value) =>
-              setDraft((f) => ({ ...f, nomeModelo: value }))
-            }
-            placeholder="Buscar pelo nome do modelo"
-          />
-        </div>
-
-        <div className="mt-5 flex gap-3">
-          <PrimaryButton type="button" onClick={handleSearch}>
-            Pesquisar
-          </PrimaryButton>
-          <SecondaryButton type="button" onClick={handleClear}>
-            Limpar filtros
-          </SecondaryButton>
-        </div>
-      </div>
+        <FilterSelectField
+          id="cancel-filtro-area"
+          label="Área gestora"
+          value={draft.areaGestora}
+          onChange={(value) => setDraft((f) => ({ ...f, areaGestora: value }))}
+          options={areaGestoraFilterOptions}
+        />
+        <FilterTextField
+          id="cancel-filtro-nome-modelo"
+          label="Nome do modelo"
+          value={draft.nomeModelo}
+          onChange={(value) => setDraft((f) => ({ ...f, nomeModelo: value }))}
+          placeholder="Buscar pelo nome do modelo"
+          icon="search"
+        />
+      </FilterBar>
 
       <Table
         columns={columns}
@@ -211,13 +158,10 @@ export function CanceladoTab() {
               value={selected.dataCancelamento}
             />
 
-            <div className="mt-4 rounded-md border border-red-200 bg-red-50 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-red-800">
-                Justificativa de cancelamento
-              </p>
-              <p className="mt-1 text-sm text-red-900">
+            <div className="mt-4">
+              <InlineAlert tone="error" title="Justificativa de cancelamento">
                 {selected.justificativa}
-              </p>
+              </InlineAlert>
             </div>
           </dl>
         )}

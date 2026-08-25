@@ -5,6 +5,7 @@ import { SelectField } from "../../components/ui/SelectField";
 import { FileUpload } from "../../components/ui/FileUpload";
 import { PrimaryButton } from "../../components/ui/PrimaryButton";
 import { SuccessModal } from "../../components/ui/SuccessModal";
+import { Panel, FormGrid, FormActions } from "../../components/ui/Panel";
 import {
   areaGestoraOptions,
   assuntoOptions,
@@ -77,66 +78,68 @@ export function SubmeterForm() {
         description="Preencha as informações abaixo para iniciar uma nova solicitação de validação."
       />
 
-      <form onSubmit={handleSubmit} noValidate>
-        <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
-          <TextField
-            id="nomeModelo"
-            label="Nome do modelo"
-            required
-            value={form.nomeModelo}
-            onChange={(value) => updateField("nomeModelo", value)}
-            placeholder="Digite o nome do modelo"
-            error={errors.nomeModelo}
-            fullWidth
-          />
+      <Panel>
+        <form onSubmit={handleSubmit} noValidate>
+          <FormGrid>
+            <TextField
+              id="nomeModelo"
+              label="Nome do modelo"
+              required
+              value={form.nomeModelo}
+              onChange={(value) => updateField("nomeModelo", value)}
+              placeholder="Digite o nome do modelo"
+              error={errors.nomeModelo}
+              fullWidth
+            />
 
-          <SelectField
-            id="tipoModelo"
-            label="Tipo de modelo"
-            required
-            value={form.tipoModelo}
-            onChange={(value) => updateField("tipoModelo", value)}
-            options={tipoModeloOptions}
-            error={errors.tipoModelo}
-          />
+            <SelectField
+              id="tipoModelo"
+              label="Tipo de modelo"
+              required
+              value={form.tipoModelo}
+              onChange={(value) => updateField("tipoModelo", value)}
+              options={tipoModeloOptions}
+              error={errors.tipoModelo}
+            />
 
-          <SelectField
-            id="areaGestora"
-            label="Área gestora"
-            required
-            value={form.areaGestora}
-            onChange={(value) => updateField("areaGestora", value)}
-            options={areaGestoraOptions}
-            error={errors.areaGestora}
-          />
+            <SelectField
+              id="areaGestora"
+              label="Área gestora"
+              required
+              value={form.areaGestora}
+              onChange={(value) => updateField("areaGestora", value)}
+              options={areaGestoraOptions}
+              error={errors.areaGestora}
+            />
 
-          <SelectField
-            id="assunto"
-            label="Assunto"
-            required
-            value={form.assunto}
-            onChange={(value) => updateField("assunto", value)}
-            options={assuntoOptions}
-            error={errors.assunto}
-          />
+            <SelectField
+              id="assunto"
+              label="Assunto"
+              required
+              value={form.assunto}
+              onChange={(value) => updateField("assunto", value)}
+              options={assuntoOptions}
+              error={errors.assunto}
+            />
 
-          <SelectField
-            id="publico"
-            label="Público"
-            required
-            value={form.publico}
-            onChange={(value) => updateField("publico", value)}
-            options={publicoOptions}
-            error={errors.publico}
-          />
+            <SelectField
+              id="publico"
+              label="Público"
+              required
+              value={form.publico}
+              onChange={(value) => updateField("publico", value)}
+              options={publicoOptions}
+              error={errors.publico}
+            />
 
-          <FileUpload id="anexo" file={file} onChange={setFile} fullWidth />
-        </div>
+            <FileUpload id="anexo" file={file} onChange={setFile} fullWidth />
+          </FormGrid>
 
-        <div className="mt-8">
-          <PrimaryButton type="submit">Enviar</PrimaryButton>
-        </div>
-      </form>
+          <FormActions>
+            <PrimaryButton type="submit">Enviar</PrimaryButton>
+          </FormActions>
+        </form>
+      </Panel>
 
       <SuccessModal
         open={successCode !== null}

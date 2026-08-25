@@ -7,11 +7,10 @@ import {
 } from "../../data/filterOptions";
 import { FilterTextField } from "../../components/ui/FilterTextField";
 import { FilterSelectField } from "../../components/ui/FilterSelectField";
-import { PrimaryButton } from "../../components/ui/PrimaryButton";
-import { SecondaryButton } from "../../components/ui/SecondaryButton";
+import { FilterBar } from "../../components/ui/FilterBar";
 import { StatCard } from "../../components/ui/StatCard";
 import { Table, type TableColumn } from "../../components/ui/Table";
-import { Badge } from "../../components/ui/Badge";
+import { StatusBadge } from "../../components/ui/Badge";
 import { Drawer } from "../../components/ui/Drawer";
 import { DetailRow } from "../../components/ui/DetailRow";
 import type { ModeloInventariado } from "../../types";
@@ -37,16 +36,6 @@ type CardFilter =
   | { field: "monitoramento"; value: string }
   | { field: "situacao"; value: string }
   | null;
-
-function validacaoBadgeTone(resultado: ModeloInventariado["resultadoValidacao"]) {
-  return resultado === "Validado" ? ("green" as const) : ("red" as const);
-}
-
-function situacaoBadgeTone(situacao: ModeloInventariado["situacao"]) {
-  if (situacao === "Ativo") return "green" as const;
-  if (situacao === "Suspenso") return "amber" as const;
-  return "slate" as const;
-}
 
 function matches(modelo: ModeloInventariado, filters: Filters) {
   if (
@@ -135,18 +124,15 @@ export function InventariadoTab() {
     { header: "Público", render: (row) => row.publico },
     {
       header: "Resultado da validação",
-      render: (row) => (
-        <Badge tone={validacaoBadgeTone(row.resultadoValidacao)}>
-          {row.resultadoValidacao}
-        </Badge>
-      ),
+      render: (row) => <StatusBadge status={row.resultadoValidacao} />,
     },
-    { header: "Monitoramento", render: (row) => row.monitoramento },
+    {
+      header: "Monitoramento",
+      render: (row) => <StatusBadge status={row.monitoramento} />,
+    },
     {
       header: "Situação do modelo",
-      render: (row) => (
-        <Badge tone={situacaoBadgeTone(row.situacao)}>{row.situacao}</Badge>
-      ),
+      render: (row) => <StatusBadge status={row.situacao} />,
     },
     {
       header: "Analista responsável",
@@ -158,7 +144,7 @@ export function InventariadoTab() {
         <button
           type="button"
           onClick={() => setSelected(row)}
-          className="text-sm font-semibold text-blue-700 hover:text-blue-900"
+          className="text-body font-semibold text-primary hover:underline"
         >
           Visualizar
         </button>
@@ -221,58 +207,46 @@ export function InventariadoTab() {
         />
       </div>
 
-      <div className="mb-6 rounded-lg border border-slate-200 bg-white p-5">
-        <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-          <FilterTextField
-            id="inv-filtro-numero"
-            label="Nº da solicitação"
-            value={draft.numero}
-            onChange={(value) => setDraft((f) => ({ ...f, numero: value }))}
-            placeholder="Ex.: INV-2026-001"
-          />
-          <FilterSelectField
-            id="inv-filtro-area"
-            label="Área gestora"
-            value={draft.areaGestora}
-            onChange={(value) =>
-              setDraft((f) => ({ ...f, areaGestora: value }))
-            }
-            options={areaGestoraFilterOptions}
-          />
-          <FilterTextField
-            id="inv-filtro-nome-modelo"
-            label="Nome do modelo"
-            value={draft.nomeModelo}
-            onChange={(value) =>
-              setDraft((f) => ({ ...f, nomeModelo: value }))
-            }
-            placeholder="Buscar pelo nome do modelo"
-          />
-          <FilterSelectField
-            id="inv-filtro-assunto"
-            label="Assunto"
-            value={draft.assunto}
-            onChange={(value) => setDraft((f) => ({ ...f, assunto: value }))}
-            options={assuntoFilterOptions}
-          />
-          <FilterSelectField
-            id="inv-filtro-analista"
-            label="Analista responsável"
-            value={draft.analista}
-            onChange={(value) => setDraft((f) => ({ ...f, analista: value }))}
-            options={analistaFilterOptions}
-          />
-        </div>
-
-        <div className="mt-5 flex gap-3">
-          <PrimaryButton type="button" onClick={handleSearch}>
-            Pesquisar
-          </PrimaryButton>
-          <SecondaryButton type="button" onClick={handleClear}>
-            Limpar filtros
-          </SecondaryButton>
-        </div>
-      </div>
+      <FilterBar onSearch={handleSearch} onClear={handleClear}>
+        <FilterTextField
+          id="inv-filtro-numero"
+          label="Nº da solicitação"
+          value={draft.numero}
+          onChange={(value) => setDraft((f) => ({ ...f, numero: value }))}
+          placeholder="Ex.: INV-2026-001"
+        />
+        <FilterSelectField
+          id="inv-filtro-area"
+          label="Área gestora"
+          value={draft.areaGestora}
+          onChange={(value) =>
+            setDraft((f) => ({ ...f, areaGestora: value }))
+          }
+          options={areaGestoraFilterOptions}
+        />
+        <FilterTextField
+          id="inv-filtro-nome-modelo"
+          label="Nome do modelo"
+          value={draft.nomeModelo}
+          onChange={(value) => setDraft((f) => ({ ...f, nomeModelo: value }))}
+          placeholder="Buscar pelo nome do modelo"
+          icon="search"
+        />
+        <FilterSelectField
+          id="inv-filtro-assunto"
+          label="Assunto"
+          value={draft.assunto}
+          onChange={(value) => setDraft((f) => ({ ...f, assunto: value }))}
+          options={assuntoFilterOptions}
+        />
+        <FilterSelectField
+          id="inv-filtro-analista"
+          label="Analista responsável"
+          value={draft.analista}
+          onChange={(value) => setDraft((f) => ({ ...f, analista: value }))}
+          options={analistaFilterOptions}
+        />
+      </FilterBar>
 
       <Table
         columns={columns}
@@ -296,20 +270,15 @@ export function InventariadoTab() {
             <DetailRow label="Público" value={selected.publico} />
             <DetailRow
               label="Resultado da validação"
-              value={
-                <Badge tone={validacaoBadgeTone(selected.resultadoValidacao)}>
-                  {selected.resultadoValidacao}
-                </Badge>
-              }
+              value={<StatusBadge status={selected.resultadoValidacao} />}
             />
-            <DetailRow label="Monitoramento" value={selected.monitoramento} />
+            <DetailRow
+              label="Monitoramento"
+              value={<StatusBadge status={selected.monitoramento} />}
+            />
             <DetailRow
               label="Situação do modelo"
-              value={
-                <Badge tone={situacaoBadgeTone(selected.situacao)}>
-                  {selected.situacao}
-                </Badge>
-              }
+              value={<StatusBadge status={selected.situacao} />}
             />
             <DetailRow
               label="Analista responsável"

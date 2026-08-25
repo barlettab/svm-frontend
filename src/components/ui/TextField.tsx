@@ -1,4 +1,6 @@
-import { FormField } from "./FormField";
+import type { InputHTMLAttributes } from "react";
+import { controlClasses, FormField } from "./FormField";
+import { Icon, type IconName } from "./Icon";
 
 interface TextFieldProps {
   id: string;
@@ -8,7 +10,12 @@ interface TextFieldProps {
   placeholder?: string;
   required?: boolean;
   error?: string;
+  hint?: string;
   fullWidth?: boolean;
+  disabled?: boolean;
+  icon?: IconName;
+  inputMode?: InputHTMLAttributes<HTMLInputElement>["inputMode"];
+  maxLength?: number;
 }
 
 export function TextField({
@@ -19,28 +26,36 @@ export function TextField({
   placeholder,
   required,
   error,
+  hint,
   fullWidth,
+  disabled,
+  icon,
+  inputMode,
+  maxLength,
 }: TextFieldProps) {
   return (
-    <FormField
-      label={label}
-      htmlFor={id}
-      required={required}
-      error={error}
-      fullWidth={fullWidth}
-    >
-      <input
-        id={id}
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className={`w-full rounded-md border px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/30 ${
-          error
-            ? "border-red-400 focus:border-red-500"
-            : "border-slate-300 focus:border-blue-600"
-        }`}
-      />
+    <FormField label={label} htmlFor={id} required={required} error={error} hint={hint} fullWidth={fullWidth}>
+      <div className="relative">
+        <input
+          id={id}
+          type="text"
+          value={value}
+          disabled={disabled}
+          inputMode={inputMode}
+          maxLength={maxLength}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          aria-invalid={error ? true : undefined}
+          className={controlClasses(error, icon ? "h-[38px] pr-9" : "h-[38px]")}
+        />
+        {icon && (
+          <Icon
+            name={icon}
+            size={16}
+            className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-3"
+          />
+        )}
+      </div>
     </FormField>
   );
 }

@@ -1,4 +1,4 @@
-import { FormField } from "./FormField";
+import { controlClasses, FormField } from "./FormField";
 
 interface TextareaFieldProps {
   id: string;
@@ -8,8 +8,11 @@ interface TextareaFieldProps {
   placeholder?: string;
   required?: boolean;
   error?: string;
+  hint?: string;
   fullWidth?: boolean;
+  disabled?: boolean;
   rows?: number;
+  maxLength?: number;
 }
 
 export function TextareaField({
@@ -20,29 +23,30 @@ export function TextareaField({
   placeholder,
   required,
   error,
+  hint,
   fullWidth = true,
+  disabled,
   rows = 4,
+  maxLength,
 }: TextareaFieldProps) {
   return (
-    <FormField
-      label={label}
-      htmlFor={id}
-      required={required}
-      error={error}
-      fullWidth={fullWidth}
-    >
+    <FormField label={label} htmlFor={id} required={required} error={error} hint={hint} fullWidth={fullWidth}>
       <textarea
         id={id}
         value={value}
+        rows={rows}
+        disabled={disabled}
+        maxLength={maxLength}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        rows={rows}
-        className={`w-full resize-none rounded-md border px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/30 ${
-          error
-            ? "border-red-400 focus:border-red-500"
-            : "border-slate-300 focus:border-blue-600"
-        }`}
+        aria-invalid={error ? true : undefined}
+        className={controlClasses(error, "resize-y py-2 leading-relaxed")}
       />
+      {maxLength && (
+        <div className="mt-1 text-right text-aux text-ink-3">
+          {value.length}/{maxLength}
+        </div>
+      )}
     </FormField>
   );
 }

@@ -1,5 +1,8 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { cx } from "./cx";
 import { FormField } from "./FormField";
+import { Icon } from "./Icon";
+import { IconButton } from "./Button";
 
 interface FileUploadProps {
   id: string;
@@ -9,6 +12,8 @@ interface FileUploadProps {
   required?: boolean;
   error?: string;
   fullWidth?: boolean;
+  accept?: string;
+  hint?: string;
 }
 
 export function FileUpload({
@@ -19,47 +24,66 @@ export function FileUpload({
   required,
   error,
   fullWidth = true,
+  accept = ".pdf,.doc,.docx,.xlsx,.csv",
+  hint = "PDF, DOC, XLSX ou CSV até 20 MB",
 }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
 
   return (
-    <FormField
-      label={label}
-      htmlFor={id}
-      required={required}
-      error={error}
-      fullWidth={fullWidth}
-    >
+    <FormField label={label} htmlFor={id} required={required} error={error} fullWidth={fullWidth}>
       <input
         ref={inputRef}
         id={id}
         type="file"
-        className="hidden"
+        accept={accept}
+        className="sr-only"
         onChange={(e) => onChange(e.target.files?.[0] ?? null)}
       />
 
       {file ? (
-        <div className="flex items-center justify-between rounded-md border border-slate-300 bg-slate-50 px-3 py-2 text-sm">
-          <span className="truncate text-slate-700">📎 {file.name}</span>
-          <button
-            type="button"
+        <div className="flex items-center justify-between gap-3 rounded-svm border border-line bg-surface-alt px-3 py-2">
+          <span className="flex min-w-0 items-center gap-2 text-body text-ink">
+            <Icon name="paperclip" size={15} className="text-ink-2" />
+            <span className="truncate">{file.name}</span>
+            <span className="shrink-0 text-aux text-ink-3">
+              {(file.size / 1024).toFixed(0)} KB
+            </span>
+          </span>
+          <IconButton
+            icon="trash"
+            label="Remover arquivo"
             onClick={() => {
               onChange(null);
               if (inputRef.current) inputRef.current.value = "";
             }}
-            className="ml-3 shrink-0 text-slate-400 hover:text-red-600"
-            aria-label="Remover arquivo"
-          >
-            ✕
-          </button>
+            className="hover:text-error"
+          />
         </div>
       ) : (
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          className="w-full rounded-md border border-dashed border-slate-300 px-3 py-3 text-center text-sm text-slate-500 hover:border-blue-500 hover:text-blue-700"
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragging(true);
+          }}
+          onDragLeave={() => setDragging(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragging(false);
+            onChange(e.dataTransfer.files?.[0] ?? null);
+          }}
+          className={cx(
+            "flex w-full flex-col items-center gap-1.5 rounded-svm border border-dashed px-3 py-6 text-center transition-colors",
+            dragging ? "border-primary bg-info-bg" : "border-field bg-white hover:border-primary",
+          )}
         >
-          Clique para selecionar um arquivo
+          <Icon name="upload" size={20} className="text-ink-3" />
+          <span className="text-body text-ink-2">
+            Arraste o arquivo ou <span className="text-primary underline">selecione</span>
+          </span>
+          <span className="text-aux text-ink-3">{hint}</span>
         </button>
       )}
     </FormField>

@@ -7,11 +7,9 @@ interface DetailRowProps {
 
 export function DetailRow({ label, value }: DetailRowProps) {
   return (
-    <div className="border-b border-slate-100 py-2.5 last:border-b-0">
-      <dt className="text-xs font-medium uppercase tracking-wide text-slate-400">
-        {label}
-      </dt>
-      <dd className="mt-0.5 text-sm text-slate-800">{value}</dd>
+    <div className="border-b border-line-soft py-3 last:border-b-0">
+      <dt className="text-label uppercase tracking-[0.4px] text-ink-3">{label}</dt>
+      <dd className="mt-1 text-body text-ink">{value}</dd>
     </div>
   );
 }

@@ -1,22 +1,22 @@
 import { useState } from "react";
+import { useProfile } from "../../context/ProfileContext";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { Tabs } from "../../components/ui/Tabs";
-import { useProfile } from "../../context/ProfileContext";
-import {
-  CONSULTAR_TABS_BY_PROFILE,
-  CONSULTAR_TAB_LABELS,
-  type ConsultarModeloTab,
-} from "../../types";
 import { EmAndamentoTab } from "./EmAndamentoTab";
 import { InventariadoTab } from "./InventariadoTab";
 import { CanceladoTab } from "./CanceladoTab";
+import { CONSULTAR_TABS_BY_PROFILE, type ConsultarModeloTab } from "../../types";
+
+const TAB_LABELS: Record<ConsultarModeloTab, string> = {
+  "em-andamento": "Em andamento",
+  inventariado: "Inventariado",
+  cancelado: "Cancelado",
+};
 
 export function ConsultarModeloPage() {
   const { profile } = useProfile();
   const availableTabs = CONSULTAR_TABS_BY_PROFILE[profile];
-  const [activeTab, setActiveTab] = useState<ConsultarModeloTab>(
-    availableTabs[0],
-  );
+  const [activeTab, setActiveTab] = useState<ConsultarModeloTab>(availableTabs[0]);
   const [lastProfile, setLastProfile] = useState(profile);
 
   if (profile !== lastProfile) {
@@ -31,10 +31,7 @@ export function ConsultarModeloPage() {
       <PageHeader title="Consultar modelos" />
 
       <Tabs
-        items={availableTabs.map((tab) => ({
-          key: tab,
-          label: CONSULTAR_TAB_LABELS[tab],
-        }))}
+        items={availableTabs.map((tab) => ({ key: tab, label: TAB_LABELS[tab] }))}
         activeKey={activeTab}
         onChange={setActiveTab}
       />

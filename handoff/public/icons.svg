@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+  <symbol id="svm-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a5 5 0 0 0-5 5v3.2c0 .8-.3 1.6-.9 2.2L5 15h14l-1.1-1.6a3.2 3.2 0 0 1-.9-2.2V8a5 5 0 0 0-5-5Z"></path><path d="M10 18a2 2 0 0 0 4 0"></path></symbol>
+  <symbol id="svm-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"></circle><path d="M5.5 20c.4-3.4 3.1-5.4 6.5-5.4s6.1 2 6.5 5.4"></path></symbol>
+  <symbol id="svm-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9.6 9.2A2.5 2.5 0 0 1 14.5 10c0 1.7-2.4 1.9-2.4 3.6"></path><path d="M12 17.1h.01"></path></symbol>
+  <symbol id="svm-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4.5H6.5v15H14"></path><path d="M11 12h9.5"></path><path d="M17.5 8.5l3 3.5-3 3.5"></path></symbol>
+  <symbol id="svm-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4"></path><path d="M10 6l-6 6 6 6"></path></symbol>
+  <symbol id="svm-chev-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5l6 6 6-6"></path></symbol>
+  <symbol id="svm-chev-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 14.5l6-6 6 6"></path></symbol>
+  <symbol id="svm-chev-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5l7 7-7 7"></path></symbol>
+  <symbol id="svm-chev-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></symbol>
+  <symbol id="svm-chev-first" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 5l-7 7 7 7"></path><path d="M7 5v14"></path></symbol>
+  <symbol id="svm-chev-last" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5l7 7-7 7"></path><path d="M17 5v14"></path></symbol>
+  <symbol id="svm-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="1"></rect><path d="M3.5 9.5h17M8 3.5V6M16 3.5V6"></path></symbol>
+  <symbol id="svm-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.8" cy="10.8" r="6.3"></circle><path d="M15.4 15.4L20.5 20.5"></path></symbol>
+  <symbol id="svm-eraser" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 20.5h12"></path><path d="M14.2 4.6l5.2 5.2a1.4 1.4 0 0 1 0 2L13 18.2H8.7L4.6 14a1.4 1.4 0 0 1 0-2l7.6-7.4a1.4 1.4 0 0 1 2 0Z"></path><path d="M9.4 8.2l6.4 6.4"></path></symbol>
+  <symbol id="svm-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></symbol>
+  <symbol id="svm-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11"></path><path d="M7.5 10.5l4.5 4.5 4.5-4.5"></path><path d="M4.5 19.5h15"></path></symbol>
+  <symbol id="svm-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5v-11"></path><path d="M7.5 8.5L12 4l4.5 4.5"></path><path d="M4.5 19.5h15"></path></symbol>
+  <symbol id="svm-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 12S6.4 6.2 12 6.2 21.2 12 21.2 12 17.6 17.8 12 17.8 2.8 12 2.8 12Z"></path><circle cx="12" cy="12" r="2.8"></circle></symbol>
+  <symbol id="svm-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 19.5h4l10-10a2.1 2.1 0 0 0-3-3l-10 10v3Z"></path><path d="M14.5 6.5l3 3"></path></symbol>
+  <symbol id="svm-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 7h15"></path><path d="M9.5 7V4.5h5V7"></path><path d="M6.5 7l.9 12.5h9.2L17.5 7"></path></symbol>
+  <symbol id="svm-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.8l4.6 4.6L19 6.8"></path></symbol>
+  <symbol id="svm-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></symbol>
+  <symbol id="svm-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.2l8.5 15.3H3.5L12 4.2Z"></path><path d="M12 9.6v4.6M12 16.8h.01"></path></symbol>
+  <symbol id="svm-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.6h.01"></path></symbol>
+  <symbol id="svm-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.2V12l3.4 2.1"></path></symbol>
+  <symbol id="svm-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h7l5 5v12H6v-17Z"></path><path d="M13 3.5v5h5"></path></symbol>
+  <symbol id="svm-paperclip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 11.5l-7 7a4.2 4.2 0 0 1-6-6l8-8a2.8 2.8 0 0 1 4 4l-8 8a1.4 1.4 0 0 1-2-2l7-7"></path></symbol>
+  <symbol id="svm-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16l-6.2 7.2v5.6l-3.6-2v-3.6L4 6Z"></path></symbol>
+  <symbol id="svm-sort" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4.5v15M8 4.5L5 8M8 4.5L11 8"></path><path d="M16 19.5v-15M16 19.5L13 16M16 19.5L19 16"></path></symbol>
+  <symbol id="svm-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7"></rect><rect x="13.5" y="3.5" width="7" height="7"></rect><rect x="3.5" y="13.5" width="7" height="7"></rect><rect x="13.5" y="13.5" width="7" height="7"></rect></symbol>
+  <symbol id="svm-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h14a1.5 1.5 0 0 0 1.5-1.5v-6.5"></path><path d="M3.5 12.5l2.6-8h11.8l2.6 8h-5a2.5 2.5 0 0 1-5 0h-5Z"></path></symbol>
+  <symbol id="svm-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v4M12 16.5v4M3.5 12h4M16.5 12h4M6.1 6.1l2.8 2.8M15.1 15.1l2.8 2.8M17.9 6.1l-2.8 2.8M8.9 15.1l-2.8 2.8"></path></symbol>
+  <symbol id="svm-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"></path></symbol>
+  <symbol id="svm-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"></path><path d="M3.5 5v4h4"></path><path d="M12 7.5V12l3.2 2"></path></symbol>
+  <symbol id="svm-user-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3.4"></circle><path d="M3.6 20c.4-3.4 3-5.4 6.4-5.4 1 0 1.9.2 2.7.5"></path><path d="M17.5 14.5v6M14.5 17.5h6"></path></symbol>
+  <symbol id="svm-user-switch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.2" cy="7.6" r="3.2"></circle><path d="M3.4 18.6c.4-3.2 2.8-5.1 5.8-5.1"></path><path d="M13.6 15.4h7l-2.2-2.2M20.6 19.4h-7l2.2 2.2"></path></symbol>
+  <symbol id="svm-ban" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M6 18L18 6"></path></symbol>
+  
+  <symbol id="svm-atribuir-analista" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <circle cx="12" cy="4.1" r="2.7"></circle>
+    <path d="M12 8.9 3.7 11.3a1 1 0 0 0-.7 1.2 1 1 0 0 0 1.2.7L10 11.7v2l-1.1 8.2a1 1 0 0 0 .9 1.1 1 1 0 0 0 1.1-.8l1.1-5.4 1.1 5.4a1 1 0 0 0 1.1.8 1 1 0 0 0 .9-1.1L14 13.7v-2l5.8 1.5a1 1 0 0 0 1.2-.7 1 1 0 0 0-.7-1.2z"></path>
+  </symbol>
+  <symbol id="svm-alterar-solicitante" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <circle cx="16.1" cy="6.9" r="2.4"></circle>
+    <path d="M12.2 12.6c.2-2.4 1.8-3.6 3.9-3.6s3.7 1.2 3.9 3.6z"></path>
+    <circle cx="7.9" cy="15.1" r="2.4"></circle>
+    <path d="M4 20.8c.2-2.4 1.8-3.6 3.9-3.6s3.7 1.2 3.9 3.6z"></path>
+    <path d="M4.2 14.4A8.3 8.3 0 0 1 10.6 4.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+    <polygon points="10.2,2.5 13.4,4.3 10.4,6.2"></polygon>
+    <path d="M19.8 9.6a8.3 8.3 0 0 1-6.4 10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+    <polygon points="13.8,17.8 10.6,19.7 13.6,21.5"></polygon>
+  </symbol>
+</svg>

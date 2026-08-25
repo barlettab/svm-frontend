@@ -1,41 +1,21 @@
-import { useState } from "react";
 import { PageHeader } from "../../components/layout/PageHeader";
-import { Tabs } from "../../components/ui/Tabs";
 import { EmptyState } from "../../components/ui/EmptyState";
-import {
-  PARAMETRIZACAO_TAB_LABELS,
-  type ParametrizacaoTab,
-} from "../../types";
+import { PARAMETRIZACAO_TAB_LABELS, type ParametrizacaoTab } from "../../types";
 
-const TABS: ParametrizacaoTab[] = [
-  "parametros-gerais",
-  "matriz-riscos",
-  "expr-score-tier",
-  "expr-score-monitoramento",
-];
+interface GestaoPageProps {
+  activeTab: ParametrizacaoTab;
+}
 
-export function GestaoPage() {
-  const [activeTab, setActiveTab] = useState<ParametrizacaoTab>(TABS[0]);
-
+export function GestaoPage({ activeTab }: GestaoPageProps) {
   return (
     <div className="mx-auto max-w-4xl">
       <PageHeader title="Parametrização" />
 
-      <Tabs
-        items={TABS.map((tab) => ({
-          key: tab,
-          label: PARAMETRIZACAO_TAB_LABELS[tab],
-        }))}
-        activeKey={activeTab}
-        onChange={setActiveTab}
+      <EmptyState
+        icon="clock"
+        title={PARAMETRIZACAO_TAB_LABELS[activeTab]}
+        description="Esta funcionalidade será implementada em uma próxima etapa."
       />
-
-      <div className="mt-6">
-        <EmptyState
-          title={PARAMETRIZACAO_TAB_LABELS[activeTab]}
-          description="Esta funcionalidade será implementada em uma próxima etapa."
-        />
-      </div>
     </div>
   );
 }

@@ -2,11 +2,11 @@ import { useState, type FormEvent } from "react";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { TextField } from "../../components/ui/TextField";
 import { SelectField } from "../../components/ui/SelectField";
-import { RadioGroupField } from "../../components/ui/RadioGroupField";
 import { TextareaField } from "../../components/ui/TextareaField";
 import { FileUpload } from "../../components/ui/FileUpload";
 import { PrimaryButton } from "../../components/ui/PrimaryButton";
 import { SuccessModal } from "../../components/ui/SuccessModal";
+import { Panel, FormGrid, FormActions } from "../../components/ui/Panel";
 import {
   areaGestoraOptions,
   monitoramentoOptions,
@@ -90,94 +90,96 @@ export function InventariarForm() {
         description="Registre um modelo existente no inventário corporativo."
       />
 
-      <form onSubmit={handleSubmit} noValidate>
-        <div className="grid grid-cols-1 gap-x-6 gap-y-5 md:grid-cols-2">
-          <SelectField
-            id="situacaoModelo"
-            label="Situação do modelo"
-            required
-            value={form.situacaoModelo}
-            onChange={(value) => updateField("situacaoModelo", value)}
-            options={situacaoModeloOptions}
-            error={errors.situacaoModelo}
-          />
+      <Panel>
+        <form onSubmit={handleSubmit} noValidate>
+          <FormGrid>
+            <SelectField
+              id="situacaoModelo"
+              label="Situação do modelo"
+              required
+              value={form.situacaoModelo}
+              onChange={(value) => updateField("situacaoModelo", value)}
+              options={situacaoModeloOptions}
+              error={errors.situacaoModelo}
+            />
 
-          <RadioGroupField
-            id="validado"
-            label="Validado?"
-            required
-            value={form.validado}
-            onChange={(value) => updateField("validado", value)}
-            options={validadoOptions}
-            error={errors.validado}
-          />
+            <SelectField
+              id="validado"
+              label="Validado?"
+              required
+              value={form.validado}
+              onChange={(value) => updateField("validado", value)}
+              options={validadoOptions}
+              error={errors.validado}
+            />
 
-          <SelectField
-            id="monitoramento"
-            label="Monitoramento"
-            required
-            value={form.monitoramento}
-            onChange={(value) => updateField("monitoramento", value)}
-            options={monitoramentoOptions}
-            error={errors.monitoramento}
-          />
+            <SelectField
+              id="monitoramento"
+              label="Monitoramento"
+              required
+              value={form.monitoramento}
+              onChange={(value) => updateField("monitoramento", value)}
+              options={monitoramentoOptions}
+              error={errors.monitoramento}
+            />
 
-          <TextField
-            id="nomeModelo"
-            label="Nome do modelo"
-            required
-            value={form.nomeModelo}
-            onChange={(value) => updateField("nomeModelo", value)}
-            error={errors.nomeModelo}
-          />
+            <TextField
+              id="nomeModelo"
+              label="Nome do modelo"
+              required
+              value={form.nomeModelo}
+              onChange={(value) => updateField("nomeModelo", value)}
+              error={errors.nomeModelo}
+            />
 
-          <SelectField
-            id="tipoModelo"
-            label="Tipo de modelo"
-            required
-            value={form.tipoModelo}
-            onChange={(value) => updateField("tipoModelo", value)}
-            options={tipoModeloOptions}
-            error={errors.tipoModelo}
-          />
+            <SelectField
+              id="tipoModelo"
+              label="Tipo de modelo"
+              required
+              value={form.tipoModelo}
+              onChange={(value) => updateField("tipoModelo", value)}
+              options={tipoModeloOptions}
+              error={errors.tipoModelo}
+            />
 
-          <SelectField
-            id="publico"
-            label="Público"
-            required
-            value={form.publico}
-            onChange={(value) => updateField("publico", value)}
-            options={publicoOptions}
-            error={errors.publico}
-          />
+            <SelectField
+              id="publico"
+              label="Público"
+              required
+              value={form.publico}
+              onChange={(value) => updateField("publico", value)}
+              options={publicoOptions}
+              error={errors.publico}
+            />
 
-          <SelectField
-            id="areaGestora"
-            label="Área gestora"
-            required
-            value={form.areaGestora}
-            onChange={(value) => updateField("areaGestora", value)}
-            options={areaGestoraOptions}
-            error={errors.areaGestora}
-          />
+            <SelectField
+              id="areaGestora"
+              label="Área gestora"
+              required
+              value={form.areaGestora}
+              onChange={(value) => updateField("areaGestora", value)}
+              options={areaGestoraOptions}
+              error={errors.areaGestora}
+            />
 
-          <TextareaField
-            id="objetivo"
-            label="Objetivo"
-            required
-            value={form.objetivo}
-            onChange={(value) => updateField("objetivo", value)}
-            placeholder="Descreva brevemente o objetivo do modelo"
-            error={errors.objetivo}
-          />
+            <TextareaField
+              id="objetivo"
+              label="Objetivo"
+              required
+              value={form.objetivo}
+              onChange={(value) => updateField("objetivo", value)}
+              placeholder="Descreva brevemente o objetivo do modelo"
+              error={errors.objetivo}
+            />
 
-          <FileUpload id="anexo" file={file} onChange={setFile} fullWidth />
-        </div>
+            <FileUpload id="anexo" file={file} onChange={setFile} fullWidth />
+          </FormGrid>
 
-        <div className="mt-8">
-          <PrimaryButton type="submit">Enviar</PrimaryButton>
-        </div>
-      </form>
+          <FormActions>
+            <PrimaryButton type="submit">Enviar</PrimaryButton>
+          </FormActions>
+        </form>
+      </Panel>
 
       <SuccessModal
         open={successCode !== null}

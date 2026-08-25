@@ -1,0 +1,136 @@
+@import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&display=swap");
+@import "tailwindcss";
+
+/* ═══════════════════════════════════════════════════════════════
+   SVM — tokens do design system (referência institucional)
+   Tailwind v4: cada var abaixo gera utilitários (bg-nav, text-ink,
+   border-line, rounded-svm, shadow-modal, text-body …)
+   ═══════════════════════════════════════════════════════════════ */
+@theme {
+  /* tipografia */
+  --font-sans: "Open Sans", "Segoe UI", Tahoma, sans-serif;
+  --font-mono: ui-monospace, Menlo, Consolas, monospace;
+
+  --text-page: 22px;        --text-page--line-height: 1.2;
+  --text-section: 16px;     --text-section--line-height: 1.35;
+  --text-ident: 15px;       --text-ident--line-height: 1.4;
+  --text-body: 14px;        --text-body--line-height: 1.5;
+  --text-nav: 13.5px;       --text-nav--line-height: 1.45;
+  --text-label: 11.5px;     --text-label--line-height: 1.4;
+  --text-aux: 12px;         --text-aux--line-height: 1.5;
+  --text-micro: 11px;       --text-micro--line-height: 1.4;
+
+  /* navegação */
+  --color-nav: #1f6cb0;
+  --color-nav-brand: #175c99;
+  --color-nav-group: #4a90c8;
+  --color-nav-hover: #3a83bf;
+  --color-nav-active: #e9eff3;
+  --color-nav-active-ink: #2b6fa8;
+  --color-nav-footer: #7b96b3;
+
+  /* superfícies e bordas */
+  --color-app: #efefef;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f7f7f7;
+  --color-thead: #f2f2f2;
+  --color-line: #e0e0e0;
+  --color-line-strong: #dcdcdc;
+  --color-line-soft: #ececec;
+  --color-field: #c9c9c9;
+
+  /* texto */
+  --color-ink: #4d4d4d;
+  --color-ink-2: #6e6e6e;
+  --color-ink-3: #9a9a9a;
+  --color-ink-4: #b8b8b8;
+  --color-ink-title: #555555;
+
+  /* ação e semânticas */
+  --color-action: #7e7e7e;
+  --color-action-hover: #6b6b6b;
+  --color-primary: #1f6cb0;
+  --color-primary-hover: #175c99;
+  --color-success: #3d7f39;
+  --color-success-bg: #edf4ec;
+  --color-success-line: #c8dfc6;
+  --color-warning: #b4801d;
+  --color-warning-bg: #faf3e4;
+  --color-warning-line: #ecdcb6;
+  --color-error: #ad3630;
+  --color-error-bg: #f8eceb;
+  --color-error-line: #e6c4c1;
+  --color-info: #1f6cb0;
+  --color-info-bg: #eaf1f8;
+  --color-info-line: #c5d9ec;
+
+  /* raios — nada acima de 3px em contêineres */
+  --radius-svm: 2px;
+  --radius-nav: 3px;
+
+  /* sombras — a referência é plana; use apenas em elementos flutuantes */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-pop: 0 2px 6px rgba(0, 0, 0, 0.12);
+  --shadow-modal: 0 6px 22px rgba(0, 0, 0, 0.22);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-app);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--color-primary-hover);
+  text-decoration: underline;
+}
+
+/* foco visível, nunca removido — anel externo de 3px */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(31, 108, 176, 0.35);
+}
+
+/* medidas fixas da referência */
+@utility h-control {
+  height: 38px;
+}
+
+@keyframes svm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes svm-shimmer {
+  0% {
+    background-position: -400px 0;
+  }
+  100% {
+    background-position: 400px 0;
+  }
+}
+@keyframes svm-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

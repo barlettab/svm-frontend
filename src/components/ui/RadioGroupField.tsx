@@ -9,6 +9,7 @@ interface RadioGroupFieldProps {
   required?: boolean;
   error?: string;
   fullWidth?: boolean;
+  disabled?: boolean;
 }
 
 export function RadioGroupField({
@@ -20,28 +21,24 @@ export function RadioGroupField({
   required,
   error,
   fullWidth,
+  disabled,
 }: RadioGroupFieldProps) {
   return (
-    <FormField
-      label={label}
-      htmlFor={id}
-      required={required}
-      error={error}
-      fullWidth={fullWidth}
-    >
-      <div className="flex items-center gap-5 pt-1" id={id}>
+    <FormField label={label} htmlFor={id} required={required} error={error} fullWidth={fullWidth}>
+      <div id={id} role="radiogroup" className="flex min-h-[38px] flex-wrap items-center gap-x-6 gap-y-2">
         {options.map((option) => (
           <label
             key={option}
-            className="flex cursor-pointer items-center gap-2 text-sm text-slate-700"
+            className="flex cursor-pointer items-center gap-2 text-body text-ink has-disabled:cursor-not-allowed has-disabled:text-ink-4"
           >
             <input
               type="radio"
               name={id}
               value={option}
               checked={value === option}
+              disabled={disabled}
               onChange={(e) => onChange(e.target.value)}
-              className="h-4 w-4 border-slate-300 text-blue-700 focus:ring-blue-600/30"
+              className="h-[15px] w-[15px] accent-primary"
             />
             {option}
           </label>

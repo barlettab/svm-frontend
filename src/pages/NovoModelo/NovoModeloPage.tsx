@@ -1,14 +1,17 @@
 import { useState } from "react";
-import { PageHeader } from "../../components/layout/PageHeader";
-import { Tabs } from "../../components/ui/Tabs";
 import { useProfile } from "../../context/ProfileContext";
-import { TABS_BY_PROFILE, type NovoModeloTab } from "../../types";
+import { Tabs } from "../../components/ui/Tabs";
+import { EmptyState } from "../../components/ui/EmptyState";
 import { SubmeterForm } from "./SubmeterForm";
 import { InventariarForm } from "./InventariarForm";
+import { TABS_BY_PROFILE, type NovoModeloTab } from "../../types";
 
 const TAB_LABELS: Record<NovoModeloTab, string> = {
-  submeter: "Submeter",
+  submeter: "Solicitação",
   inventariar: "Inventariar",
+  "informacoes-adicionais": "Informações Adicionais",
+  implantacao: "Implantação",
+  "metodologia-monitoramento": "Metodologia e Monitoramento",
 };
 
 export function NovoModeloPage() {
@@ -24,8 +27,6 @@ export function NovoModeloPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <PageHeader title="Novo modelo" />
-
       <Tabs
         items={availableTabs.map((tab) => ({ key: tab, label: TAB_LABELS[tab] }))}
         activeKey={activeTab}
@@ -35,6 +36,15 @@ export function NovoModeloPage() {
       <div className="mt-6">
         {activeTab === "submeter" && <SubmeterForm />}
         {activeTab === "inventariar" && <InventariarForm />}
+        {(activeTab === "informacoes-adicionais" ||
+          activeTab === "implantacao" ||
+          activeTab === "metodologia-monitoramento") && (
+          <EmptyState
+            icon="clock"
+            title={TAB_LABELS[activeTab]}
+            description="Esta funcionalidade será implementada em uma próxima etapa."
+          />
+        )}
       </div>
     </div>
   );

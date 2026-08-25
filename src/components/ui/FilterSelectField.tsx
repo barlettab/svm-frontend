@@ -1,3 +1,6 @@
+import { controlClasses } from "./FormField";
+import { Icon } from "./Icon";
+
 interface FilterSelectFieldProps {
   id: string;
   label: string;
@@ -6,33 +9,27 @@ interface FilterSelectFieldProps {
   options: string[];
 }
 
-export function FilterSelectField({
-  id,
-  label,
-  value,
-  onChange,
-  options,
-}: FilterSelectFieldProps) {
+export function FilterSelectField({ id, label, value, onChange, options }: FilterSelectFieldProps) {
   return (
-    <div>
-      <label
-        htmlFor={id}
-        className="mb-1.5 block text-sm font-medium text-slate-700"
-      >
+    <div className="min-w-0">
+      <label htmlFor={id} className="mb-2 block text-label uppercase tracking-[0.4px] text-ink-2">
         {label}
       </label>
-      <select
-        id={id}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600/30"
-      >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </select>
+      <div className="relative">
+        <select
+          id={id}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={controlClasses(undefined, "h-[38px] appearance-none pr-9")}
+        >
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+        <Icon name="chev-down" size={15} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-2" />
+      </div>
     </div>
   );
 }

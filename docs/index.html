@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SVM — Design System (HTML/CSS)</title>
+<link rel="stylesheet" href="svm.css">
+<style>
+  /* estilos apenas desta página de referência — não fazem parte do design system */
+  body { padding: 0; }
+  .sg { max-width: 1280px; margin: 0 auto; padding: 40px 32px 80px; }
+  .sg-title { font-size: 28px; font-weight: 300; color: var(--svm-ink-title); }
+  .sg-sub { margin-top: 8px; color: var(--svm-ink-3); font-size: 14px; max-width: 720px; }
+  .sg-toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 28px 0 44px; }
+  .sg-toc a { padding: 7px 14px; border: 1px solid var(--svm-line-strong); border-radius: 2px; background: #fff; color: var(--svm-ink-title); font-size: 12px; text-decoration: none; }
+  .sg-toc a:hover { border-color: var(--svm-primary); color: var(--svm-primary); text-decoration: none; }
+  .sg-section { margin-bottom: 56px; scroll-margin-top: 20px; }
+  .sg-head { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+  .sg-head h2 { font-size: 20px; font-weight: 600; text-transform: capitalize; }
+  .sg-num { color: var(--svm-primary); font-size: 11px; font-weight: 700; letter-spacing: 1.2px; }
+  .sg-rule { flex: 1; height: 1px; background: var(--svm-line-strong); }
+  .sg-note { margin-bottom: 20px; color: var(--svm-ink-3); font-size: 13px; max-width: 760px; }
+  .sg-demo { padding: 24px; border: 1px solid var(--svm-line); background: #fff; margin-bottom: 16px; }
+  .sg-demo--flat { background: var(--svm-app); }
+  .sg-label { margin-bottom: 12px; color: var(--svm-ink-3); font-size: 11px; letter-spacing: 0.6px; text-transform: uppercase; }
+  .sg-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; }
+  .sg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
+  .sg-swatch { display: flex; align-items: center; gap: 12px; }
+  .sg-chip { width: 40px; height: 40px; border: 1px solid rgba(0,0,0,.12); border-radius: 2px; flex-shrink: 0; }
+  .sg-swatch code { display: block; font-family: var(--svm-font-mono); font-size: 12px; color: var(--svm-ink); }
+  .sg-swatch span:last-child { color: var(--svm-ink-3); font-size: 11px; }
+  .sg-icons { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 4px; }
+  .sg-icon { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 6px; border: 1px solid var(--svm-line-soft); }
+  .sg-icon code { color: var(--svm-ink-3); font-family: var(--svm-font-mono); font-size: 10px; text-align: center; word-break: break-all; }
+  .sg-type-row { display: flex; align-items: baseline; gap: 24px; padding: 12px 0; border-top: 1px solid var(--svm-line-soft); }
+  .sg-type-row code { flex-shrink: 0; width: 210px; color: var(--svm-ink-3); font-family: var(--svm-font-mono); font-size: 11px; }
+  .sg-scale { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-end; }
+  .sg-scale div { text-align: center; }
+  .sg-scale span { display: block; background: var(--svm-info-bg); border: 1px solid var(--svm-info-line); height: 34px; }
+  .sg-scale code { display: block; margin-top: 6px; color: var(--svm-ink-3); font-family: var(--svm-font-mono); font-size: 10px; }
+  .sg-static { position: static !important; inset: auto !important; }
+  .sg-mini-app { display: flex; height: 470px; overflow: hidden; border: 1px solid var(--svm-line); }
+  .sg-mini-app .svm-sidebar { width: 240px; position: static; inset: auto; transform: none; }
+  .sg-mini-app .svm-menu-toggle { display: inline-flex; }
+  .sg-code { margin: 0; padding: 14px 16px; border: 1px solid var(--svm-line); border-top: 0; background: #fafafa; color: var(--svm-ink-2); font-family: var(--svm-font-mono); font-size: 11.5px; line-height: 1.6; overflow-x: auto; white-space: pre; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+
+  <symbol id="svm-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a5 5 0 0 0-5 5v3.2c0 .8-.3 1.6-.9 2.2L5 15h14l-1.1-1.6a3.2 3.2 0 0 1-.9-2.2V8a5 5 0 0 0-5-5Z"></path><path d="M10 18a2 2 0 0 0 4 0"></path></symbol>
+  <symbol id="svm-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.4"></circle><path d="M5.5 20c.4-3.4 3.1-5.4 6.5-5.4s6.1 2 6.5 5.4"></path></symbol>
+  <symbol id="svm-help" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9.6 9.2A2.5 2.5 0 0 1 14.5 10c0 1.7-2.4 1.9-2.4 3.6"></path><path d="M12 17.1h.01"></path></symbol>
+  <symbol id="svm-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4.5H6.5v15H14"></path><path d="M11 12h9.5"></path><path d="M17.5 8.5l3 3.5-3 3.5"></path></symbol>
+  <symbol id="svm-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4"></path><path d="M10 6l-6 6 6 6"></path></symbol>
+  <symbol id="svm-chev-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5l6 6 6-6"></path></symbol>
+  <symbol id="svm-chev-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 14.5l6-6 6 6"></path></symbol>
+  <symbol id="svm-chev-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 5l7 7-7 7"></path></symbol>
+  <symbol id="svm-chev-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 5l-7 7 7 7"></path></symbol>
+  <symbol id="svm-chev-first" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 5l-7 7 7 7"></path><path d="M7 5v14"></path></symbol>
+  <symbol id="svm-chev-last" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5l7 7-7 7"></path><path d="M17 5v14"></path></symbol>
+  <symbol id="svm-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="1"></rect><path d="M3.5 9.5h17M8 3.5V6M16 3.5V6"></path></symbol>
+  <symbol id="svm-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.8" cy="10.8" r="6.3"></circle><path d="M15.4 15.4L20.5 20.5"></path></symbol>
+  <symbol id="svm-eraser" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 20.5h12"></path><path d="M14.2 4.6l5.2 5.2a1.4 1.4 0 0 1 0 2L13 18.2H8.7L4.6 14a1.4 1.4 0 0 1 0-2l7.6-7.4a1.4 1.4 0 0 1 2 0Z"></path><path d="M9.4 8.2l6.4 6.4"></path></symbol>
+  <symbol id="svm-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></symbol>
+  <symbol id="svm-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11"></path><path d="M7.5 10.5l4.5 4.5 4.5-4.5"></path><path d="M4.5 19.5h15"></path></symbol>
+  <symbol id="svm-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15.5v-11"></path><path d="M7.5 8.5L12 4l4.5 4.5"></path><path d="M4.5 19.5h15"></path></symbol>
+  <symbol id="svm-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 12S6.4 6.2 12 6.2 21.2 12 21.2 12 17.6 17.8 12 17.8 2.8 12 2.8 12Z"></path><circle cx="12" cy="12" r="2.8"></circle></symbol>
+  <symbol id="svm-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 19.5h4l10-10a2.1 2.1 0 0 0-3-3l-10 10v3Z"></path><path d="M14.5 6.5l3 3"></path></symbol>
+  <symbol id="svm-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 7h15"></path><path d="M9.5 7V4.5h5V7"></path><path d="M6.5 7l.9 12.5h9.2L17.5 7"></path></symbol>
+  <symbol id="svm-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.8l4.6 4.6L19 6.8"></path></symbol>
+  <symbol id="svm-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"></path></symbol>
+  <symbol id="svm-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4.2l8.5 15.3H3.5L12 4.2Z"></path><path d="M12 9.6v4.6M12 16.8h.01"></path></symbol>
+  <symbol id="svm-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v6M12 7.6h.01"></path></symbol>
+  <symbol id="svm-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M12 7.2V12l3.4 2.1"></path></symbol>
+  <symbol id="svm-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5h7l5 5v12H6v-17Z"></path><path d="M13 3.5v5h5"></path></symbol>
+  <symbol id="svm-paperclip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18.5 11.5l-7 7a4.2 4.2 0 0 1-6-6l8-8a2.8 2.8 0 0 1 4 4l-8 8a1.4 1.4 0 0 1-2-2l7-7"></path></symbol>
+  <symbol id="svm-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16l-6.2 7.2v5.6l-3.6-2v-3.6L4 6Z"></path></symbol>
+  <symbol id="svm-sort" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4.5v15M8 4.5L5 8M8 4.5L11 8"></path><path d="M16 19.5v-15M16 19.5L13 16M16 19.5L19 16"></path></symbol>
+  <symbol id="svm-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7"></rect><rect x="13.5" y="3.5" width="7" height="7"></rect><rect x="3.5" y="13.5" width="7" height="7"></rect><rect x="13.5" y="13.5" width="7" height="7"></rect></symbol>
+  <symbol id="svm-inbox" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h14a1.5 1.5 0 0 0 1.5-1.5v-6.5"></path><path d="M3.5 12.5l2.6-8h11.8l2.6 8h-5a2.5 2.5 0 0 1-5 0h-5Z"></path></symbol>
+  <symbol id="svm-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v4M12 16.5v4M3.5 12h4M16.5 12h4M6.1 6.1l2.8 2.8M15.1 15.1l2.8 2.8M17.9 6.1l-2.8 2.8M8.9 15.1l-2.8 2.8"></path></symbol>
+  <symbol id="svm-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"></path></symbol>
+  <symbol id="svm-history" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1"></path><path d="M3.5 5v4h4"></path><path d="M12 7.5V12l3.2 2"></path></symbol>
+  <symbol id="svm-user-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="8" r="3.4"></circle><path d="M3.6 20c.4-3.4 3-5.4 6.4-5.4 1 0 1.9.2 2.7.5"></path><path d="M17.5 14.5v6M14.5 17.5h6"></path></symbol>
+  <symbol id="svm-user-switch" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="9.2" cy="7.6" r="3.2"></circle><path d="M3.4 18.6c.4-3.2 2.8-5.1 5.8-5.1"></path><path d="M13.6 15.4h7l-2.2-2.2M20.6 19.4h-7l2.2 2.2"></path></symbol>
+  <symbol id="svm-ban" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M6 18L18 6"></path></symbol>
+  
+  <symbol id="svm-atribuir-analista" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <circle cx="12" cy="4.1" r="2.7"></circle>
+    <path d="M12 8.9 3.7 11.3a1 1 0 0 0-.7 1.2 1 1 0 0 0 1.2.7L10 11.7v2l-1.1 8.2a1 1 0 0 0 .9 1.1 1 1 0 0 0 1.1-.8l1.1-5.4 1.1 5.4a1 1 0 0 0 1.1.8 1 1 0 0 0 .9-1.1L14 13.7v-2l5.8 1.5a1 1 0 0 0 1.2-.7 1 1 0 0 0-.7-1.2z"></path>
+  </symbol>
+  <symbol id="svm-alterar-solicitante" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <circle cx="16.1" cy="6.9" r="2.4"></circle>
+    <path d="M12.2 12.6c.2-2.4 1.8-3.6 3.9-3.6s3.7 1.2 3.9 3.6z"></path>
+    <circle cx="7.9" cy="15.1" r="2.4"></circle>
+    <path d="M4 20.8c.2-2.4 1.8-3.6 3.9-3.6s3.7 1.2 3.9 3.6z"></path>
+    <path d="M4.2 14.4A8.3 8.3 0 0 1 10.6 4.4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+    <polygon points="10.2,2.5 13.4,4.3 10.4,6.2"></polygon>
+    <path d="M19.8 9.6a8.3 8.3 0 0 1-6.4 10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+    <polygon points="13.8,17.8 10.6,19.7 13.6,21.5"></polygon>
+  </symbol>
+</svg>
+
+<div class="sg">
+  <h1 class="sg-title">SVM — Design System</h1>
+  <p class="sg-sub">Referência de implementação em HTML e CSS puros. Uma única folha de estilo (<code>svm.css</code>) e um sprite de ícones (<code>icons.svg</code>), sem framework nem dependência de build. Toda medida vem da referência institucional: controles de 38px, borda de 1px, raio de 2px, superfícies delimitadas por borda em vez de sombra.</p>
+
+  <nav class="sg-toc">
+    <a href="#cores">01 Cores</a>
+    <a href="#tipografia">02 Tipografia</a>
+    <a href="#espacamento">03 Espaçamento e bordas</a>
+    <a href="#icones">04 Ícones</a>
+    <a href="#layout">05 Layout e navegação</a>
+    <a href="#abas">06 Abas e etapas</a>
+    <a href="#botoes">07 Botões</a>
+    <a href="#campos">08 Campos</a>
+    <a href="#dados">09 Tabela e dados</a>
+    <a href="#feedback">10 Feedback</a>
+    <a href="#estados">11 Estados</a>
+  </nav>
+
+
+    <section class="sg-section" id="cores">
+      <div class="sg-head"><span class="sg-num">01</span><h2>cores</h2><span class="sg-rule"></span></div>
+      <p class="sg-note">Duas famílias: o azul institucional, restrito à navegação e a indicadores de seleção; e a escala neutra, que carrega o resto da interface. As semânticas aparecem sempre em par (texto escuro sobre fundo claro com borda) e nunca isoladas como único portador de significado.</p>
+      <div class="sg-demo">
+        <p class="sg-label">Navegação</p>
+        <div class="sg-grid">
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#1f6cb0"></span>
+          <div><code>--svm-nav</code><span>#1f6cb0 · fundo da sidebar</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#175c99"></span>
+          <div><code>--svm-nav-brand</code><span>#175c99 · faixa da marca</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#4a90c8"></span>
+          <div><code>--svm-nav-group</code><span>#4a90c8 · grupo de menu</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#3a83bf"></span>
+          <div><code>--svm-nav-hover</code><span>#3a83bf · hover de item</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#e9eff3"></span>
+          <div><code>--svm-nav-active</code><span>#e9eff3 · item ativo</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#2b6fa8"></span>
+          <div><code>--svm-nav-active-ink</code><span>#2b6fa8 · texto do item ativo</span></div>
+        </div>
+        </div>
+        <hr class="svm-section-divider">
+        <p class="sg-label">Superfícies e bordas</p>
+        <div class="sg-grid">
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#efefef"></span>
+          <div><code>--svm-app</code><span>#efefef · fundo da aplicação</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#ffffff"></span>
+          <div><code>--svm-surface</code><span>#ffffff · painel, card, modal</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#f7f7f7"></span>
+          <div><code>--svm-surface-alt</code><span>#f7f7f7 · hover de linha</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#f2f2f2"></span>
+          <div><code>--svm-thead</code><span>#f2f2f2 · cabeçalho de tabela</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#e0e0e0"></span>
+          <div><code>--svm-line</code><span>#e0e0e0 · borda padrão</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#ececec"></span>
+          <div><code>--svm-line-soft</code><span>#ececec · divisória interna</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#c9c9c9"></span>
+          <div><code>--svm-field</code><span>#c9c9c9 · borda de campo</span></div>
+        </div>
+        </div>
+        <hr class="svm-section-divider">
+        <p class="sg-label">Texto e ação</p>
+        <div class="sg-grid">
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#4d4d4d"></span>
+          <div><code>--svm-ink</code><span>#4d4d4d · corpo · 8,9:1</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#6e6e6e"></span>
+          <div><code>--svm-ink-2</code><span>#6e6e6e · label · 5,3:1</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#9a9a9a"></span>
+          <div><code>--svm-ink-3</code><span>#9a9a9a · auxiliar</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#b8b8b8"></span>
+          <div><code>--svm-ink-4</code><span>#b8b8b8 · desabilitado</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#7e7e7e"></span>
+          <div><code>--svm-action</code><span>#7e7e7e · botão de ação</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#1f6cb0"></span>
+          <div><code>--svm-primary</code><span>#1f6cb0 · link, seleção</span></div>
+        </div>
+        </div>
+        <hr class="svm-section-divider">
+        <p class="sg-label">Semânticas</p>
+        <div class="sg-grid">
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#3d7f39"></span>
+          <div><code>--svm-success</code><span>#3d7f39 · validado</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#b4801d"></span>
+          <div><code>--svm-warning</code><span>#b4801d · em análise</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#ad3630"></span>
+          <div><code>--svm-error</code><span>#ad3630 · não validado</span></div>
+        </div>
+
+        <div class="sg-swatch">
+          <span class="sg-chip" style="background:#1f6cb0"></span>
+          <div><code>--svm-info</code><span>#1f6cb0 · submetido</span></div>
+        </div>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="sg-section" id="tipografia">
+      <div class="sg-head"><span class="sg-num">02</span><h2>tipografia</h2><span class="sg-rule"></span></div>
+      <p class="sg-note">Open Sans em quatro pesos. Peso 300 apenas em título de página e em números grandes; 600 é o máximo — nunca 700 em texto de interface. Títulos de página são leves e grandes; o restante da hierarquia se resolve por tamanho e cor, não por peso.</p>
+      <div class="sg-demo">
+        <div class="sg-type-row" style="border-top:0"><code>--svm-fs-page · 22/300</code><span style="font-size:22px;font-weight:300;color:var(--svm-ink-title)">Consultar modelo</span></div>
+        <div class="sg-type-row"><code>--svm-fs-section · 16/600</code><span style="font-size:16px;font-weight:600">Dados do modelo</span></div>
+        <div class="sg-type-row"><code>--svm-fs-ident · 15/400</code><span style="font-size:15px">SVM-2026-000482</span></div>
+        <div class="sg-type-row"><code>--svm-fs-body · 14/400</code><span style="font-size:14px">Modelo de propensão a crédito consignado</span></div>
+        <div class="sg-type-row"><code>--svm-fs-nav · 13.5/400</code><span style="font-size:13.5px">Matriz de Riscos</span></div>
+        <div class="sg-type-row"><code>--svm-fs-aux · 12/400</code><span style="font-size:12px;color:var(--svm-ink-3)">Atualizado em 24/08/2026 às 14:32</span></div>
+        <div class="sg-type-row"><code>--svm-fs-label · 11.5/400 ↑</code><span style="font-size:11.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--svm-ink-2)">Área responsável</span></div>
+        <div class="sg-type-row"><code>--svm-fs-micro · 11/600 ↑</code><span style="font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--svm-ink-2)">Situação</span></div>
+      </div>
+    </section>
+
+
+    <section class="sg-section" id="espacamento">
+      <div class="sg-head"><span class="sg-num">03</span><h2>espacamento</h2><span class="sg-rule"></span></div>
+      <p class="sg-note">Escala de 4px. O padding interno de painel é 24/28; entre campos, 20 na horizontal e 24 na vertical. Bordas são sempre 1px sólidas; o raio nunca passa de 3px e tabelas não têm raio nenhum.</p>
+      <div class="sg-demo">
+        <p class="sg-label">Escala</p>
+        <div class="sg-scale">
+          <div><span style="width:4px"></span><code>--svm-sp-1<br>4</code></div><div><span style="width:8px"></span><code>--svm-sp-2<br>8</code></div><div><span style="width:12px"></span><code>--svm-sp-3<br>12</code></div><div><span style="width:16px"></span><code>--svm-sp-4<br>16</code></div><div><span style="width:20px"></span><code>--svm-sp-5<br>20</code></div><div><span style="width:24px"></span><code>--svm-sp-6<br>24</code></div><div><span style="width:28px"></span><code>--svm-sp-7<br>28</code></div><div><span style="width:32px"></span><code>--svm-sp-8<br>32</code></div><div><span style="width:40px"></span><code>--svm-sp-10<br>40</code></div>
+        </div>
+        <hr class="svm-section-divider">
+        <p class="sg-label">Bordas, raios e sombras</p>
+        <div class="sg-row" style="align-items:flex-start">
+          <div style="width:150px;height:74px;border:1px solid var(--svm-line);border-radius:2px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--svm-ink-3)">1px · raio 2 · plano</div>
+          <div style="width:150px;height:74px;border:1px solid var(--svm-line);border-radius:2px;background:#fff;box-shadow:var(--svm-shadow-card);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--svm-ink-3)">sombra leve</div>
+          <div style="width:150px;height:74px;border-radius:2px;background:#fff;box-shadow:var(--svm-shadow-pop);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--svm-ink-3)">sombra média<br>toast</div>
+          <div style="width:150px;height:74px;border-radius:2px;background:#fff;box-shadow:var(--svm-shadow-modal);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--svm-ink-3)">sombra forte<br>modal</div>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="sg-section" id="icones">
+      <div class="sg-head"><span class="sg-num">04</span><h2>icones</h2><span class="sg-rule"></span></div>
+      <p class="sg-note">Sprite único de traço 1.7 sobre grade de 24, sempre em <code>currentColor</code>. Exceção deliberada: os dois ícones de atribuição são sólidos, como na referência. Uso: <code>&lt;svg viewBox="0 0 24 24"&gt;&lt;use href="icons.svg#svm-search"/&gt;&lt;/svg&gt;</code>.</p>
+      <div class="sg-demo">
+        <div class="sg-icons">
+<div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-eye"/></svg><code>eye</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-edit"/></svg><code>edit</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-trash"/></svg><code>trash</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-atribuir-analista"/></svg><code>atribuir-analista</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-alterar-solicitante"/></svg><code>alterar-solicitante</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-search"/></svg><code>search</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-eraser"/></svg><code>eraser</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-filter"/></svg><code>filter</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-sort"/></svg><code>sort</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-plus"/></svg><code>plus</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-download"/></svg><code>download</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-upload"/></svg><code>upload</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-paperclip"/></svg><code>paperclip</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-doc"/></svg><code>doc</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-calendar"/></svg><code>calendar</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-clock"/></svg><code>clock</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-history"/></svg><code>history</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-check"/></svg><code>check</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-x"/></svg><code>x</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-warning"/></svg><code>warning</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-info"/></svg><code>info</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-ban"/></svg><code>ban</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-bell"/></svg><code>bell</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-user"/></svg><code>user</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-user-plus"/></svg><code>user-plus</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-user-switch"/></svg><code>user-switch</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-help"/></svg><code>help</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-logout"/></svg><code>logout</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-menu"/></svg><code>menu</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-grid"/></svg><code>grid</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-inbox"/></svg><code>inbox</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-spinner"/></svg><code>spinner</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-arrow-left"/></svg><code>arrow-left</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-down"/></svg><code>chev-down</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-up"/></svg><code>chev-up</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-left"/></svg><code>chev-left</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-right"/></svg><code>chev-right</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-first"/></svg><code>chev-first</code></div><div class="sg-icon"><svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-last"/></svg><code>chev-last</code></div>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="sg-section" id="layout">
+      <div class="sg-head"><span class="sg-num">05</span><h2>layout</h2><span class="sg-rule"></span></div>
+      <p class="sg-note">Sidebar fixa de 265px em azul, com a faixa da marca de 66px; header branco de 56px com as ações à direita; conteúdo sobre fundo #EFEFEF com padding de 28/32; rodapé institucional de 46px. A árvore de navegação tem três níveis e o item-folha ativo recebe pill claro.</p>
+      <div class="sg-mini-app">
+        <aside class="svm-sidebar">
+          <div class="svm-sidebar__brand"><span class="svm-sidebar__logo">logo</span>SVM</div>
+          <nav class="svm-nav" aria-label="Navegação principal">
+            <button class="svm-nav__group svm-nav__group--root" aria-expanded="true">Módulo - SVM <svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-up"/></svg></button>
+            <div class="svm-nav__children">
+              <button class="svm-nav__group" aria-expanded="true">Novo modelo <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-up"/></svg></button>
+              <div class="svm-nav__children">
+                <button class="svm-nav__item">Submeter</button>
+                <button class="svm-nav__item">Inventariar</button>
+              </div>
+              <button class="svm-nav__group" aria-expanded="true">Consultar modelo <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-up"/></svg></button>
+              <div class="svm-nav__children">
+                <button class="svm-nav__item" aria-current="page">Em andamento</button>
+                <button class="svm-nav__item">Inventariado</button>
+                <button class="svm-nav__item">Cancelado</button>
+              </div>
+              <button class="svm-nav__group" aria-expanded="true">Gestão <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-up"/></svg></button>
+              <div class="svm-nav__children">
+                <button class="svm-nav__group" aria-expanded="true" style="margin-left:8px">Parametrização <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-up"/></svg></button>
+                <div class="svm-nav__children svm-nav__children--nested">
+                  <button class="svm-nav__item svm-nav__item--deep">Parâmetros Gerais</button>
+                  <button class="svm-nav__item svm-nav__item--deep">Matriz de Riscos</button>
+                  <button class="svm-nav__item svm-nav__item--deep">Expr. Score Tier</button>
+                  <button class="svm-nav__item svm-nav__item--deep">Expr. Score Monitoramento</button>
+                </div>
+              </div>
+            </div>
+          </nav>
+          <div class="svm-sidebar__user">Ana Paula Ribeiro<span>Analista GEVAM</span></div>
+        </aside>
+
+        <div class="svm-main">
+          <header class="svm-header">
+            <button class="svm-icon-btn svm-menu-toggle" aria-label="Abrir menu"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-menu"/></svg></button>
+            <div class="svm-header__actions">
+              <button class="svm-icon-btn" aria-label="Notificações"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-bell"/></svg></button>
+              <button class="svm-icon-btn" aria-label="Ajuda"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-help"/></svg></button>
+              <span class="svm-header__divider"></span>
+              <span class="svm-header__user"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-user"/></svg> Ana Paula Ribeiro</span>
+            </div>
+          </header>
+          <div class="svm-content" style="overflow:auto">
+            <div class="svm-page-header">
+              <nav class="svm-breadcrumb" aria-label="Trilha de navegação">
+                <a href="#layout">SVM</a><svg width="11" height="11" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-right"/></svg><a href="#layout">Consultar modelo</a><svg width="11" height="11" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-right"/></svg><span>Em andamento</span>
+              </nav>
+              <div class="svm-page-header__row">
+                <div>
+                  <h1 class="svm-page-title">Consultar modelo</h1>
+                  <p class="svm-page-desc">Solicitações em andamento atribuídas à sua área.</p>
+                </div>
+                <div class="svm-page-header__actions">
+                  <button class="svm-btn svm-btn--secondary"><svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-download"/></svg> Exportar</button>
+                  <button class="svm-btn svm-btn--primary"><svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-plus"/></svg> Nova solicitação</button>
+                </div>
+              </div>
+            </div>
+            <div class="svm-panel"><div class="svm-panel__body" style="color:var(--svm-ink-3);font-size:13px">Área de conteúdo — filtros, tabela e paginação.</div></div>
+          </div>
+          <footer class="svm-footer"><span>Informações do Sistema</span><span>SVM · v1.0</span></footer>
+        </div>
+      </div>
+      <pre class="sg-code">&lt;div class="svm-app"&gt;
+  &lt;aside class="svm-sidebar"&gt;…&lt;/aside&gt;
+  &lt;div class="svm-main"&gt;
+    &lt;header class="svm-header"&gt;…&lt;/header&gt;
+    &lt;main class="svm-content"&gt;&lt;div class="svm-container"&gt;…&lt;/div&gt;&lt;/main&gt;
+    &lt;footer class="svm-footer"&gt;…&lt;/footer&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+    </section>
+
+
+    <section class="sg-section" id="abas">
+      <div class="sg-head"><span class="sg-num">06</span><h2>abas</h2><span class="sg-rule"></span></div>
+      <p class="sg-note">A aba ativa é uma superfície branca levantada sobre a linha inferior, em azul e peso 600. O contador vem em pill. A trilha de etapas serve ao formulário multi-etapa: concluída com marca de verificação, atual em pill azul, futura em cinza e não clicável.</p>
+      <div class="sg-demo sg-demo--flat">
+        <div class="svm-tabs">
+          <button class="svm-tab" role="tab" aria-selected="true">Dados do modelo</button>
+          <button class="svm-tab" role="tab" aria-selected="false">Documentos <span class="svm-tab__count">4</span></button>
+          <button class="svm-tab" role="tab" aria-selected="false">Análise</button>
+          <button class="svm-tab" role="tab" aria-selected="false">Histórico <span class="svm-tab__count">12</span></button>
+          <button class="svm-tab" role="tab" aria-selected="false" disabled>Monitoramento</button>
+        </div>
+        <div class="svm-panel" style="border-top:0;border-radius:0">
+          <div class="svm-panel__body" style="color:var(--svm-ink-3);font-size:13px">Conteúdo da aba selecionada.</div>
+        </div>
+      </div>
+      <div class="sg-demo">
+        <ol class="svm-stepper" style="margin-bottom:0">
+          <li class="svm-step svm-step--done"><button class="svm-step__btn"><span class="svm-step__num"><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-check"/></svg></span>Identificação</button></li>
+          <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-right"/></svg>
+          <li class="svm-step svm-step--done"><button class="svm-step__btn"><span class="svm-step__num"><svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-check"/></svg></span>Classificação</button></li>
+          <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-right"/></svg>
+          <li class="svm-step svm-step--current"><button class="svm-step__btn"><span class="svm-step__num">3</span>Documentação</button></li>
+          <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-right"/></svg>
+          <li class="svm-step"><button class="svm-step__btn" disabled><span class="svm-step__num">4</span>Revisão</button></li>
+        </ol>
+      </div>
+    </section>
+
+
+    <section class="sg-section" id="botoes">
+      <div class="sg-head"><span class="sg-num">07</span><h2>botoes</h2><span class="sg-rule"></span></div>
+      <p class="sg-note">A ação principal da referência é cinza sólida, não azul — o azul fica reservado à navegação. Altura de 38px, raio de 2px, ícone opcional de 15px à esquerda. Ações de linha usam o botão só-ícone, com alvo de 34×34.</p>
+      <div class="sg-demo">
+        <p class="sg-label">Variantes · default</p>
+        <div class="sg-row">
+          <button class="svm-btn svm-btn--primary"><svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-search"/></svg> Pesquisar</button>
+          <button class="svm-btn svm-btn--secondary"><svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-eraser"/></svg> Limpar</button>
+          <button class="svm-btn svm-btn--ghost">Cancelar</button>
+          <button class="svm-btn svm-btn--danger"><svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-trash"/></svg> Cancelar solicitação</button>
+          <button class="svm-btn svm-btn--link">Ver detalhes</button>
+        </div>
+        <hr class="svm-section-divider">
+        <p class="sg-label">Desabilitado</p>
+        <div class="sg-row">
+          <button class="svm-btn svm-btn--primary" disabled>Salvar</button>
+          <button class="svm-btn svm-btn--secondary" disabled>Limpar</button>
+          <button class="svm-btn svm-btn--ghost" disabled>Cancelar</button>
+          <button class="svm-btn svm-btn--danger" disabled>Excluir</button>
+        </div>
+        <hr class="svm-section-divider">
+        <p class="sg-label">Carregando</p>
+        <div class="sg-row">
+          <button class="svm-btn svm-btn--primary" aria-busy="true" disabled><span class="svm-spin" style="display:inline-flex;color:#fff"><svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-spinner"/></svg></span> Pesquisando</button>
+        </div>
+        <hr class="svm-section-divider">
+        <p class="sg-label">Ações de linha — ordem definida para solicitação</p>
+        <div class="svm-row-actions" style="justify-content:flex-start;background:var(--svm-surface-alt);border:1px solid var(--svm-line-soft);padding:6px;width:max-content">
+          <button class="svm-icon-btn" title="Visualizar solicitação" aria-label="Visualizar solicitação"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-eye"/></svg></button>
+          <button class="svm-icon-btn" title="Alterar solicitação" aria-label="Alterar solicitação"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-edit"/></svg></button>
+          <button class="svm-icon-btn" title="Atribuir solicitação p/ Analista" aria-label="Atribuir solicitação para analista"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-atribuir-analista"/></svg></button>
+          <button class="svm-icon-btn" title="Alterar solicitante" aria-label="Alterar solicitante"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-alterar-solicitante"/></svg></button>
+          <button class="svm-icon-btn svm-icon-btn--danger" title="Cancelar solicitação" aria-label="Cancelar solicitação"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-trash"/></svg></button>
+          <button class="svm-icon-btn" title="Indisponível" aria-label="Indisponível" disabled><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-edit"/></svg></button>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="sg-section" id="campos">
+      <div class="sg-head"><span class="sg-num">08</span><h2>campos</h2><span class="sg-rule"></span></div>
+      <p class="sg-note">Todo controle tem 38px de altura, borda #C9C9C9 e raio 2px. Label acima, 11.5px maiúsculo, 8px de respiro. Obrigatoriedade por asterisco; erro por borda vermelha mais ícone e texto — nunca só cor.</p>
+      <div class="sg-demo">
+        <div class="svm-form-grid">
+          <div class="svm-field">
+            <label class="svm-label" for="f1">Nome do modelo <span class="svm-label__req">*</span></label>
+            <input class="svm-control" id="f1" type="text" value="Propensão a crédito consignado">
+          </div>
+          <div class="svm-field">
+            <label class="svm-label" for="f2">Nº da solicitação</label>
+            <div class="svm-input-icon">
+              <input class="svm-control" id="f2" type="text" placeholder="SVM-2026-000000">
+              <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-search"/></svg>
+            </div>
+          </div>
+          <div class="svm-field">
+            <label class="svm-label" for="f3">Situação</label>
+            <div class="svm-select-wrap">
+              <select class="svm-control" id="f3">
+                <option>Todas</option>
+                <option>Em análise</option>
+                <option>Validado</option>
+              </select>
+              <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-down"/></svg>
+            </div>
+          </div>
+          <div class="svm-field">
+            <label class="svm-label" for="f4">Data da submissão</label>
+            <input class="svm-control" id="f4" type="date" value="2026-08-24">
+          </div>
+          <div class="svm-field">
+            <label class="svm-label" for="f5">Tier <span class="svm-label__req">*</span></label>
+            <div class="svm-select-wrap">
+              <select class="svm-control svm-control--error" id="f5" aria-invalid="true">
+                <option value="">Selecione</option>
+              </select>
+              <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-down"/></svg>
+            </div>
+            <p class="svm-error-text"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-warning"/></svg> Informe o tier do modelo.</p>
+          </div>
+          <div class="svm-field">
+            <span class="svm-label">Nº gerado pelo sistema</span>
+            <div class="svm-readonly">SVM-2026-000482</div>
+          </div>
+          <div class="svm-field">
+            <label class="svm-label" for="f6">Campo desabilitado</label>
+            <input class="svm-control" id="f6" type="text" value="Indisponível neste perfil" disabled>
+          </div>
+          <div class="svm-field">
+            <span class="svm-label">Modelo monitorado <span class="svm-label__req">*</span></span>
+            <div class="svm-choice-row">
+              <label class="svm-choice"><input type="radio" name="mon" checked> Sim</label>
+              <label class="svm-choice"><input type="radio" name="mon"> Não</label>
+              <label class="svm-choice"><input type="radio" name="mon" disabled> N/A</label>
+            </div>
+          </div>
+          <div class="svm-field">
+            <span class="svm-label">Declarações</span>
+            <div class="svm-choice-row">
+              <label class="svm-choice"><input type="checkbox" checked> Base validada</label>
+            </div>
+            <p class="svm-hint">Confirme antes de submeter.</p>
+          </div>
+          <div class="svm-field svm-col-full">
+            <label class="svm-label" for="f7">Objetivo do modelo <span class="svm-label__req">*</span></label>
+            <textarea class="svm-control" id="f7" rows="4" maxlength="600" placeholder="Descreva a finalidade de negócio do modelo."></textarea>
+            <div class="svm-counter">0/600</div>
+          </div>
+          <div class="svm-field svm-col-full">
+            <span class="svm-label">Documentação técnica <span class="svm-label__req">*</span></span>
+            <div class="svm-upload">
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-upload"/></svg>
+              <span>Arraste o arquivo ou <a href="#campos">selecione</a></span>
+              <span class="svm-upload__hint">PDF, DOC, XLSX ou CSV até 20 MB</span>
+            </div>
+          </div>
+          <div class="svm-field svm-col-full">
+            <span class="svm-label">Anexo enviado</span>
+            <div class="svm-file">
+              <span class="svm-file__name"><svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-paperclip"/></svg> documentacao-tecnica-v3.pdf <span class="svm-file__size">1.842 KB</span></span>
+              <button class="svm-icon-btn svm-icon-btn--danger" aria-label="Remover arquivo"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-trash"/></svg></button>
+            </div>
+          </div>
+        </div>
+        <div class="svm-form-actions">
+          <button class="svm-btn svm-btn--secondary">Voltar</button>
+          <button class="svm-btn svm-btn--primary">Salvar e continuar</button>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="sg-section" id="dados">
+      <div class="sg-head"><span class="sg-num">09</span><h2>dados</h2><span class="sg-rule"></span></div>
+      <p class="sg-note">Tabela sem raio, cabeçalho #F2F2F2 com rótulo 11px maiúsculo, linhas divididas por #ECECEC e hover #F7F7F7. Identificadores em monoespaçado; números alinhados à direita com <code>tabular-nums</code>. Status sempre com rótulo textual.</p>
+      <div class="sg-demo sg-demo--flat">
+        <div class="svm-stats">
+          <div class="svm-stat"><span class="svm-stat__label">Submetidas</span><span class="svm-stat__value">128</span><span class="svm-stat__hint">no mês corrente</span></div>
+          <button class="svm-stat svm-stat--active"><span class="svm-stat__label">Em análise</span><span class="svm-stat__value svm-stat__value--warning">37</span><span class="svm-stat__hint">filtro aplicado</span></button>
+          <div class="svm-stat"><span class="svm-stat__label">Validados</span><span class="svm-stat__value svm-stat__value--success">64</span><span class="svm-stat__hint">últimos 90 dias</span></div>
+          <div class="svm-stat"><span class="svm-stat__label">Fora do prazo</span><span class="svm-stat__value svm-stat__value--error">6</span><span class="svm-stat__hint">requer atenção</span></div>
+        </div>
+
+        <div class="svm-table-wrap">
+          <div class="svm-table-scroll">
+            <table class="svm-table">
+              <thead>
+                <tr>
+                  <th style="width:150px"><button type="button">Solicitação <svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-sort"/></svg></button></th>
+                  <th>Modelo</th>
+                  <th style="width:150px">Solicitante</th>
+                  <th style="width:110px">Tier</th>
+                  <th style="width:150px">Situação</th>
+                  <th style="width:110px" class="svm-align-right">Prazo</th>
+                  <th style="width:180px" class="svm-align-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="svm-table__row--clickable">
+                  <td class="svm-table__id">SVM-2026-000482</td>
+                  <td>Propensão a crédito consignado</td>
+                  <td>Marcos Vinícius Alves</td>
+                  <td>Tier 1</td>
+                  <td><span class="svm-badge svm-badge--amber">Em análise</span></td>
+                  <td class="svm-align-right">4 dias</td>
+                  <td>
+                    <div class="svm-row-actions">
+                      <button class="svm-icon-btn" title="Visualizar solicitação" aria-label="Visualizar solicitação"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-eye"/></svg></button>
+                      <button class="svm-icon-btn" title="Alterar solicitação" aria-label="Alterar solicitação"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-edit"/></svg></button>
+                      <button class="svm-icon-btn" title="Atribuir solicitação p/ Analista" aria-label="Atribuir solicitação para analista"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-atribuir-analista"/></svg></button>
+                      <button class="svm-icon-btn" title="Alterar solicitante" aria-label="Alterar solicitante"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-alterar-solicitante"/></svg></button>
+                      <button class="svm-icon-btn svm-icon-btn--danger" title="Cancelar solicitação" aria-label="Cancelar solicitação"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-trash"/></svg></button>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="svm-table__row--clickable">
+                  <td class="svm-table__id">SVM-2026-000479</td>
+                  <td>Score de recuperação de crédito</td>
+                  <td>Juliana Prado Menezes</td>
+                  <td>Tier 2</td>
+                  <td><span class="svm-badge svm-badge--blue">Submetido</span></td>
+                  <td class="svm-align-right">11 dias</td>
+                  <td><div class="svm-row-actions"><button class="svm-icon-btn" title="Visualizar solicitação" aria-label="Visualizar solicitação"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-eye"/></svg></button><button class="svm-icon-btn" title="Alterar solicitação" aria-label="Alterar solicitação"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-edit"/></svg></button></div></td>
+                </tr>
+                <tr class="svm-table__row--clickable">
+                  <td class="svm-table__id">SVM-2026-000461</td>
+                  <td>Segmentação comportamental PJ</td>
+                  <td>Rafael Costa Lima</td>
+                  <td>Tier 3</td>
+                  <td><span class="svm-badge svm-badge--green">Validado</span></td>
+                  <td class="svm-align-right">—</td>
+                  <td><div class="svm-row-actions"><button class="svm-icon-btn" title="Visualizar solicitação" aria-label="Visualizar solicitação"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-eye"/></svg></button><button class="svm-icon-btn" title="Alterar solicitação" aria-label="Alterar solicitação" disabled><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-edit"/></svg></button></div></td>
+                </tr>
+                <tr class="svm-table__row--clickable">
+                  <td class="svm-table__id">SVM-2026-000455</td>
+                  <td>Antecipação de recebíveis — varejo</td>
+                  <td>Camila Nogueira</td>
+                  <td>Tier 2</td>
+                  <td><span class="svm-badge svm-badge--red">Não validado</span></td>
+                  <td class="svm-align-right">—</td>
+                  <td><div class="svm-row-actions"><button class="svm-icon-btn" title="Visualizar solicitação" aria-label="Visualizar solicitação"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-eye"/></svg></button></div></td>
+                </tr>
+                <tr class="svm-table__row--clickable">
+                  <td class="svm-table__id">SVM-2026-000448</td>
+                  <td>Elasticidade de preço — seguros</td>
+                  <td>Eduardo Bastos</td>
+                  <td>Tier 4</td>
+                  <td><span class="svm-badge">Cancelado</span></td>
+                  <td class="svm-align-right">—</td>
+                  <td><div class="svm-row-actions"><button class="svm-icon-btn" title="Visualizar solicitação" aria-label="Visualizar solicitação"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-eye"/></svg></button></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="svm-table__foot">
+            <div class="svm-pagination">
+              <span class="svm-pagination__info">1 a 5 de 128 registros</span>
+              <div class="svm-pagination__controls">
+                <label class="svm-page-size">Itens por página
+                  <select><option>10</option><option>25</option><option>50</option></select>
+                </label>
+                <div class="svm-pagination__pages">
+                  <button class="svm-page-btn" disabled aria-label="Primeira página"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-first"/></svg></button>
+                  <button class="svm-page-btn" disabled aria-label="Página anterior"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-left"/></svg></button>
+                  <button class="svm-page-btn" aria-current="page">1</button>
+                  <button class="svm-page-btn">2</button>
+                  <button class="svm-page-btn">3</button>
+                  <button class="svm-page-btn">4</button>
+                  <button class="svm-page-btn" aria-label="Próxima página"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-right"/></svg></button>
+                  <button class="svm-page-btn" aria-label="Última página"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-last"/></svg></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sg-demo">
+        <p class="sg-label">Situações e tons</p>
+        <div class="sg-row">
+          <span class="svm-badge svm-badge--blue">Submetido</span>
+          <span class="svm-badge svm-badge--amber">Em análise</span>
+          <span class="svm-badge svm-badge--amber">Em complementação</span>
+          <span class="svm-badge svm-badge--green">Validado</span>
+          <span class="svm-badge svm-badge--red">Não validado</span>
+          <span class="svm-badge">Cancelado</span>
+          <span class="svm-badge svm-badge--green">Ativo</span>
+          <span class="svm-badge">Não monitorado</span>
+        </div>
+        <hr class="svm-section-divider">
+        <p class="sg-label">Lista de detalhe e histórico</p>
+        <div class="sg-row" style="align-items:flex-start;gap:40px">
+          <dl class="svm-details" style="flex:1;min-width:280px;grid-template-columns:minmax(0,1fr)">
+            <div class="svm-detail"><dt>Solicitação</dt><dd>SVM-2026-000482</dd></div>
+            <div class="svm-detail"><dt>Área responsável</dt><dd>Superintendência de Riscos de Crédito</dd></div>
+            <div class="svm-detail"><dt>Analista atribuído</dt><dd>Ana Paula Ribeiro</dd></div>
+            <div class="svm-detail"><dt>Situação</dt><dd><span class="svm-badge svm-badge--amber">Em análise</span></dd></div>
+          </dl>
+          <ol class="svm-timeline" style="flex:1;min-width:280px">
+            <li class="svm-timeline__item">
+              <span class="svm-timeline__dot svm-timeline__dot--warning"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-clock"/></svg></span>
+              <div class="svm-timeline__date">24/08/2026 · 14:32</div>
+              <div class="svm-timeline__text">Análise iniciada</div>
+              <div class="svm-timeline__author">Ana Paula Ribeiro · Analista GEVAM</div>
+            </li>
+            <li class="svm-timeline__item">
+              <span class="svm-timeline__dot"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-atribuir-analista"/></svg></span>
+              <div class="svm-timeline__date">22/08/2026 · 09:10</div>
+              <div class="svm-timeline__text">Solicitação atribuída para analista</div>
+              <div class="svm-timeline__author">Carlos Henrique Dias · Gestor GEVAM</div>
+            </li>
+            <li class="svm-timeline__item">
+              <span class="svm-timeline__dot svm-timeline__dot--success"><svg width="13" height="13" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-check"/></svg></span>
+              <div class="svm-timeline__date">21/08/2026 · 17:48</div>
+              <div class="svm-timeline__text">Solicitação submetida</div>
+              <div class="svm-timeline__author">Marcos Vinícius Alves · Solicitante</div>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="sg-section" id="feedback">
+      <div class="sg-head"><span class="sg-num">10</span><h2>feedback</h2><span class="sg-rule"></span></div>
+      <p class="sg-note">Overlay de 40% sobre a interface. O modal é a superfície branca com cabeçalho e rodapé delimitados por borda; o drawer entra pela direita com 520px; o toast fica no topo direito, abaixo do header, em região <code>aria-live</code>.</p>
+      <div class="sg-demo sg-demo--flat">
+        <p class="sg-label">Modal e confirmação</p>
+        <div class="sg-row" style="align-items:flex-start">
+          <div class="svm-modal" style="max-width:520px">
+            <div class="svm-modal__head"><h3 class="svm-modal__title">Atribuir solicitação</h3><button class="svm-icon-btn" aria-label="Fechar"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-x"/></svg></button></div>
+            <div class="svm-modal__body">
+              <div class="svm-field">
+                <label class="svm-label" for="m1">Analista responsável <span class="svm-label__req">*</span></label>
+                <div class="svm-select-wrap">
+                  <select class="svm-control" id="m1"><option>Ana Paula Ribeiro</option></select>
+                  <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-chev-down"/></svg>
+                </div>
+              </div>
+            </div>
+            <div class="svm-modal__foot">
+              <button class="svm-btn svm-btn--secondary">Cancelar</button>
+              <button class="svm-btn svm-btn--primary">Atribuir</button>
+            </div>
+          </div>
+
+          <div class="svm-modal svm-modal--sm">
+            <div class="svm-modal__head"><h3 class="svm-modal__title">Cancelar solicitação</h3><button class="svm-icon-btn" aria-label="Fechar"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-x"/></svg></button></div>
+            <div class="svm-modal__body" style="display:flex;gap:12px">
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-warning"/></svg>
+              <div>A solicitação SVM-2026-000482 será cancelada e não poderá ser reaberta. Deseja continuar?</div>
+            </div>
+            <div class="svm-modal__foot">
+              <button class="svm-btn svm-btn--secondary">Voltar</button>
+              <button class="svm-btn svm-btn--danger">Cancelar solicitação</button>
+            </div>
+          </div>
+        </div>
+        <hr class="svm-section-divider">
+        <p class="sg-label">Sucesso, drawer e toast</p>
+        <div class="sg-row" style="align-items:flex-start">
+          <div class="svm-success">
+            <span class="svm-success__mark"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-check"/></svg></span>
+            <p class="svm-success__msg">Solicitação submetida com sucesso.</p>
+            <p class="svm-success__code">SVM-2026-000483</p>
+            <div class="svm-state__actions">
+              <button class="svm-btn svm-btn--secondary">Ver solicitação</button>
+              <button class="svm-btn svm-btn--primary">Fechar</button>
+            </div>
+          </div>
+
+          <div class="svm-drawer sg-static" style="height:300px;max-width:340px;border:1px solid var(--svm-line)">
+            <div class="svm-drawer__head">
+              <div><h3 class="svm-modal__title">SVM-2026-000482</h3><p class="svm-drawer__sub">Propensão a crédito consignado</p></div>
+              <button class="svm-icon-btn" aria-label="Fechar"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-x"/></svg></button>
+            </div>
+            <div class="svm-drawer__body">
+              <dl class="svm-details" style="grid-template-columns:minmax(0,1fr)">
+                <div class="svm-detail"><dt>Solicitante</dt><dd>Marcos Vinícius Alves</dd></div>
+                <div class="svm-detail"><dt>Tier</dt><dd>Tier 1</dd></div>
+              </dl>
+            </div>
+            <div class="svm-drawer__foot"><button class="svm-btn svm-btn--secondary">Fechar</button></div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div class="svm-toast"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-check"/></svg><div><p class="svm-toast__title">Parâmetro salvo</p><p class="svm-toast__detail">Matriz de riscos atualizada.</p></div><button class="svm-icon-btn" style="width:24px;height:24px" aria-label="Fechar aviso"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-x"/></svg></button></div>
+            <div class="svm-toast svm-toast--error"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-warning"/></svg><div><p class="svm-toast__title">Falha ao salvar</p><p class="svm-toast__detail">Verifique os campos destacados.</p></div><button class="svm-icon-btn" style="width:24px;height:24px" aria-label="Fechar aviso"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-x"/></svg></button></div>
+            <div class="svm-toast svm-toast--info"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-info"/></svg><div><p class="svm-toast__title">Exportação em andamento</p></div><button class="svm-icon-btn" style="width:24px;height:24px" aria-label="Fechar aviso"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-x"/></svg></button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <section class="sg-section" id="estados">
+      <div class="sg-head"><span class="sg-num">11</span><h2>estados</h2><span class="sg-rule"></span></div>
+      <p class="sg-note">Cobertura obrigatória de cada componente: default, hover, active, foco (anel de 3px), desabilitado, carregando, vazio, erro e sucesso. O foco é global na folha de estilo e nunca deve ser suprimido.</p>
+      <div class="sg-demo">
+        <p class="sg-label">Vazio</p>
+        <div class="svm-state">
+          <svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-search"/></svg>
+          <p class="svm-state__title">Nenhuma solicitação encontrada</p>
+          <p class="svm-state__desc">Ajuste os filtros de pesquisa ou limpe os critérios para ver todos os registros.</p>
+          <div class="svm-state__actions"><button class="svm-btn svm-btn--secondary"><svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-eraser"/></svg> Limpar filtros</button></div>
+        </div>
+      </div>
+      <div class="sg-demo">
+        <p class="sg-label">Carregando</p>
+        <div class="svm-table-wrap" aria-busy="true">
+          <div class="svm-skeleton-head"><span></span><span></span><span></span><span></span><span></span></div>
+          <div class="svm-skeleton-body">
+            <div class="svm-skeleton-row"><span class="svm-skeleton-cell"></span><span class="svm-skeleton-cell"></span><span class="svm-skeleton-cell"></span><span class="svm-skeleton-cell"></span><span class="svm-skeleton-cell"></span></div><div class="svm-skeleton-row"><span class="svm-skeleton-cell"></span><span class="svm-skeleton-cell"></span><span class="svm-skeleton-cell"></span><span class="svm-skeleton-cell"></span><span class="svm-skeleton-cell"></span></div><div class="svm-skeleton-row"><span class="svm-skeleton-cell"></span><span class="svm-skeleton-cell"></span><span class="svm-skeleton-cell"></span><span class="svm-skeleton-cell"></span><span class="svm-skeleton-cell"></span></div><div class="svm-skeleton-row"><span class="svm-skeleton-cell"></span><span class="svm-skeleton-cell"></span><span class="svm-skeleton-cell"></span><span class="svm-skeleton-cell"></span><span class="svm-skeleton-cell"></span></div>
+          </div>
+        </div>
+        <div class="svm-inline-loading" style="margin-top:16px"><span class="svm-spin" style="display:inline-flex"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-spinner"/></svg></span> Carregando parâmetros…</div>
+      </div>
+      <div class="sg-demo">
+        <p class="sg-label">Erro</p>
+        <div class="svm-alert" role="alert">
+          <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-warning"/></svg>
+          <div><p class="svm-alert__title">Não foi possível submeter a solicitação</p><p class="svm-alert__body">Três campos obrigatórios não foram preenchidos na etapa Classificação.</p></div>
+        </div>
+        <div class="svm-state">
+          <span class="svm-state__icon svm-state__icon--error"><svg width="34" height="34" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-warning"/></svg></span>
+          <p class="svm-state__title">Não foi possível carregar os dados</p>
+          <p class="svm-state__desc">Tente novamente em alguns instantes. Se o erro persistir, acione o suporte.</p>
+          <div class="svm-state__actions"><button class="svm-btn svm-btn--primary">Tentar novamente</button></div>
+        </div>
+      </div>
+      <div class="sg-demo">
+        <p class="sg-label">Alertas — demais tons</p>
+        <div class="svm-alert svm-alert--warning" role="alert"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-warning"/></svg><div><p class="svm-alert__title">Prazo de análise próximo do vencimento</p><p class="svm-alert__body">Restam 2 dias úteis para conclusão.</p></div></div>
+        <div class="svm-alert svm-alert--info"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-info"/></svg><div><p class="svm-alert__title">Modelo sujeito a monitoramento contínuo</p></div></div>
+        <div class="svm-alert svm-alert--success" style="margin-bottom:0"><svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><use href="#svm-check"/></svg><div><p class="svm-alert__title">Validação concluída</p><p class="svm-alert__body">Parecer registrado em 24/08/2026.</p></div></div>
+      </div>
+    </section>
+</div>
+</body>
+</html>

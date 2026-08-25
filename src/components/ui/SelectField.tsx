@@ -1,4 +1,6 @@
-import { FormField } from "./FormField";
+import { controlClasses, FormField } from "./FormField";
+import { cx } from "./cx";
+import { Icon } from "./Icon";
 
 interface SelectFieldProps {
   id: string;
@@ -10,6 +12,7 @@ interface SelectFieldProps {
   required?: boolean;
   error?: string;
   fullWidth?: boolean;
+  disabled?: boolean;
 }
 
 export function SelectField({
@@ -22,36 +25,37 @@ export function SelectField({
   required,
   error,
   fullWidth,
+  disabled,
 }: SelectFieldProps) {
   return (
-    <FormField
-      label={label}
-      htmlFor={id}
-      required={required}
-      error={error}
-      fullWidth={fullWidth}
-    >
-      <select
-        id={id}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={`w-full rounded-md border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/30 ${
-          value ? "text-slate-900" : "text-slate-400"
-        } ${
-          error
-            ? "border-red-400 focus:border-red-500"
-            : "border-slate-300 focus:border-blue-600"
-        }`}
-      >
-        <option value="" disabled>
-          {placeholder}
-        </option>
-        {options.map((option) => (
-          <option key={option} value={option} className="text-slate-900">
-            {option}
+    <FormField label={label} htmlFor={id} required={required} error={error} fullWidth={fullWidth}>
+      <div className="relative">
+        <select
+          id={id}
+          value={value}
+          disabled={disabled}
+          onChange={(e) => onChange(e.target.value)}
+          aria-invalid={error ? true : undefined}
+          className={cx(
+            controlClasses(error, "h-[38px] appearance-none pr-9"),
+            !value && "text-ink-4",
+          )}
+        >
+          <option value="" disabled>
+            {placeholder}
           </option>
-        ))}
-      </select>
+          {options.map((option) => (
+            <option key={option} value={option} className="text-ink">
+              {option}
+            </option>
+          ))}
+        </select>
+        <Icon
+          name="chev-down"
+          size={15}
+          className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-2"
+        />
+      </div>
     </FormField>
   );
 }

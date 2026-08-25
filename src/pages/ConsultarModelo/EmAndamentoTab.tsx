@@ -9,15 +9,30 @@ import {
 } from "../../data/filterOptions";
 import { FilterTextField } from "../../components/ui/FilterTextField";
 import { FilterSelectField } from "../../components/ui/FilterSelectField";
+import { FilterBar } from "../../components/ui/FilterBar";
 import { ReadOnlyField } from "../../components/ui/ReadOnlyField";
-import { PrimaryButton } from "../../components/ui/PrimaryButton";
-import { SecondaryButton } from "../../components/ui/SecondaryButton";
 import { StatCard } from "../../components/ui/StatCard";
 import { Table, type TableColumn } from "../../components/ui/Table";
-import { Badge } from "../../components/ui/Badge";
+import { StatusBadge } from "../../components/ui/Badge";
 import { Drawer } from "../../components/ui/Drawer";
 import { DetailRow } from "../../components/ui/DetailRow";
+import { Timeline } from "../../components/ui/Timeline";
+import { InlineAlert } from "../../components/ui/ErrorState";
+import { Toast } from "../../components/ui/Toast";
+import {
+  RowActions,
+  SOLICITACAO_ACTIONS,
+  type SolicitacaoAction,
+} from "../../components/ui/RowActions";
 import type { Solicitacao, SolicitacaoStatus } from "../../types";
+
+const ROW_ACTIONS: SolicitacaoAction[] = [
+  "visualizar",
+  "alterar",
+  "atribuir-analista",
+  "alterar-solicitante",
+  "cancelar",
+];
 
 interface Filters {
   numero: string;
@@ -34,12 +49,6 @@ const DEFAULT_FILTERS: Filters = {
   assunto: "Todos",
   analista: "Todos",
 };
-
-function statusBadgeTone(status: SolicitacaoStatus) {
-  if (status === "Submetido") return "slate" as const;
-  if (status === "Em análise") return "blue" as const;
-  return "amber" as const;
-}
 
 function matches(solicitacao: Solicitacao, filters: Filters) {
   if (
@@ -83,6 +92,7 @@ export function EmAndamentoTab() {
     null,
   );
   const [selected, setSelected] = useState<Solicitacao | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const counts = useMemo(() => {
     return {
@@ -117,6 +127,16 @@ export function EmAndamentoTab() {
     setStatusFilter(null);
   }
 
+  function handleRowAction(action: SolicitacaoAction, row: Solicitacao) {
+    if (action === "visualizar") {
+      setSelected(row);
+      return;
+    }
+    setToastMessage(
+      `${SOLICITACAO_ACTIONS[action].label} (${row.numero}): funcionalidade ainda não implementada.`,
+    );
+  }
+
   const columns: TableColumn<Solicitacao>[] = [
     { header: "Nº da solicitação", render: (row) => row.numero },
     { header: "Nome do modelo", render: (row) => row.nomeModelo },
@@ -130,20 +150,16 @@ export function EmAndamentoTab() {
     },
     {
       header: "Status",
-      render: (row) => (
-        <Badge tone={statusBadgeTone(row.status)}>{row.status}</Badge>
-      ),
+      render: (row) => <StatusBadge status={row.status} />,
     },
     {
       header: "Ação",
+      align: "center",
       render: (row) => (
-        <button
-          type="button"
-          onClick={() => setSelected(row)}
-          className="text-sm font-semibold text-blue-700 hover:text-blue-900"
-        >
-          Visualizar
-        </button>
+        <RowActions
+          actions={ROW_ACTIONS}
+          onAction={(action) => handleRowAction(action, row)}
+        />
       ),
     },
   ];
@@ -174,74 +190,62 @@ export function EmAndamentoTab() {
       )}
 
       {!showCards && (
-        <p className="mb-4 text-sm text-slate-500">
+        <p className="mb-4 text-body text-ink-3">
           Exibindo solicitações da área{" "}
-          <span className="font-medium text-slate-700">
+          <span className="font-semibold text-ink">
             {currentSolicitante.areaGestora}
           </span>
           .
         </p>
       )}
 
-      <div className="mb-6 rounded-lg border border-slate-200 bg-white p-5">
-        <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-          <FilterTextField
-            id="filtro-numero"
-            label="Nº da solicitação"
-            value={draft.numero}
-            onChange={(value) => setDraft((f) => ({ ...f, numero: value }))}
-            placeholder="Ex.: REQ-2026-001"
-          />
-          {showCards ? (
-            <FilterSelectField
-              id="filtro-area"
-              label="Área gestora"
-              value={draft.areaGestora}
-              onChange={(value) =>
-                setDraft((f) => ({ ...f, areaGestora: value }))
-              }
-              options={areaGestoraFilterOptions}
-            />
-          ) : (
-            <ReadOnlyField
-              label="Área gestora"
-              value={currentSolicitante.areaGestora}
-            />
-          )}
-          <FilterTextField
-            id="filtro-nome-modelo"
-            label="Nome do modelo"
-            value={draft.nomeModelo}
+      <FilterBar onSearch={handleSearch} onClear={handleClear}>
+        <FilterTextField
+          id="filtro-numero"
+          label="Nº da solicitação"
+          value={draft.numero}
+          onChange={(value) => setDraft((f) => ({ ...f, numero: value }))}
+          placeholder="Ex.: REQ-2026-001"
+        />
+        {showCards ? (
+          <FilterSelectField
+            id="filtro-area"
+            label="Área gestora"
+            value={draft.areaGestora}
             onChange={(value) =>
-              setDraft((f) => ({ ...f, nomeModelo: value }))
+              setDraft((f) => ({ ...f, areaGestora: value }))
             }
-            placeholder="Buscar pelo nome do modelo"
+            options={areaGestoraFilterOptions}
           />
-          <FilterSelectField
-            id="filtro-assunto"
-            label="Assunto"
-            value={draft.assunto}
-            onChange={(value) => setDraft((f) => ({ ...f, assunto: value }))}
-            options={assuntoFilterOptions}
+        ) : (
+          <ReadOnlyField
+            label="Área gestora"
+            value={currentSolicitante.areaGestora}
           />
-          <FilterSelectField
-            id="filtro-analista"
-            label="Analista responsável"
-            value={draft.analista}
-            onChange={(value) => setDraft((f) => ({ ...f, analista: value }))}
-            options={analistaFilterOptions}
-          />
-        </div>
-
-        <div className="mt-5 flex gap-3">
-          <PrimaryButton type="button" onClick={handleSearch}>
-            Pesquisar
-          </PrimaryButton>
-          <SecondaryButton type="button" onClick={handleClear}>
-            Limpar filtros
-          </SecondaryButton>
-        </div>
-      </div>
+        )}
+        <FilterTextField
+          id="filtro-nome-modelo"
+          label="Nome do modelo"
+          value={draft.nomeModelo}
+          onChange={(value) => setDraft((f) => ({ ...f, nomeModelo: value }))}
+          placeholder="Buscar pelo nome do modelo"
+          icon="search"
+        />
+        <FilterSelectField
+          id="filtro-assunto"
+          label="Assunto"
+          value={draft.assunto}
+          onChange={(value) => setDraft((f) => ({ ...f, assunto: value }))}
+          options={assuntoFilterOptions}
+        />
+        <FilterSelectField
+          id="filtro-analista"
+          label="Analista responsável"
+          value={draft.analista}
+          onChange={(value) => setDraft((f) => ({ ...f, analista: value }))}
+          options={analistaFilterOptions}
+        />
+      </FilterBar>
 
       <Table
         columns={columns}
@@ -261,11 +265,7 @@ export function EmAndamentoTab() {
             <DetailRow label="Nome do modelo" value={selected.nomeModelo} />
             <DetailRow
               label="Status"
-              value={
-                <Badge tone={statusBadgeTone(selected.status)}>
-                  {selected.status}
-                </Badge>
-              }
+              value={<StatusBadge status={selected.status} />}
             />
             <DetailRow label="Solicitante" value={selected.solicitante} />
             <DetailRow label="Área gestora" value={selected.areaGestora} />
@@ -281,36 +281,34 @@ export function EmAndamentoTab() {
             />
 
             {selected.complementacao && (
-              <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
-                  Complementação solicitada
-                </p>
-                <p className="mt-1 text-sm text-amber-900">
+              <div className="mt-4">
+                <InlineAlert tone="warning" title="Complementação solicitada">
                   {selected.complementacao}
-                </p>
+                </InlineAlert>
               </div>
             )}
 
             <div className="mt-5">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              <p className="mb-3 text-label uppercase tracking-[0.4px] text-ink-3">
                 Timeline
               </p>
-              <ol className="space-y-3 border-l-2 border-slate-200 pl-4">
-                {selected.timeline.map((event, index) => (
-                  <li key={index}>
-                    <p className="text-xs font-medium text-slate-400">
-                      {event.data}
-                    </p>
-                    <p className="text-sm text-slate-800">
-                      {event.descricao}
-                    </p>
-                  </li>
-                ))}
-              </ol>
+              <Timeline
+                items={selected.timeline.map((event) => ({
+                  data: event.data,
+                  descricao: event.descricao,
+                }))}
+              />
             </div>
           </dl>
         )}
       </Drawer>
+
+      <Toast
+        open={toastMessage !== null}
+        tone="info"
+        message={toastMessage ?? ""}
+        onClose={() => setToastMessage(null)}
+      />
     </div>
   );
 }
