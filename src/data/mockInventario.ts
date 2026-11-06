@@ -3,6 +3,7 @@ import type { ModeloInventariado } from "../types";
 export const mockInventario: ModeloInventariado[] = [
   {
     numero: "INV-2026-001",
+    numeroSolicitacao: "REQ-2026-101",
     nomeModelo: "Modelo Score de Crédito PF",
     tipoModelo: "Machine Learning",
     areaGestora: "Risco",
@@ -17,6 +18,7 @@ export const mockInventario: ModeloInventariado[] = [
   },
   {
     numero: "INV-2026-002",
+    numeroSolicitacao: "REQ-2026-102",
     nomeModelo: "Modelo Anti-Fraude Cartões",
     tipoModelo: "Estatístico",
     areaGestora: "Financeiro",
@@ -31,6 +33,7 @@ export const mockInventario: ModeloInventariado[] = [
   },
   {
     numero: "INV-2026-003",
+    numeroSolicitacao: "REQ-2026-103",
     nomeModelo: "Modelo Propensão a Compra",
     tipoModelo: "Inteligência Artificial",
     areaGestora: "Marketing",
@@ -45,6 +48,7 @@ export const mockInventario: ModeloInventariado[] = [
   },
   {
     numero: "INV-2026-004",
+    numeroSolicitacao: "REQ-2026-104",
     nomeModelo: "Modelo Previsão de Demanda",
     tipoModelo: "Estatístico",
     areaGestora: "Operações",
@@ -59,6 +63,7 @@ export const mockInventario: ModeloInventariado[] = [
   },
   {
     numero: "INV-2026-005",
+    numeroSolicitacao: "REQ-2026-105",
     nomeModelo: "Modelo Rotatividade de Pessoal",
     tipoModelo: "Machine Learning",
     areaGestora: "Recursos Humanos",
@@ -73,6 +78,7 @@ export const mockInventario: ModeloInventariado[] = [
   },
   {
     numero: "INV-2026-006",
+    numeroSolicitacao: "REQ-2026-106",
     nomeModelo: "Modelo Limite de Crédito PJ",
     tipoModelo: "Machine Learning",
     areaGestora: "Risco",
@@ -87,6 +93,7 @@ export const mockInventario: ModeloInventariado[] = [
   },
   {
     numero: "INV-2026-007",
+    numeroSolicitacao: "REQ-2026-107",
     nomeModelo: "Modelo Recomendação de Produtos",
     tipoModelo: "Inteligência Artificial",
     areaGestora: "Marketing",
@@ -101,6 +108,7 @@ export const mockInventario: ModeloInventariado[] = [
   },
   {
     numero: "INV-2026-008",
+    numeroSolicitacao: "REQ-2026-108",
     nomeModelo: "Modelo Score de Cobrança",
     tipoModelo: "Estatístico",
     areaGestora: "Financeiro",
@@ -115,6 +123,7 @@ export const mockInventario: ModeloInventariado[] = [
   },
   {
     numero: "INV-2026-009",
+    numeroSolicitacao: "REQ-2026-109",
     nomeModelo: "Modelo Detecção de Anomalias Operacionais",
     tipoModelo: "Machine Learning",
     areaGestora: "Operações",

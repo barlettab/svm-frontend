@@ -12,7 +12,7 @@ export const mockSolicitacoes: Solicitacao[] = [
     analistaResponsavel: "Maria Santos",
     status: "Em análise",
     timeline: [
-      { data: "2026-07-02", descricao: "Solicitação submetida pelo solicitante." },
+      { data: "2026-07-02", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
       { data: "2026-07-03", descricao: "Encaminhada para análise técnica." },
       { data: "2026-07-05", descricao: "Em análise pela GEVAM." },
     ],
@@ -28,9 +28,9 @@ export const mockSolicitacoes: Solicitacao[] = [
     analistaResponsavel: "Carlos Oliveira",
     status: "Em complementação",
     timeline: [
-      { data: "2026-07-10", descricao: "Solicitação submetida pelo solicitante." },
+      { data: "2026-07-10", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
       { data: "2026-07-11", descricao: "Encaminhada para análise técnica." },
-      { data: "2026-07-14", descricao: "Complementação solicitada ao time responsável." },
+      { data: "2026-07-14", descricao: "Complementação solicitada ao solicitante.", autor: "Carlos Oliveira", tipo: "complementacao-pedida" },
     ],
     complementacao:
       "Necessário anexar o documento de validação estatística do modelo atualizado.",
@@ -46,7 +46,7 @@ export const mockSolicitacoes: Solicitacao[] = [
     analistaResponsavel: "Fernanda Alves",
     status: "Submetido",
     timeline: [
-      { data: "2026-07-15", descricao: "Solicitação submetida pelo solicitante." },
+      { data: "2026-07-15", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
     ],
   },
   {
@@ -60,7 +60,7 @@ export const mockSolicitacoes: Solicitacao[] = [
     analistaResponsavel: "Maria Santos",
     status: "Em análise",
     timeline: [
-      { data: "2026-07-18", descricao: "Solicitação submetida pelo solicitante." },
+      { data: "2026-07-18", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
       { data: "2026-07-19", descricao: "Encaminhada para análise técnica." },
       { data: "2026-07-21", descricao: "Em análise pela GEVAM." },
     ],
@@ -76,7 +76,7 @@ export const mockSolicitacoes: Solicitacao[] = [
     analistaResponsavel: "Não atribuído",
     status: "Submetido",
     timeline: [
-      { data: "2026-07-20", descricao: "Solicitação submetida pelo solicitante." },
+      { data: "2026-07-20", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
     ],
   },
   {
@@ -90,9 +90,9 @@ export const mockSolicitacoes: Solicitacao[] = [
     analistaResponsavel: "Carlos Oliveira",
     status: "Em complementação",
     timeline: [
-      { data: "2026-07-22", descricao: "Solicitação submetida pelo solicitante." },
+      { data: "2026-07-22", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
       { data: "2026-07-23", descricao: "Encaminhada para análise técnica." },
-      { data: "2026-07-25", descricao: "Complementação solicitada ao time responsável." },
+      { data: "2026-07-25", descricao: "Complementação solicitada ao solicitante.", autor: "Carlos Oliveira", tipo: "complementacao-pedida" },
     ],
     complementacao:
       "Pendente envio da base de dados utilizada para o retreinamento do modelo.",
@@ -106,11 +106,28 @@ export const mockSolicitacoes: Solicitacao[] = [
     solicitante: "Eduardo Nunes",
     dataSubmissao: "2026-08-01",
     analistaResponsavel: "Fernanda Alves",
-    status: "Em análise",
+    status: "Aguardando gestor",
+    tipoModelo: "Inteligência Artificial",
+    objetivo: "Recomendar produtos com base no histórico de compras do cliente.",
+    encaminhamento: {
+      tipo: "enviada-gestor",
+      texto: "Testes de desempenho e estabilidade aprovados. Recomendo validar e monitorar trimestralmente o KS.",
+      autor: "Fernanda Alves",
+      data: "2026-08-12",
+      anexo: "Parecer técnico REQ-2026-007.pdf",
+    },
     timeline: [
-      { data: "2026-08-01", descricao: "Solicitação submetida pelo solicitante." },
+      { data: "2026-08-01", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
       { data: "2026-08-02", descricao: "Encaminhada para análise técnica." },
       { data: "2026-08-04", descricao: "Em análise pela GEVAM." },
+      {
+        data: "2026-08-12",
+        descricao: "Análise concluída e enviada para o gestor.",
+        detalhe: "Testes de desempenho e estabilidade aprovados. Recomendo validar e monitorar trimestralmente o KS.",
+        autor: "Fernanda Alves",
+        anexos: ["Parecer técnico REQ-2026-007.pdf"],
+        tipo: "enviada-gestor",
+      },
     ],
   },
   {
@@ -124,7 +141,7 @@ export const mockSolicitacoes: Solicitacao[] = [
     analistaResponsavel: "Maria Santos",
     status: "Submetido",
     timeline: [
-      { data: "2026-08-05", descricao: "Solicitação submetida pelo solicitante." },
+      { data: "2026-08-05", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
     ],
   },
   {
@@ -138,7 +155,7 @@ export const mockSolicitacoes: Solicitacao[] = [
     analistaResponsavel: "Não atribuído",
     status: "Submetido",
     timeline: [
-      { data: "2026-08-10", descricao: "Solicitação submetida pelo solicitante." },
+      { data: "2026-08-10", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
     ],
   },
 ];

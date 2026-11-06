@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { mockInventario } from "../../data/mockInventario";
+import { useMemo, useRef, useState } from "react";
+import { useSolicitacoes } from "../../context/SolicitacoesContext";
 import {
   analistaFilterOptions,
   areaGestoraFilterOptions,
@@ -8,11 +8,10 @@ import {
 import { FilterTextField } from "../../components/ui/FilterTextField";
 import { FilterSelectField } from "../../components/ui/FilterSelectField";
 import { FilterBar } from "../../components/ui/FilterBar";
-import { StatCard } from "../../components/ui/StatCard";
+import { IndicatorPanel, type IndicatorGroup } from "../../components/ui/IndicatorPanel";
 import { Table, type TableColumn } from "../../components/ui/Table";
 import { StatusBadge } from "../../components/ui/Badge";
-import { Drawer } from "../../components/ui/Drawer";
-import { DetailRow } from "../../components/ui/DetailRow";
+import { Icon } from "../../components/ui/Icon";
 import type { ModeloInventariado } from "../../types";
 
 interface Filters {
@@ -31,11 +30,52 @@ const DEFAULT_FILTERS: Filters = {
   analista: "Todos",
 };
 
-type CardFilter =
-  | { field: "resultadoValidacao"; value: string }
-  | { field: "monitoramento"; value: string }
-  | { field: "situacao"; value: string }
-  | null;
+type IndicatorField = "resultadoValidacao" | "monitoramento" | "situacao";
+
+/** Cada indicador = um campo + um valor. Clicar nele filtra a tabela por esse par. */
+const INDICATORS: {
+  title: string;
+  field: IndicatorField;
+  items: { key: string; label: string; value: string; color: string }[];
+}[] = [
+  {
+    title: "Resultado da validação",
+    field: "resultadoValidacao",
+    items: [
+      { key: "val-ok", label: "Validados", value: "Validado", color: "var(--color-success)" },
+      { key: "val-no", label: "Não validados", value: "Não validado", color: "var(--color-error)" },
+    ],
+  },
+  {
+    title: "Monitoramento",
+    field: "monitoramento",
+    items: [
+      { key: "mon-sim", label: "Monitorados", value: "Em monitoramento", color: "var(--color-primary)" },
+      { key: "mon-nao", label: "Não monitorados", value: "Não monitorado", color: "var(--color-ink-4)" },
+      { key: "mon-na", label: "Não se aplica", value: "Não se aplica", color: "var(--color-line-strong)" },
+    ],
+  },
+  {
+    title: "Situação do modelo",
+    field: "situacao",
+    items: [
+      { key: "sit-at", label: "Ativos", value: "Ativo", color: "var(--color-success)" },
+      { key: "sit-in", label: "Inativos", value: "Inativo", color: "var(--color-ink-2)" },
+      { key: "sit-su", label: "Suspensos", value: "Suspenso", color: "var(--color-warning)" },
+    ],
+  },
+];
+
+const INDICATOR_BY_KEY = Object.fromEntries(
+  INDICATORS.flatMap((group) =>
+    group.items.map((item) => [item.key, { ...item, field: group.field, group: group.title }]),
+  ),
+);
+
+function formatDate(iso: string) {
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
 
 function matches(modelo: ModeloInventariado, filters: Filters) {
   if (
@@ -57,52 +97,44 @@ function matches(modelo: ModeloInventariado, filters: Filters) {
   return true;
 }
 
-function matchesCard(modelo: ModeloInventariado, cardFilter: CardFilter) {
-  if (!cardFilter) return true;
-  return modelo[cardFilter.field] === cardFilter.value;
-}
-
-export function InventariadoTab() {
+export function InventariadoTab({ onAbrir }: { onAbrir: (numero: string) => void }) {
+  // Inventário compartilhado: modelos validados pelo gestor com "inventariar = Sim" entram aqui.
+  const { inventario } = useSolicitacoes();
   const [draft, setDraft] = useState<Filters>(DEFAULT_FILTERS);
   const [applied, setApplied] = useState<Filters>(DEFAULT_FILTERS);
-  const [cardFilter, setCardFilter] = useState<CardFilter>(null);
-  const [selected, setSelected] = useState<ModeloInventariado | null>(null);
+  const [indicator, setIndicator] = useState<string | null>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
-  const counts = useMemo(
-    () => ({
-      total: mockInventario.length,
-      naoValidados: mockInventario.filter(
-        (m) => m.resultadoValidacao === "Não validado",
-      ).length,
-      validados: mockInventario.filter(
-        (m) => m.resultadoValidacao === "Validado",
-      ).length,
-      monitorados: mockInventario.filter(
-        (m) => m.monitoramento === "Em monitoramento",
-      ).length,
-      ativos: mockInventario.filter((m) => m.situacao === "Ativo").length,
-      inativos: mockInventario.filter((m) => m.situacao === "Inativo").length,
-      suspensos: mockInventario.filter((m) => m.situacao === "Suspenso")
-        .length,
-    }),
-    [],
+  const active = indicator ? INDICATOR_BY_KEY[indicator] : null;
+
+  const groups: IndicatorGroup[] = useMemo(
+    () =>
+      INDICATORS.map((group) => ({
+        title: group.title,
+        items: group.items.map((item) => ({
+          key: item.key,
+          label: item.label,
+          color: item.color,
+          count: inventario.filter((m) => m[group.field] === item.value).length,
+        })),
+      })),
+    [inventario],
   );
 
-  const filtered = useMemo(() => {
-    return mockInventario.filter(
-      (m) => matchesCard(m, cardFilter) && matches(m, applied),
-    );
-  }, [applied, cardFilter]);
+  const filtered = useMemo(
+    () =>
+      inventario.filter(
+        (m) => (!active || m[active.field] === active.value) && matches(m, applied),
+      ),
+    [applied, active, inventario],
+  );
 
-  function toggleCard(
-    field: "resultadoValidacao" | "monitoramento" | "situacao",
-    value: string,
-  ) {
-    setCardFilter((current) =>
-      current && current.field === field && current.value === value
-        ? null
-        : ({ field, value } as CardFilter),
-    );
+  function handleIndicator(key: string | null) {
+    setIndicator(key);
+    if (key) {
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      resultsRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    }
   }
 
   function handleSearch() {
@@ -112,100 +144,75 @@ export function InventariadoTab() {
   function handleClear() {
     setDraft(DEFAULT_FILTERS);
     setApplied(DEFAULT_FILTERS);
-    setCardFilter(null);
+    setIndicator(null);
   }
 
+  const hl = (field: IndicatorField) => active?.field === field;
+
   const columns: TableColumn<ModeloInventariado>[] = [
-    { header: "Nº da solicitação", render: (row) => row.numero },
-    { header: "Nome do modelo", render: (row) => row.nomeModelo },
-    { header: "Tipo de modelo", render: (row) => row.tipoModelo },
-    { header: "Área gestora", render: (row) => row.areaGestora },
-    { header: "Assunto", render: (row) => row.assunto },
-    { header: "Público", render: (row) => row.publico },
     {
-      header: "Resultado da validação",
+      header: "Modelo",
+      render: (row) => (
+        <div>
+          <div className="font-semibold text-ink">{row.nomeModelo}</div>
+          <div className="font-mono text-aux text-ink-2">{row.numero}</div>
+        </div>
+      ),
+    },
+    { header: "Tipo de modelo", render: (row) => row.tipoModelo },
+    { header: "Assunto", render: (row) => row.assunto },
+    {
+      header: "Validação",
+      highlight: hl("resultadoValidacao"),
       render: (row) => <StatusBadge status={row.resultadoValidacao} />,
     },
     {
       header: "Monitoramento",
+      highlight: hl("monitoramento"),
       render: (row) => <StatusBadge status={row.monitoramento} />,
     },
     {
-      header: "Situação do modelo",
+      header: "Situação",
+      highlight: hl("situacao"),
       render: (row) => <StatusBadge status={row.situacao} />,
     },
+    { header: "Analista", render: (row) => row.analistaResponsavel },
     {
-      header: "Analista responsável",
-      render: (row) => row.analistaResponsavel,
+      header: "Inventariado em",
+      render: (row) => <span className="whitespace-nowrap">{formatDate(row.dataInventario)}</span>,
     },
     {
       header: "Ação",
+      align: "right",
       render: (row) => (
         <button
           type="button"
-          onClick={() => setSelected(row)}
-          className="text-body font-semibold text-primary hover:underline"
+          onClick={() => onAbrir(row.numero)}
+          aria-label={`Visualizar ${row.nomeModelo}`}
+          className="inline-flex size-9 items-center justify-center rounded-svm text-primary hover:bg-info-bg"
         >
-          Visualizar
+          <Icon name="eye" size={18} />
         </button>
       ),
     },
   ];
 
+  const total = inventario.length;
+  const resultTitle = active
+    ? `${filtered.length} ${filtered.length === 1 ? "modelo" : "modelos"} — ${active.label.toLowerCase()}`
+    : filtered.length === total
+      ? `${total} modelos inventariados`
+      : `${filtered.length} de ${total} modelos`;
+
   return (
     <div>
-      <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        <StatCard label="Total de inventariados" value={counts.total} />
-        <StatCard
-          label="Total de validados"
-          value={counts.validados}
-          active={
-            cardFilter?.field === "resultadoValidacao" &&
-            cardFilter.value === "Validado"
-          }
-          onClick={() => toggleCard("resultadoValidacao", "Validado")}
-        />
-        <StatCard
-          label="Total de não validados"
-          value={counts.naoValidados}
-          active={
-            cardFilter?.field === "resultadoValidacao" &&
-            cardFilter.value === "Não validado"
-          }
-          onClick={() => toggleCard("resultadoValidacao", "Não validado")}
-        />
-        <StatCard
-          label="Total de monitorados"
-          value={counts.monitorados}
-          active={
-            cardFilter?.field === "monitoramento" &&
-            cardFilter.value === "Em monitoramento"
-          }
-          onClick={() => toggleCard("monitoramento", "Em monitoramento")}
-        />
-        <StatCard
-          label="Total de modelos ativos"
-          value={counts.ativos}
-          active={cardFilter?.field === "situacao" && cardFilter.value === "Ativo"}
-          onClick={() => toggleCard("situacao", "Ativo")}
-        />
-        <StatCard
-          label="Total de modelos inativos"
-          value={counts.inativos}
-          active={
-            cardFilter?.field === "situacao" && cardFilter.value === "Inativo"
-          }
-          onClick={() => toggleCard("situacao", "Inativo")}
-        />
-        <StatCard
-          label="Total de modelos suspensos"
-          value={counts.suspensos}
-          active={
-            cardFilter?.field === "situacao" && cardFilter.value === "Suspenso"
-          }
-          onClick={() => toggleCard("situacao", "Suspenso")}
-        />
-      </div>
+      <IndicatorPanel
+        totalLabel="Modelos inventariados"
+        total={total}
+        groups={groups}
+        activeKey={indicator}
+        onSelect={handleIndicator}
+      />
 
       <FilterBar onSearch={handleSearch} onClear={handleClear}>
         <FilterTextField
@@ -248,50 +255,33 @@ export function InventariadoTab() {
         />
       </FilterBar>
 
-      <Table
-        columns={columns}
-        rows={filtered}
-        rowKey={(row) => row.numero}
-        emptyTitle="Nenhum modelo encontrado."
-        emptyDescription="Tente alterar os filtros ou os termos da pesquisa."
-      />
-
-      <Drawer
-        open={selected !== null}
-        title={selected?.numero ?? ""}
-        onClose={() => setSelected(null)}
-      >
-        {selected && (
-          <dl>
-            <DetailRow label="Nome do modelo" value={selected.nomeModelo} />
-            <DetailRow label="Tipo de modelo" value={selected.tipoModelo} />
-            <DetailRow label="Área gestora" value={selected.areaGestora} />
-            <DetailRow label="Assunto" value={selected.assunto} />
-            <DetailRow label="Público" value={selected.publico} />
-            <DetailRow
-              label="Resultado da validação"
-              value={<StatusBadge status={selected.resultadoValidacao} />}
-            />
-            <DetailRow
-              label="Monitoramento"
-              value={<StatusBadge status={selected.monitoramento} />}
-            />
-            <DetailRow
-              label="Situação do modelo"
-              value={<StatusBadge status={selected.situacao} />}
-            />
-            <DetailRow
-              label="Analista responsável"
-              value={selected.analistaResponsavel}
-            />
-            <DetailRow
-              label="Data do inventário"
-              value={selected.dataInventario}
-            />
-            <DetailRow label="Objetivo" value={selected.objetivo} />
-          </dl>
-        )}
-      </Drawer>
+      <div ref={resultsRef} className="scroll-mt-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border border-b-0 border-line bg-surface px-5 py-3.5">
+          <h2 className="text-section font-semibold text-ink" aria-live="polite">
+            {resultTitle}
+            {active && <span className="ml-2 text-body font-normal text-ink-2">de {total} inventariados</span>}
+          </h2>
+          {active && (
+            <button
+              type="button"
+              onClick={() => setIndicator(null)}
+              aria-label={`Remover filtro ${active.group}: ${active.label}`}
+              className="inline-flex h-7 items-center gap-1.5 rounded-full border border-info-line bg-info-bg px-3 text-aux font-semibold text-primary hover:border-primary"
+            >
+              {active.group}: {active.label}
+              <Icon name="x" size={12} />
+            </button>
+          )}
+        </div>
+        <Table
+          columns={columns}
+          rows={filtered}
+          rowKey={(row) => row.numero}
+          minWidth={1000}
+          emptyTitle="Nenhum modelo encontrado."
+          emptyDescription="Nenhum modelo atende ao indicador e aos filtros aplicados. Remova um filtro ou clique em Limpar."
+        />
+      </div>
     </div>
   );
 }

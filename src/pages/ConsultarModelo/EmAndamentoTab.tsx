@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useProfile } from "../../context/ProfileContext";
-import { mockSolicitacoes } from "../../data/mockSolicitacoes";
+import { useSolicitacoes } from "../../context/SolicitacoesContext";
 import { currentSolicitante } from "../../data/currentUser";
 import {
   analistaFilterOptions,
@@ -14,25 +14,77 @@ import { ReadOnlyField } from "../../components/ui/ReadOnlyField";
 import { StatCard } from "../../components/ui/StatCard";
 import { Table, type TableColumn } from "../../components/ui/Table";
 import { StatusBadge } from "../../components/ui/Badge";
-import { Drawer } from "../../components/ui/Drawer";
-import { DetailRow } from "../../components/ui/DetailRow";
-import { Timeline } from "../../components/ui/Timeline";
 import { InlineAlert } from "../../components/ui/ErrorState";
 import { Toast } from "../../components/ui/Toast";
-import {
-  RowActions,
-  SOLICITACAO_ACTIONS,
-  type SolicitacaoAction,
-} from "../../components/ui/RowActions";
-import type { Solicitacao, SolicitacaoStatus } from "../../types";
+import { Button } from "../../components/ui/Button";
+import { SOLICITACAO_ACTIONS, type SolicitacaoAction } from "../../components/ui/RowActions";
+import { ActionMenu, type ActionMenuItem } from "../../components/ui/ActionMenu";
+import type { Profile, Solicitacao, SolicitacaoStatus } from "../../types";
 
-const ROW_ACTIONS: SolicitacaoAction[] = [
-  "visualizar",
-  "alterar",
-  "atribuir-analista",
-  "alterar-solicitante",
-  "cancelar",
-];
+import { ANALISTA_PODE_AGIR, statusParaPerfil, type AcaoSolicitacao } from "./SolicitacaoDetalhePage";
+
+/**
+ * Itens do menu "Ações" de cada linha. "Visualizar" não entra: é o botão "Abrir".
+ * Para analista e gestor, "Pedir complementação" vem primeiro e com explicação.
+ */
+function menuItems(row: Solicitacao, profile: Profile): ActionMenuItem[] {
+  const item = (key: SolicitacaoAction, extra?: Partial<ActionMenuItem>): ActionMenuItem => ({
+    key,
+    label: SOLICITACAO_ACTIONS[key].label,
+    icon: SOLICITACAO_ACTIONS[key].icon,
+    danger: SOLICITACAO_ACTIONS[key].danger,
+    ...extra,
+  });
+  const comuns = [
+    item("alterar"),
+    item("atribuir-analista"),
+    item("alterar-solicitante"),
+    item("cancelar", { separated: true }),
+  ];
+  if (profile === "solicitante") return comuns;
+
+  if (profile === "analista") {
+    const pode = ANALISTA_PODE_AGIR.includes(row.status);
+    const motivo =
+      row.status === "Em complementação"
+        ? "Aguardando o solicitante."
+        : row.status === "Aguardando gestor"
+          ? "Aguardando decisão do gestor."
+          : "Indisponível neste status.";
+    return [
+      item("solicitar-complementacao", {
+        description: "Peça um documento ou informação ao solicitante.",
+        disabled: !pode,
+        disabledReason: motivo,
+      }),
+      item("enviar-gestor", {
+        description: "Conclua a análise e envie seu parecer ao gestor.",
+        disabled: !pode,
+        disabledReason: motivo,
+      }),
+      { ...comuns[0], separated: true },
+      ...comuns.slice(1),
+    ];
+  }
+
+  // gestor
+  const comGestor = row.status === "Aguardando gestor";
+  const motivoGestor = "Disponível quando o analista enviar para o gestor.";
+  return [
+    item("validar", {
+      description: "Aprova a validação do analista e finaliza (status Validada).",
+      disabled: !comGestor,
+      disabledReason: motivoGestor,
+    }),
+    item("devolver-analista", {
+      description: "Devolve ao analista com o motivo da recusa.",
+      disabled: !comGestor,
+      disabledReason: motivoGestor,
+    }),
+    { ...comuns[0], separated: true },
+    ...comuns.slice(1),
+  ];
+}
 
 interface Filters {
   numero: string;
@@ -49,6 +101,11 @@ const DEFAULT_FILTERS: Filters = {
   assunto: "Todos",
   analista: "Todos",
 };
+
+function formatDate(iso: string) {
+  const [y, m, d] = iso.split("-");
+  return `${d}/${m}/${y}`;
+}
 
 function matches(solicitacao: Solicitacao, filters: Filters) {
   if (
@@ -75,36 +132,50 @@ function matches(solicitacao: Solicitacao, filters: Filters) {
   return true;
 }
 
-export function EmAndamentoTab() {
+interface EmAndamentoTabProps {
+  /** Abre a página da solicitação. `pedir` já abre o formulário de pedido de complementação. */
+  onAbrir: (numero: string, acao?: AcaoSolicitacao) => void;
+}
+
+export function EmAndamentoTab({ onAbrir }: EmAndamentoTabProps) {
   const { profile } = useProfile();
-  const showCards = profile !== "solicitante";
+  const isSolicitante = profile === "solicitante";
+  const showCards = !isSolicitante;
+
+  const { solicitacoes: todas } = useSolicitacoes();
+  // Validadas estão finalizadas: saem de Em andamento.
+  const solicitacoes = useMemo(() => todas.filter((s) => s.status !== "Validada"), [todas]);
 
   const visibleSolicitacoes = useMemo(() => {
-    if (profile !== "solicitante") return mockSolicitacoes;
-    return mockSolicitacoes.filter(
+    if (!isSolicitante) return solicitacoes;
+    return solicitacoes.filter(
       (s) => s.areaGestora === currentSolicitante.areaGestora,
     );
-  }, [profile]);
+  }, [isSolicitante, solicitacoes]);
+
+  const pendentesComplementacao = isSolicitante
+    ? visibleSolicitacoes.filter((s) => s.status === "Em complementação")
+    : [];
 
   const [draft, setDraft] = useState<Filters>(DEFAULT_FILTERS);
   const [applied, setApplied] = useState<Filters>(DEFAULT_FILTERS);
   const [statusFilter, setStatusFilter] = useState<SolicitacaoStatus | null>(
     null,
   );
-  const [selected, setSelected] = useState<Solicitacao | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const counts = useMemo(() => {
     return {
-      Submetido: mockSolicitacoes.filter((s) => s.status === "Submetido")
+      Submetido: solicitacoes.filter((s) => s.status === "Submetido")
         .length,
-      "Em análise": mockSolicitacoes.filter((s) => s.status === "Em análise")
+      "Em análise": solicitacoes.filter((s) => s.status === "Em análise")
         .length,
-      "Em complementação": mockSolicitacoes.filter(
+      "Em complementação": solicitacoes.filter(
         (s) => s.status === "Em complementação",
       ).length,
+      "Aguardando gestor": solicitacoes.filter((s) => s.status === "Aguardando gestor").length,
     };
-  }, []);
+  }, [solicitacoes]);
 
   const filtered = useMemo(() => {
     return visibleSolicitacoes.filter((s) => {
@@ -129,12 +200,20 @@ export function EmAndamentoTab() {
 
   function handleRowAction(action: SolicitacaoAction, row: Solicitacao) {
     if (action === "visualizar") {
-      setSelected(row);
+      onAbrir(row.numero);
       return;
     }
-    setToastMessage(
-      `${SOLICITACAO_ACTIONS[action].label} (${row.numero}): funcionalidade ainda não implementada.`,
-    );
+    const atalhos: Partial<Record<SolicitacaoAction, AcaoSolicitacao>> = {
+      "solicitar-complementacao": "pedir",
+      "enviar-gestor": "enviar-gestor",
+      "devolver-analista": "devolver",
+      validar: "validar",
+    };
+    if (atalhos[action]) {
+      onAbrir(row.numero, atalhos[action]);
+      return;
+    }
+    setToast(`${SOLICITACAO_ACTIONS[action].label} (${row.numero}): funcionalidade ainda não implementada.`);
   }
 
   const columns: TableColumn<Solicitacao>[] = [
@@ -143,23 +222,34 @@ export function EmAndamentoTab() {
     { header: "Área gestora", render: (row) => row.areaGestora },
     { header: "Assunto", render: (row) => row.assunto },
     { header: "Solicitante", render: (row) => row.solicitante },
-    { header: "Data da submissão", render: (row) => row.dataSubmissao },
+    { header: "Data da submissão", render: (row) => formatDate(row.dataSubmissao) },
     {
       header: "Analista responsável",
       render: (row) => row.analistaResponsavel,
     },
     {
       header: "Status",
-      render: (row) => <StatusBadge status={row.status} />,
+      render: (row) => <StatusBadge status={statusParaPerfil(row.status, profile)} />,
     },
     {
       header: "Ação",
-      align: "center",
+      align: "right",
       render: (row) => (
-        <RowActions
-          actions={ROW_ACTIONS}
-          onAction={(action) => handleRowAction(action, row)}
-        />
+        <div className="flex items-center justify-end gap-2">
+          {isSolicitante && row.status === "Em complementação" && (
+            <Button variant="primary" icon="upload" onClick={() => onAbrir(row.numero)} className="h-[34px] whitespace-nowrap px-3">
+              Complementar
+            </Button>
+          )}
+          <Button variant="secondary" icon="eye" onClick={() => onAbrir(row.numero)} className="h-[34px] px-3">
+            Abrir
+          </Button>
+          <ActionMenu
+            ariaLabel={`Ações da solicitação ${row.numero}`}
+            items={menuItems(row, profile)}
+            onSelect={(key) => handleRowAction(key as SolicitacaoAction, row)}
+          />
+        </div>
       ),
     },
   ];
@@ -167,7 +257,7 @@ export function EmAndamentoTab() {
   return (
     <div>
       {showCards && (
-        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             label="Novas submissões"
             value={counts.Submetido}
@@ -186,6 +276,12 @@ export function EmAndamentoTab() {
             active={statusFilter === "Em complementação"}
             onClick={() => toggleStatusFilter("Em complementação")}
           />
+          <StatCard
+            label="Aguardando gestor"
+            value={counts["Aguardando gestor"]}
+            active={statusFilter === "Aguardando gestor"}
+            onClick={() => toggleStatusFilter("Aguardando gestor")}
+          />
         </div>
       )}
 
@@ -197,6 +293,31 @@ export function EmAndamentoTab() {
           </span>
           .
         </p>
+      )}
+
+      {pendentesComplementacao.length > 0 && (
+        <InlineAlert
+          tone="warning"
+          title={
+            pendentesComplementacao.length === 1
+              ? "1 solicitação aguarda sua complementação"
+              : `${pendentesComplementacao.length} solicitações aguardam sua complementação`
+          }
+        >
+          <p>O analista pediu informações adicionais. Envie o anexo solicitado para que a análise continue.</p>
+          <ul className="mt-2 flex flex-col gap-1.5">
+            {pendentesComplementacao.map((s) => (
+              <li key={s.numero} className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span>
+                  <span className="font-semibold text-ink">{s.numero}</span> · {s.nomeModelo}
+                </span>
+                <Button variant="link" onClick={() => onAbrir(s.numero)} className="h-auto p-0">
+                  Ver pedido e complementar
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </InlineAlert>
       )}
 
       <FilterBar onSearch={handleSearch} onClear={handleClear}>
@@ -255,59 +376,11 @@ export function EmAndamentoTab() {
         emptyDescription="Tente alterar os filtros ou os termos da pesquisa."
       />
 
-      <Drawer
-        open={selected !== null}
-        title={selected?.numero ?? ""}
-        onClose={() => setSelected(null)}
-      >
-        {selected && (
-          <dl>
-            <DetailRow label="Nome do modelo" value={selected.nomeModelo} />
-            <DetailRow
-              label="Status"
-              value={<StatusBadge status={selected.status} />}
-            />
-            <DetailRow label="Solicitante" value={selected.solicitante} />
-            <DetailRow label="Área gestora" value={selected.areaGestora} />
-            <DetailRow
-              label="Analista responsável"
-              value={selected.analistaResponsavel}
-            />
-            <DetailRow label="Assunto" value={selected.assunto} />
-            <DetailRow label="Público" value={selected.publico} />
-            <DetailRow
-              label="Data da submissão"
-              value={selected.dataSubmissao}
-            />
-
-            {selected.complementacao && (
-              <div className="mt-4">
-                <InlineAlert tone="warning" title="Complementação solicitada">
-                  {selected.complementacao}
-                </InlineAlert>
-              </div>
-            )}
-
-            <div className="mt-5">
-              <p className="mb-3 text-label uppercase tracking-[0.4px] text-ink-3">
-                Timeline
-              </p>
-              <Timeline
-                items={selected.timeline.map((event) => ({
-                  data: event.data,
-                  descricao: event.descricao,
-                }))}
-              />
-            </div>
-          </dl>
-        )}
-      </Drawer>
-
       <Toast
-        open={toastMessage !== null}
+        open={toast !== null}
         tone="info"
-        message={toastMessage ?? ""}
-        onClose={() => setToastMessage(null)}
+        message={toast ?? ""}
+        onClose={() => setToast(null)}
       />
     </div>
   );

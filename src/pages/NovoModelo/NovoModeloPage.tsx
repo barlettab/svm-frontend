@@ -27,13 +27,15 @@ export function NovoModeloPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <Tabs
-        items={availableTabs.map((tab) => ({ key: tab, label: TAB_LABELS[tab] }))}
-        activeKey={activeTab}
-        onChange={setActiveTab}
-      />
+      {availableTabs.length > 1 && (
+        <Tabs
+          items={availableTabs.map((tab) => ({ key: tab, label: TAB_LABELS[tab] }))}
+          activeKey={activeTab}
+          onChange={setActiveTab}
+        />
+      )}
 
-      <div className="mt-6">
+      <div className={availableTabs.length > 1 ? "mt-6" : undefined}>
         {activeTab === "submeter" && <SubmeterForm />}
         {activeTab === "inventariar" && <InventariarForm />}
         {(activeTab === "informacoes-adicionais" ||

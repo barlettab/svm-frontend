@@ -19,6 +19,7 @@ interface FormState {
   areaGestora: string;
   assunto: string;
   publico: string;
+  objetivo: string;
 }
 
 const INITIAL_STATE: FormState = {
@@ -27,6 +28,7 @@ const INITIAL_STATE: FormState = {
   areaGestora: "",
   assunto: "",
   publico: "",
+  objetivo: "",
 };
 
 function generateRequestCode() {
@@ -93,6 +95,16 @@ export function SubmeterForm() {
             />
 
             <SelectField
+              id="assunto"
+              label="Assunto"
+              required
+              value={form.assunto}
+              onChange={(value) => updateField("assunto", value)}
+              options={assuntoOptions}
+              error={errors.assunto}
+            />
+
+            <SelectField
               id="tipoModelo"
               label="Tipo de modelo"
               required
@@ -113,16 +125,6 @@ export function SubmeterForm() {
             />
 
             <SelectField
-              id="assunto"
-              label="Assunto"
-              required
-              value={form.assunto}
-              onChange={(value) => updateField("assunto", value)}
-              options={assuntoOptions}
-              error={errors.assunto}
-            />
-
-            <SelectField
               id="publico"
               label="Público"
               required
@@ -130,6 +132,18 @@ export function SubmeterForm() {
               onChange={(value) => updateField("publico", value)}
               options={publicoOptions}
               error={errors.publico}
+            />
+
+            <TextField
+              id="objetivo"
+              label="Objetivo"
+              required
+              value={form.objetivo}
+              onChange={(value) => updateField("objetivo", value)}
+              placeholder="Descreva para que o modelo é usado"
+              error={errors.objetivo}
+              maxLength={500}
+              fullWidth
             />
 
             <FileUpload id="anexo" file={file} onChange={setFile} fullWidth />
