@@ -5,6 +5,11 @@ export interface TimelineItem {
   data: string;
   descricao: string;
   autor?: string;
+  /** Texto citado abaixo da descrição (ex.: o pedido do analista). */
+  detalhe?: string;
+  /** Arquivos anexados no evento. */
+  anexos?: string[];
+  onAbrirAnexo?: (nome: string) => void;
   icon?: IconName;
   tone?: "default" | "success" | "warning" | "error";
 }
@@ -33,7 +38,29 @@ export function Timeline({ items }: { items: TimelineItem[] }) {
           <div className="pt-1">
             <div className="text-aux text-ink-3">{item.data}</div>
             <div className="mt-1 text-body text-ink">{item.descricao}</div>
-            {item.autor && <div className="mt-0.5 text-aux text-ink-3">{item.autor}</div>}
+            {item.autor && <div className="mt-0.5 text-aux text-ink-2">por {item.autor}</div>}
+            {item.detalhe && (
+              <blockquote className="mt-2 border-l-2 border-line-strong pl-3 text-body text-ink-2">
+                {item.detalhe}
+              </blockquote>
+            )}
+            {item.anexos && item.anexos.length > 0 && (
+              <ul className="mt-2 flex flex-wrap gap-2">
+                {item.anexos.map((nome) => (
+                  <li key={nome}>
+                    <button
+                      type="button"
+                      onClick={() => item.onAbrirAnexo?.(nome)}
+                      className="inline-flex max-w-full items-center gap-1.5 rounded-svm border border-line bg-surface-alt px-2.5 py-1 text-aux text-ink hover:border-primary hover:text-primary"
+                    >
+                      <Icon name="paperclip" size={13} className="text-ink-2" />
+                      <span className="truncate">{nome}</span>
+                      <Icon name="download" size={13} className="text-ink-2" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </li>
       ))}

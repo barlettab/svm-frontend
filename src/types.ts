@@ -22,24 +22,9 @@ export type NovoModeloTab =
   | "metodologia-monitoramento";
 
 export const TABS_BY_PROFILE: Record<Profile, NovoModeloTab[]> = {
-  solicitante: [
-    "submeter",
-    "informacoes-adicionais",
-    "implantacao",
-    "metodologia-monitoramento",
-  ],
-  analista: [
-    "inventariar",
-    "informacoes-adicionais",
-    "implantacao",
-    "metodologia-monitoramento",
-  ],
-  gestor: [
-    "inventariar",
-    "informacoes-adicionais",
-    "implantacao",
-    "metodologia-monitoramento",
-  ],
+  solicitante: ["submeter"],
+  analista: ["inventariar"],
+  gestor: ["inventariar"],
 };
 
 export type ConsultarModeloTab = "em-andamento" | "inventariado" | "cancelado";
@@ -77,11 +62,30 @@ export function getModuleTabs(module: ModuleKey, profile: Profile): string[] {
   return PARAMETRIZACAO_TABS;
 }
 
-export type SolicitacaoStatus = "Submetido" | "Em análise" | "Em complementação";
+export type SolicitacaoStatus =
+  | "Submetido"
+  | "Em análise"
+  | "Em complementação"
+  | "Aguardando gestor"
+  | "Validada";
 
 export interface TimelineEvent {
   data: string;
   descricao: string;
+  /** Quem fez a ação (solicitante, analista ou gestor). */
+  autor?: string;
+  /** Texto complementar, ex.: o pedido do analista ou a observação do solicitante. */
+  detalhe?: string;
+  /** Nomes dos arquivos anexados nesse evento. */
+  anexos?: string[];
+  tipo?:
+    | "complementacao-pedida"
+    | "complementacao-enviada"
+    | "enviada-gestor"
+    | "devolvida-analista"
+    | "validada"
+    | "documento-adicionado"
+    | "situacao-alterada";
 }
 
 export interface Solicitacao {
@@ -94,8 +98,35 @@ export interface Solicitacao {
   dataSubmissao: string;
   analistaResponsavel: string;
   status: SolicitacaoStatus;
+  tipoModelo?: string;
+  objetivo?: string;
   timeline: TimelineEvent[];
+  /** O que o analista pediu para o solicitante complementar. */
   complementacao?: string;
+  /** Arquivo de apoio enviado pelo analista junto com o pedido (opcional). */
+  anexoPedidoComplementacao?: string;
+  /** Último encaminhamento interno da GEVAM (parecer do analista ou pedido de ajuste do gestor). */
+  encaminhamento?: {
+    tipo: "enviada-gestor" | "devolvida-analista";
+    texto?: string;
+    autor: string;
+    data: string;
+    anexo: string;
+  };
+  /** Decisão final do gestor ao validar. */
+  conclusao?: {
+    data: string;
+    gestor: string;
+    inventariado: boolean;
+    monitorado: boolean;
+    numeroInventario?: string;
+  };
+  /** Resposta enviada pelo solicitante à última complementação. */
+  respostaComplementacao?: {
+    data: string;
+    arquivo: string;
+    observacao?: string;
+  };
 }
 
 export type ResultadoValidacao = "Validado" | "Não validado";
@@ -107,6 +138,8 @@ export type SituacaoModeloInventario = "Ativo" | "Inativo" | "Suspenso";
 
 export interface ModeloInventariado {
   numero: string;
+  /** Solicitação que deu origem ao modelo (histórico e arquivos ficam nela). */
+  numeroSolicitacao?: string;
   nomeModelo: string;
   tipoModelo: string;
   areaGestora: string;

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ProfileProvider, useProfile } from "./context/ProfileContext";
+import { SolicitacoesProvider } from "./context/SolicitacoesContext";
 import { Sidebar } from "./components/layout/Sidebar";
 import { Header } from "./components/layout/Header";
 import { AppFooter } from "./components/layout/AppFooter";
@@ -74,7 +75,9 @@ function AppShell() {
 function App() {
   return (
     <ProfileProvider>
-      <AppShell />
+      <SolicitacoesProvider>
+        <AppShell />
+      </SolicitacoesProvider>
     </ProfileProvider>
   );
 }

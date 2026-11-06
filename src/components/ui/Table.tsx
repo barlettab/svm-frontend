@@ -10,6 +10,8 @@ export interface TableColumn<T> {
   width?: string;
   align?: "left" | "center" | "right";
   sortable?: boolean;
+  /** Destaca a coluna (ex.: dimensão do indicador que está filtrando a lista). */
+  highlight?: boolean;
 }
 
 interface TableProps<T> {
@@ -57,6 +59,7 @@ export function Table<T>({
                   style={column.width ? { width: column.width } : undefined}
                   className={cx(
                     "border-b border-line px-3.5 py-2.5 text-micro font-semibold uppercase tracking-[0.5px] text-ink-2",
+                    column.highlight && "bg-info-bg text-primary shadow-[inset_0_-2px_0_var(--color-primary)]",
                     column.align === "right" && "text-right",
                     column.align === "center" && "text-center",
                   )}
@@ -92,6 +95,7 @@ export function Table<T>({
                     key={column.header}
                     className={cx(
                       "px-3.5 py-3 text-body text-ink align-middle",
+                      column.highlight && "bg-[#f5f9fc]",
                       column.align === "right" && "text-right",
                       column.align === "center" && "text-center",
                     )}
