@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useProfile } from "../../context/ProfileContext";
 import { useSolicitacoes } from "../../context/SolicitacoesContext";
-import { currentSolicitante } from "../../data/currentUser";
+import { currentSolicitante, currentUserNameByProfile } from "../../data/currentUser";
 import {
   analistaFilterOptions,
   areaGestoraFilterOptions,
@@ -21,11 +21,25 @@ import { SOLICITACAO_ACTIONS, type SolicitacaoAction } from "../../components/ui
 import { ActionMenu, type ActionMenuItem } from "../../components/ui/ActionMenu";
 import type { Profile, Solicitacao, SolicitacaoStatus } from "../../types";
 
-import { ANALISTA_PODE_AGIR, statusParaPerfil, type AcaoSolicitacao } from "./SolicitacaoDetalhePage";
+import { pendenciasParaGestor } from "../../components/modelo/dadosModelo";
+import { type AcaoSolicitacao } from "./SolicitacaoDetalhePage";
+import {
+  analistaPodeAgir,
+  analistaPodeCancelar,
+  emAvaliacaoPreliminar,
+  gestorPodeCancelar,
+  gestorPodeAtribuir,
+  solicitantePodeAlterar,
+  solicitantePodeCancelar,
+  statusParaPerfil,
+} from "./fluxo";
+
+const ANALISTA = currentUserNameByProfile.analista;
 
 /**
  * Itens do menu "Ações" de cada linha. "Visualizar" não entra: é o botão "Abrir".
- * Para analista e gestor, "Pedir complementação" vem primeiro e com explicação.
+ * Para o analista, as ações seguem o fluxo: avaliação preliminar (atualizar, complementar
+ * ou cancelar) e depois análise (complementar ou enviar ao gestor).
  */
 function menuItems(row: Solicitacao, profile: Profile): ActionMenuItem[] {
   const item = (key: SolicitacaoAction, extra?: Partial<ActionMenuItem>): ActionMenuItem => ({
@@ -35,35 +49,75 @@ function menuItems(row: Solicitacao, profile: Profile): ActionMenuItem[] {
     danger: SOLICITACAO_ACTIONS[key].danger,
     ...extra,
   });
-  const comuns = [
-    item("alterar"),
-    item("atribuir-analista"),
-    item("alterar-solicitante"),
-    item("cancelar", { separated: true }),
-  ];
-  if (profile === "solicitante") return comuns;
+  const alterar = item("alterar", {
+    description: "Corrija os dados enquanto nenhum analista assumiu.",
+    disabled: profile !== "solicitante" || !solicitantePodeAlterar(row),
+    disabledReason:
+      profile !== "solicitante"
+        ? "Só o solicitante edita a solicitação."
+        : "Só é possível editar enquanto nenhum analista assumiu (status Submetido).",
+  });
+  const atribuir = item("atribuir-analista", {
+    description: row.status === "Submetido" ? "Passa para Em análise com o analista escolhido." : `Hoje com ${row.analistaResponsavel}.`,
+    disabled: profile !== "gestor" || !gestorPodeAtribuir(row),
+    disabledReason:
+      profile === "analista" ? "Ao abrir uma solicitação Submetido, ela é atribuída a você." : "Só o gestor atribui.",
+  });
+  const comuns = [alterar, atribuir, item("alterar-solicitante")];
+
+  // Solicitante: só Editar e Cancelar no menu (Abrir é o botão ao lado).
+  if (profile === "solicitante") {
+    return [
+      { ...alterar, label: "Editar solicitação" },
+      item("cancelar", {
+        separated: true,
+        description: "Desista da solicitação. Informe o motivo.",
+        disabled: !solicitantePodeCancelar(row),
+      }),
+    ];
+  }
 
   if (profile === "analista") {
-    const pode = ANALISTA_PODE_AGIR.includes(row.status);
+    const pode = analistaPodeAgir(row, ANALISTA);
+    const preliminar = emAvaliacaoPreliminar(row);
     const motivo =
       row.status === "Em complementação"
         ? "Aguardando o solicitante."
         : row.status === "Aguardando gestor"
           ? "Aguardando decisão do gestor."
-          : "Indisponível neste status.";
+          : row.status === "Em análise"
+            ? `Em análise com ${row.analistaResponsavel}.`
+            : "Indisponível neste status.";
     return [
+      item("atualizar-solicitacao", {
+        description: preliminar
+          ? "Relatório ok: registre o TAP sem pendências e libere a análise."
+          : "Registre documentos ou informações recebidos por outros meios.",
+        disabled: !pode,
+        disabledReason: motivo,
+      }),
       item("solicitar-complementacao", {
-        description: "Peça um documento ou informação ao solicitante.",
+        description: preliminar
+          ? "Relatório com pendências: envie o TAP com as pendências ao solicitante."
+          : "Peça um documento ou informação ao solicitante.",
         disabled: !pode,
         disabledReason: motivo,
       }),
       item("enviar-gestor", {
-        description: "Conclua a análise e envie seu parecer ao gestor.",
-        disabled: !pode,
-        disabledReason: motivo,
+        description: pendenciasParaGestor(row).length
+          ? `Antes, preencha ${pendenciasParaGestor(row).join(", ")}.`
+          : "Peça o aval do gestor para finalizar a validação.",
+        disabled: !pode || preliminar,
+        disabledReason: !pode ? motivo : "Antes, emita o TAP (avaliação preliminar).",
       }),
       { ...comuns[0], separated: true },
       ...comuns.slice(1),
+      item("cancelar", {
+        separated: true,
+        description: "Encerra a solicitação. A justificativa fica visível para todos.",
+        disabled: !analistaPodeCancelar(row, ANALISTA),
+        disabledReason: `Só o analista responsável (${row.analistaResponsavel}), o gestor ou o solicitante cancelam.`,
+      }),
     ];
   }
 
@@ -72,17 +126,17 @@ function menuItems(row: Solicitacao, profile: Profile): ActionMenuItem[] {
   const motivoGestor = "Disponível quando o analista enviar para o gestor.";
   return [
     item("validar", {
-      description: "Aprova a validação do analista e finaliza (status Validada).",
-      disabled: !comGestor,
-      disabledReason: motivoGestor,
-    }),
-    item("devolver-analista", {
-      description: "Devolve ao analista com o motivo da recusa.",
+      description: "Dá o aval à validação do analista e finaliza (status Validada).",
       disabled: !comGestor,
       disabledReason: motivoGestor,
     }),
     { ...comuns[0], separated: true },
     ...comuns.slice(1),
+    item("cancelar", {
+      separated: true,
+      description: "Encerra a solicitação. Informe o motivo.",
+      disabled: !gestorPodeCancelar(row),
+    }),
   ];
 }
 
@@ -143,8 +197,11 @@ export function EmAndamentoTab({ onAbrir }: EmAndamentoTabProps) {
   const showCards = !isSolicitante;
 
   const { solicitacoes: todas } = useSolicitacoes();
-  // Validadas estão finalizadas: saem de Em andamento.
-  const solicitacoes = useMemo(() => todas.filter((s) => s.status !== "Validada"), [todas]);
+  // Validadas e canceladas estão finalizadas: saem de Em andamento.
+  const solicitacoes = useMemo(
+    () => todas.filter((s) => s.status !== "Validada" && s.status !== "Cancelada"),
+    [todas],
+  );
 
   const visibleSolicitacoes = useMemo(() => {
     if (!isSolicitante) return solicitacoes;
@@ -205,9 +262,12 @@ export function EmAndamentoTab({ onAbrir }: EmAndamentoTabProps) {
     }
     const atalhos: Partial<Record<SolicitacaoAction, AcaoSolicitacao>> = {
       "solicitar-complementacao": "pedir",
+      "atualizar-solicitacao": "atualizar",
+      cancelar: "cancelar",
       "enviar-gestor": "enviar-gestor",
-      "devolver-analista": "devolver",
       validar: "validar",
+      alterar: "alterar",
+      "atribuir-analista": "atribuir",
     };
     if (atalhos[action]) {
       onAbrir(row.numero, atalhos[action]);

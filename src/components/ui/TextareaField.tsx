@@ -9,6 +9,8 @@ interface TextareaFieldProps {
   required?: boolean;
   error?: string;
   hint?: string;
+  /** Dica mostrada no ícone (i) ao lado do label. */
+  info?: string;
   fullWidth?: boolean;
   disabled?: boolean;
   rows?: number;
@@ -24,13 +26,14 @@ export function TextareaField({
   required,
   error,
   hint,
+  info,
   fullWidth = true,
   disabled,
   rows = 4,
   maxLength,
 }: TextareaFieldProps) {
   return (
-    <FormField label={label} htmlFor={id} required={required} error={error} hint={hint} fullWidth={fullWidth}>
+    <FormField label={label} htmlFor={id} required={required} error={error} hint={hint} info={info} fullWidth={fullWidth}>
       <textarea
         id={id}
         value={value}

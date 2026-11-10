@@ -1,4 +1,5 @@
 import type { Solicitacao } from "../types";
+import { exemploCalculos, exemploInformacoesAdicionais, exemploInformacoesModelo } from "./mockDadosModelo";
 
 export const mockSolicitacoes: Solicitacao[] = [
   {
@@ -10,6 +11,7 @@ export const mockSolicitacoes: Solicitacao[] = [
     solicitante: "João Pereira",
     dataSubmissao: "2026-07-02",
     analistaResponsavel: "Maria Santos",
+    dataAtribuicao: "2026-07-03T09:15",
     status: "Em análise",
     timeline: [
       { data: "2026-07-02", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
@@ -26,6 +28,7 @@ export const mockSolicitacoes: Solicitacao[] = [
     solicitante: "Ana Costa",
     dataSubmissao: "2026-07-10",
     analistaResponsavel: "Carlos Oliveira",
+    dataAtribuicao: "2026-07-11T10:40",
     status: "Em complementação",
     timeline: [
       { data: "2026-07-10", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
@@ -43,7 +46,7 @@ export const mockSolicitacoes: Solicitacao[] = [
     publico: "Externo",
     solicitante: "Marcos Lima",
     dataSubmissao: "2026-07-15",
-    analistaResponsavel: "Fernanda Alves",
+    analistaResponsavel: "Não atribuído",
     status: "Submetido",
     timeline: [
       { data: "2026-07-15", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
@@ -59,10 +62,22 @@ export const mockSolicitacoes: Solicitacao[] = [
     dataSubmissao: "2026-07-18",
     analistaResponsavel: "Maria Santos",
     status: "Em análise",
+    tap: { anexo: "TAP REQ-2026-004.pdf", data: "2026-07-23", autor: "Maria Santos" },
     timeline: [
       { data: "2026-07-18", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
-      { data: "2026-07-19", descricao: "Encaminhada para análise técnica." },
-      { data: "2026-07-21", descricao: "Em análise pela GEVAM." },
+      {
+        data: "2026-07-19",
+        descricao: "Solicitação atribuída a Maria Santos. Avaliação preliminar da documentação iniciada.",
+        autor: "Maria Santos",
+        tipo: "atribuida",
+      },
+      {
+        data: "2026-07-23",
+        descricao: "TAP emitido sem pendências. Solicitação seguiu para análise.",
+        autor: "Maria Santos",
+        anexos: ["TAP REQ-2026-004.pdf"],
+        tipo: "tap-emitido",
+      },
     ],
   },
   {
@@ -88,6 +103,7 @@ export const mockSolicitacoes: Solicitacao[] = [
     solicitante: "Camila Dias",
     dataSubmissao: "2026-07-22",
     analistaResponsavel: "Carlos Oliveira",
+    dataAtribuicao: "2026-07-23T14:05",
     status: "Em complementação",
     timeline: [
       { data: "2026-07-22", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
@@ -106,26 +122,42 @@ export const mockSolicitacoes: Solicitacao[] = [
     solicitante: "Eduardo Nunes",
     dataSubmissao: "2026-08-01",
     analistaResponsavel: "Fernanda Alves",
+    dataAtribuicao: "2026-08-02T08:50",
     status: "Aguardando gestor",
     tipoModelo: "Inteligência Artificial",
     objetivo: "Recomendar produtos com base no histórico de compras do cliente.",
-    encaminhamento: {
-      tipo: "enviada-gestor",
-      texto: "Testes de desempenho e estabilidade aprovados. Recomendo validar e monitorar trimestralmente o KS.",
-      autor: "Fernanda Alves",
-      data: "2026-08-12",
-      anexo: "Parecer técnico REQ-2026-007.pdf",
-    },
+    informacoesAdicionais: exemploInformacoesAdicionais,
+    informacoesModelo: exemploInformacoesModelo,
+    calculosTier: exemploCalculos("Fernanda Alves", "2026-08-10"),
+    matrizesRisco: [
+      {
+        id: "matriz-req-007",
+        tipo: "Cálculo",
+        prazoRevalidacaoMeses: "12",
+        alcadaSugerida: "Diretoria de Riscos",
+        tier: "Gestão Flexível",
+        nota: "B",
+        classificacaoRisco: "Baixo",
+        data: "2026-08-10T15:20:00",
+        usuario: "Fernanda Alves",
+      },
+    ],
+    tap: { anexo: "TAP REQ-2026-007.pdf", data: "2026-08-04", autor: "Fernanda Alves" },
+    encaminhamento: { tipo: "enviada-gestor", autor: "Fernanda Alves", data: "2026-08-12" },
     timeline: [
       { data: "2026-08-01", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
       { data: "2026-08-02", descricao: "Encaminhada para análise técnica." },
-      { data: "2026-08-04", descricao: "Em análise pela GEVAM." },
+      {
+        data: "2026-08-04",
+        descricao: "TAP emitido sem pendências. Solicitação seguiu para análise.",
+        autor: "Fernanda Alves",
+        anexos: ["TAP REQ-2026-007.pdf"],
+        tipo: "tap-emitido",
+      },
       {
         data: "2026-08-12",
-        descricao: "Análise concluída e enviada para o gestor.",
-        detalhe: "Testes de desempenho e estabilidade aprovados. Recomendo validar e monitorar trimestralmente o KS.",
+        descricao: "Análise concluída e enviada para o gestor. Aval solicitado.",
         autor: "Fernanda Alves",
-        anexos: ["Parecer técnico REQ-2026-007.pdf"],
         tipo: "enviada-gestor",
       },
     ],
@@ -138,7 +170,7 @@ export const mockSolicitacoes: Solicitacao[] = [
     publico: "Interno",
     solicitante: "Patrícia Gomes",
     dataSubmissao: "2026-08-05",
-    analistaResponsavel: "Maria Santos",
+    analistaResponsavel: "Não atribuído",
     status: "Submetido",
     timeline: [
       { data: "2026-08-05", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },

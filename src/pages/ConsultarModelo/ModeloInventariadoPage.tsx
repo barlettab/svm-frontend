@@ -16,6 +16,7 @@ import { Toast } from "../../components/ui/Toast";
 import type { SituacaoModeloInventario } from "../../types";
 import { formatDate } from "./formatDate";
 import { HistoricoEArquivos, Info } from "./DetalheComum";
+import { ResumoInformacoesAdicionais, ResumoInformacoesModelo } from "../../components/modelo/ResumoDadosModelo";
 
 const SITUACOES: SituacaoModeloInventario[] = ["Ativo", "Inativo", "Suspenso"];
 const ORIGENS = ["Teams", "E-mail", "Reunião", "Outro"];
@@ -231,6 +232,18 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
             </Info>
           </dl>
         </Panel>
+
+        {/* ── Informações Adicionais / Informações do Modelo (do inventário ou da solicitação) ── */}
+        {(modelo.informacoesAdicionais ?? solicitacao?.informacoesAdicionais) && (
+          <Panel title="Informações Adicionais">
+            <ResumoInformacoesAdicionais dados={(modelo.informacoesAdicionais ?? solicitacao?.informacoesAdicionais)!} />
+          </Panel>
+        )}
+        {(modelo.informacoesModelo ?? solicitacao?.informacoesModelo) && (
+          <Panel title="Informações do Modelo">
+            <ResumoInformacoesModelo dados={(modelo.informacoesModelo ?? solicitacao?.informacoesModelo)!} />
+          </Panel>
+        )}
 
         {/* ── Histórico + arquivos ────────────────────────────────────────── */}
         {solicitacao ? (

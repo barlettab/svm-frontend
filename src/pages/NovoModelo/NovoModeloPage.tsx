@@ -3,7 +3,7 @@ import { useProfile } from "../../context/ProfileContext";
 import { Tabs } from "../../components/ui/Tabs";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { SubmeterForm } from "./SubmeterForm";
-import { InventariarForm } from "./InventariarForm";
+import { InventariarWizard } from "./InventariarWizard";
 import { TABS_BY_PROFILE, type NovoModeloTab } from "../../types";
 
 const TAB_LABELS: Record<NovoModeloTab, string> = {
@@ -11,7 +11,7 @@ const TAB_LABELS: Record<NovoModeloTab, string> = {
   inventariar: "Inventariar",
   "informacoes-adicionais": "Informações Adicionais",
   implantacao: "Implantação",
-  "metodologia-monitoramento": "Metodologia e Monitoramento",
+  "informacoes-modelo": "Informações do Modelo",
 };
 
 export function NovoModeloPage() {
@@ -26,7 +26,7 @@ export function NovoModeloPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className={activeTab === "inventariar" ? "mx-auto max-w-6xl" : "mx-auto max-w-3xl"}>
       {availableTabs.length > 1 && (
         <Tabs
           items={availableTabs.map((tab) => ({ key: tab, label: TAB_LABELS[tab] }))}
@@ -37,10 +37,10 @@ export function NovoModeloPage() {
 
       <div className={availableTabs.length > 1 ? "mt-6" : undefined}>
         {activeTab === "submeter" && <SubmeterForm />}
-        {activeTab === "inventariar" && <InventariarForm />}
+        {activeTab === "inventariar" && <InventariarWizard />}
         {(activeTab === "informacoes-adicionais" ||
           activeTab === "implantacao" ||
-          activeTab === "metodologia-monitoramento") && (
+          activeTab === "informacoes-modelo") && (
           <EmptyState
             icon="clock"
             title={TAB_LABELS[activeTab]}

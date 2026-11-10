@@ -11,6 +11,7 @@ interface SelectFieldProps {
   placeholder?: string;
   required?: boolean;
   error?: string;
+  info?: string;
   fullWidth?: boolean;
   disabled?: boolean;
 }
@@ -24,11 +25,12 @@ export function SelectField({
   placeholder = "Selecione",
   required,
   error,
+  info,
   fullWidth,
   disabled,
 }: SelectFieldProps) {
   return (
-    <FormField label={label} htmlFor={id} required={required} error={error} fullWidth={fullWidth}>
+    <FormField label={label} htmlFor={id} required={required} error={error} info={info} fullWidth={fullWidth}>
       <div className="relative">
         <select
           id={id}

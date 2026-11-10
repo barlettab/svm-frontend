@@ -19,7 +19,7 @@ export type NovoModeloTab =
   | "inventariar"
   | "informacoes-adicionais"
   | "implantacao"
-  | "metodologia-monitoramento";
+  | "informacoes-modelo";
 
 export const TABS_BY_PROFILE: Record<Profile, NovoModeloTab[]> = {
   solicitante: ["submeter"],
@@ -67,7 +67,11 @@ export type SolicitacaoStatus =
   | "Em análise"
   | "Em complementação"
   | "Aguardando gestor"
-  | "Validada";
+  | "Validada"
+  | "Cancelada";
+
+/** Quem pode cancelar: o analista responsável, o gestor GEVAM ou o próprio solicitante, sempre com justificativa. */
+export type CanceladoPor = "analista" | "gestor" | "solicitante";
 
 export interface TimelineEvent {
   data: string;
@@ -84,8 +88,74 @@ export interface TimelineEvent {
     | "enviada-gestor"
     | "devolvida-analista"
     | "validada"
+    | "atribuida"
+    | "tap-emitido"
+    | "atualizacao"
+    | "cancelada"
     | "documento-adicionado"
     | "situacao-alterada";
+}
+
+/** Aba "Informações Adicionais": dados usados no cálculo do Tier. */
+export interface InformacoesAdicionais {
+  materialidade: string;
+  impactoDecisao: string;
+  complexidade: string;
+  novoAlgoritmo: string;
+  novoProduto: string;
+  implementacaoAutomatizada: string;
+}
+
+/** Aba "Informações do Modelo": seções em texto livre preenchidas pelo analista. */
+export interface InformacoesModelo {
+  /** Objetivo, justificativa, público, carteira e se substitui outro modelo. */
+  contextualizacao: string;
+  /** Técnicas utilizadas (regressão logística, SARIMAX…). */
+  metodologia: string;
+  /** Indicadores de performance por período e resultados dos testes. */
+  resultados: string;
+  /** Monitoramento que será realizado pela área solicitante. */
+  monitoramento1Linha: string;
+  /** Monitoramento que será realizado pela GEVAM e com quais indicadores. */
+  monitoramento2Linha: string;
+  /** Opcional. */
+  observacoes?: string;
+}
+
+/** Uma linha do "Histórico Cálculo e Recálculo" do Tier. */
+export interface CalculoTier {
+  id: string;
+  tipo: "Cálculo" | "Recálculo";
+  /** Parâmetros usados (mesmos campos de Informações Adicionais). */
+  parametros: InformacoesAdicionais;
+  /** Pontuação dos parâmetros, antes do ajuste de MRM. */
+  pontuacaoBase: number;
+  /** Ajuste de MRM em pontos (pode ser negativo). */
+  ajusteMrm?: number;
+  /** Resultado final = base + ajuste. */
+  resultado: number;
+  /** Tier pela pontuação, ou o tier forçado pelo override. */
+  tier: string;
+  override?: string;
+  /** Data e hora ISO. */
+  data: string;
+  usuario: string;
+}
+
+/** Uma linha do "Histórico Matriz de Risco". */
+export interface MatrizRisco {
+  id: string;
+  tipo: "Cálculo" | "Recálculo";
+  /** Prazo para revalidar o modelo, em meses (opcional). */
+  prazoRevalidacaoMeses?: string;
+  alcadaSugerida?: string;
+  tier: string;
+  /** Letra da Nota de Classificação (A a E). */
+  nota: string;
+  classificacaoRisco: string;
+  /** Data e hora ISO. */
+  data: string;
+  usuario: string;
 }
 
 export interface Solicitacao {
@@ -97,6 +167,17 @@ export interface Solicitacao {
   solicitante: string;
   dataSubmissao: string;
   analistaResponsavel: string;
+  /**
+   * Nome do arquivo do relatório de desenvolvimento em vigor. Se o solicitante o substituir
+   * ao editar, o anterior é descartado. Sem o campo, vale o anexo do evento de submissão.
+   */
+  relatorioDesenvolvimento?: string;
+  /** Data e hora ISO em que o analista assumiu ou foi atribuído (a mais recente). */
+  dataAtribuicao?: string;
+  /** Data e hora ISO em que o analista enviou ao gestor. */
+  dataFinalizacaoAnalise?: string;
+  /** Gestor GEVAM que atribuiu ou finalizou a validação (o mais recente). */
+  gestorGevam?: string;
   status: SolicitacaoStatus;
   tipoModelo?: string;
   objetivo?: string;
@@ -105,13 +186,11 @@ export interface Solicitacao {
   complementacao?: string;
   /** Arquivo de apoio enviado pelo analista junto com o pedido (opcional). */
   anexoPedidoComplementacao?: string;
-  /** Último encaminhamento interno da GEVAM (parecer do analista ou pedido de ajuste do gestor). */
+  /** Envio ao gestor: o analista pede o aval (sem anexo; o gestor lê os documentos já em Arquivos). */
   encaminhamento?: {
-    tipo: "enviada-gestor" | "devolvida-analista";
-    texto?: string;
+    tipo: "enviada-gestor";
     autor: string;
     data: string;
-    anexo: string;
   };
   /** Decisão final do gestor ao validar. */
   conclusao?: {
@@ -121,6 +200,20 @@ export interface Solicitacao {
     monitorado: boolean;
     numeroInventario?: string;
   };
+  /**
+   * TAP emitido sem pendências ("Atualizar solicitação"). Encerra a avaliação
+   * preliminar e libera a fase de análise.
+   */
+  tap?: { anexo: string; data: string; autor: string; observacao?: string; comPendencias?: boolean };
+  /** Preenchido quando o analista ou o próprio solicitante cancela a solicitação. */
+  cancelamento?: { data: string; autor: string; justificativa: string; por: CanceladoPor };
+  /** Preenchidas pelo analista; obrigatórias para enviar ao gestor. */
+  informacoesAdicionais?: InformacoesAdicionais;
+  informacoesModelo?: InformacoesModelo;
+  /** Cálculo do Tier: o primeiro é feito ao salvar Informações Adicionais; depois, recálculos do analista. */
+  calculosTier?: CalculoTier[];
+  /** Matriz de Risco: o primeiro registro é o cálculo; depois, recálculos do analista. */
+  matrizesRisco?: MatrizRisco[];
   /** Resposta enviada pelo solicitante à última complementação. */
   respostaComplementacao?: {
     data: string;
@@ -151,6 +244,8 @@ export interface ModeloInventariado {
   analistaResponsavel: string;
   objetivo: string;
   dataInventario: string;
+  informacoesAdicionais?: InformacoesAdicionais;
+  informacoesModelo?: InformacoesModelo;
 }
 
 export interface SolicitacaoCancelada {
@@ -162,4 +257,6 @@ export interface SolicitacaoCancelada {
   analistaResponsavel?: string;
   dataCancelamento: string;
   justificativa: string;
+  /** Quem cancelou (ausente nos registros antigos). */
+  canceladoPor?: CanceladoPor;
 }

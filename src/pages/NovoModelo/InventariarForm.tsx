@@ -1,11 +1,9 @@
 import { useState, type FormEvent } from "react";
-import { PageHeader } from "../../components/layout/PageHeader";
 import { TextField } from "../../components/ui/TextField";
 import { SelectField } from "../../components/ui/SelectField";
 import { TextareaField } from "../../components/ui/TextareaField";
 import { FileUpload } from "../../components/ui/FileUpload";
 import { PrimaryButton } from "../../components/ui/PrimaryButton";
-import { SuccessModal } from "../../components/ui/SuccessModal";
 import { Panel, FormGrid, FormActions } from "../../components/ui/Panel";
 import {
   areaGestoraOptions,
@@ -16,7 +14,7 @@ import {
   validadoOptions,
 } from "../../data/options";
 
-interface FormState {
+export interface InventariarDados {
   situacaoModelo: string;
   validado: string;
   monitoramento: string;
@@ -27,36 +25,24 @@ interface FormState {
   objetivo: string;
 }
 
-const INITIAL_STATE: FormState = {
-  situacaoModelo: "",
-  validado: "",
-  monitoramento: "",
-  nomeModelo: "",
-  tipoModelo: "",
-  publico: "",
-  areaGestora: "",
-  objetivo: "",
-};
+type FormState = InventariarDados;
 
-function generateInventoryCode() {
-  const year = new Date().getFullYear();
-  const sequence = String(Math.floor(Math.random() * 900) + 100).padStart(
-    3,
-    "0",
-  );
-  return `INV-${year}-${sequence}`;
+interface InventariarFormProps {
+  form: InventariarDados;
+  onChange: (form: InventariarDados) => void;
+  file: File | null;
+  onFileChange: (file: File | null) => void;
+  /** Chamado com o formulário válido (botão Avançar). */
+  onAvancar: () => void;
 }
 
-export function InventariarForm() {
-  const [form, setForm] = useState<FormState>(INITIAL_STATE);
-  const [file, setFile] = useState<File | null>(null);
-  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>(
-    {},
-  );
-  const [successCode, setSuccessCode] = useState<string | null>(null);
+/** Passo 1 do inventário: dados do modelo. Estado fica no InventariarWizard. */
+export function InventariarForm({ form, onChange, file, onFileChange, onAvancar }: InventariarFormProps) {
+  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
 
   function updateField(field: keyof FormState, value: string) {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    onChange({ ...form, [field]: value });
+    if (errors[field]) setErrors((e) => ({ ...e, [field]: undefined }));
   }
 
   function validate(): boolean {
@@ -73,24 +59,12 @@ export function InventariarForm() {
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (!validate()) return;
-    setSuccessCode(generateInventoryCode());
-  }
-
-  function handleCloseModal() {
-    setSuccessCode(null);
-    setForm(INITIAL_STATE);
-    setFile(null);
-    setErrors({});
+    onAvancar();
   }
 
   return (
     <div>
-      <PageHeader
-        title="Inventariar modelo"
-        description="Registre um modelo existente no inventário corporativo."
-      />
-
-      <Panel>
+      <Panel title="Dados do modelo">
         <form onSubmit={handleSubmit} noValidate>
           <FormGrid>
             <SelectField
@@ -172,21 +146,15 @@ export function InventariarForm() {
               error={errors.objetivo}
             />
 
-            <FileUpload id="anexo" file={file} onChange={setFile} fullWidth />
+            <FileUpload id="anexo" file={file} onChange={onFileChange} fullWidth />
           </FormGrid>
 
           <FormActions>
-            <PrimaryButton type="submit">Enviar</PrimaryButton>
+            <PrimaryButton type="submit" iconRight="chev-right">Avançar</PrimaryButton>
           </FormActions>
         </form>
       </Panel>
 
-      <SuccessModal
-        open={successCode !== null}
-        message="Modelo inventariado com sucesso."
-        code={successCode ?? ""}
-        onClose={handleCloseModal}
-      />
     </div>
   );
 }

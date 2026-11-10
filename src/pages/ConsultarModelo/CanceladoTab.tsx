@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { mockCancelados } from "../../data/mockCancelados";
+import { useSolicitacoes } from "../../context/SolicitacoesContext";
 import { areaGestoraFilterOptions } from "../../data/filterOptions";
 import { FilterTextField } from "../../components/ui/FilterTextField";
 import { FilterSelectField } from "../../components/ui/FilterSelectField";
@@ -12,6 +12,11 @@ import { IconButton } from "../../components/ui/Button";
 import type { SolicitacaoCancelada } from "../../types";
 
 const EMPTY_VALUE = "—";
+
+const canceladoPorLabel = (row: SolicitacaoCancelada) =>
+  row.canceladoPor ? CANCELADO_POR_LABEL[row.canceladoPor] : EMPTY_VALUE;
+
+const CANCELADO_POR_LABEL = { analista: "Analista", gestor: "Gestor GEVAM", solicitante: "Solicitante" } as const;
 
 interface Filters {
   numero: string;
@@ -50,10 +55,11 @@ export function CanceladoTab() {
   const [draft, setDraft] = useState<Filters>(DEFAULT_FILTERS);
   const [applied, setApplied] = useState<Filters>(DEFAULT_FILTERS);
   const [selected, setSelected] = useState<SolicitacaoCancelada | null>(null);
+  const { cancelados } = useSolicitacoes();
 
   const filtered = useMemo(
-    () => mockCancelados.filter((s) => matches(s, applied)),
-    [applied],
+    () => cancelados.filter((s) => matches(s, applied)),
+    [cancelados, applied],
   );
 
   function handleSearch() {
@@ -76,6 +82,7 @@ export function CanceladoTab() {
       render: (row) => row.analistaResponsavel ?? EMPTY_VALUE,
     },
     { header: "Data do cancelamento", render: (row) => row.dataCancelamento },
+    { header: "Cancelada por", render: canceladoPorLabel },
     {
       header: "Justificativa",
       render: (row) => (
@@ -162,6 +169,7 @@ export function CanceladoTab() {
               label="Data do cancelamento"
               value={selected.dataCancelamento}
             />
+            <DetailRow label="Cancelada por" value={canceladoPorLabel(selected)} />
 
             <div className="mt-4">
               <InlineAlert tone="error" title="Justificativa de cancelamento">

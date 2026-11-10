@@ -1,5 +1,6 @@
 import type { Solicitacao } from "../types";
 import { mockInventario } from "./mockInventario";
+import { exemploCalculos, exemploInformacoesAdicionais, exemploInformacoesModelo } from "./mockDadosModelo";
 
 /**
  * Solicitações já finalizadas que deram origem aos modelos do inventário mockado.
@@ -20,7 +21,6 @@ export const mockSolicitacoesInventariadas: Solicitacao[] = mockInventario
     const numero = m.numeroSolicitacao!;
     const fim = m.dataInventario;
     const monitorado = m.monitoramento === "Em monitoramento";
-    const parecer = `Parecer técnico ${numero}.pdf`;
     return {
       numero,
       nomeModelo: m.nomeModelo,
@@ -33,16 +33,31 @@ export const mockSolicitacoesInventariadas: Solicitacao[] = mockInventario
       status: "Validada",
       tipoModelo: m.tipoModelo,
       objetivo: m.objetivo,
+      informacoesAdicionais: exemploInformacoesAdicionais,
+      informacoesModelo: exemploInformacoesModelo,
+      tap: { anexo: `TAP ${numero}.pdf`, data: diasAntes(fim, 26), autor: m.analistaResponsavel },
+      calculosTier: exemploCalculos(m.analistaResponsavel, diasAntes(fim, 7)),
       conclusao: { data: fim, gestor: GESTOR, inventariado: true, monitorado, numeroInventario: m.numero },
       timeline: [
         { data: diasAntes(fim, 30), descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
         { data: diasAntes(fim, 29), descricao: "Encaminhada para análise técnica." },
-        { data: diasAntes(fim, 27), descricao: "Em análise pela GEVAM." },
+        {
+          data: diasAntes(fim, 27),
+          descricao: `Solicitação atribuída a ${m.analistaResponsavel}. Avaliação preliminar da documentação iniciada.`,
+          autor: m.analistaResponsavel,
+          tipo: "atribuida",
+        },
+        {
+          data: diasAntes(fim, 26),
+          descricao: "TAP emitido sem pendências. Solicitação seguiu para análise.",
+          autor: m.analistaResponsavel,
+          anexos: [`TAP ${numero}.pdf`],
+          tipo: "tap-emitido",
+        },
         {
           data: diasAntes(fim, 5),
-          descricao: "Análise concluída e enviada para o gestor.",
+          descricao: "Análise concluída e enviada para o gestor. Aval solicitado.",
           autor: m.analistaResponsavel,
-          anexos: [parecer],
           tipo: "enviada-gestor",
         },
         {
