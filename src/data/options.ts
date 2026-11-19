@@ -22,19 +22,11 @@ export const assuntoOptions = [
 
 export const publicoOptions = ["Interno", "Externo", "Interno e externo"];
 
-export const situacaoModeloOptions = [
-  "Em produção",
-  "Em desenvolvimento",
-  "Descontinuado",
-];
+/** Situação do modelo no inventário. Todo modelo validado entra como Ativo. */
+export const situacaoModeloOptions = ["Ativo", "Inativo", "Suspenso"];
 
-export const validadoOptions = ["Sim", "Não"];
-
-export const monitoramentoOptions = [
-  "Em monitoramento",
-  "Não monitorado",
-  "Não se aplica",
-];
+/** Monitoramento pela GEVAM. Todo modelo entra no inventário como Não monitorado. */
+export const monitoramentoOptions = ["Em monitoramento", "Não monitorado"];
 
 // ── Informações Adicionais (cálculo do Tier) ─────────────────────────────
 export const materialidadeOptions = [

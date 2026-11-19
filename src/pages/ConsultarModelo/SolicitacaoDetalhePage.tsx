@@ -10,7 +10,6 @@ import { Button } from "../../components/ui/Button";
 import { Icon, type IconName } from "../../components/ui/Icon";
 import { FileUpload } from "../../components/ui/FileUpload";
 import { TextareaField } from "../../components/ui/TextareaField";
-import { RadioGroupField } from "../../components/ui/RadioGroupField";
 import { Modal } from "../../components/ui/Modal";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { Toast } from "../../components/ui/Toast";
@@ -19,7 +18,7 @@ import type { Solicitacao } from "../../types";
 import { formatDate } from "./formatDate";
 import { HistoricoEArquivos, Info } from "./DetalheComum";
 import { AbaInformacoesModelo } from "./AbasDadosModelo";
-import { FormAtualizacao } from "./FormAtualizacao";
+import { FormAcrescentarDocumentacao } from "./FormAcrescentarDocumentacao";
 import { AbaCalculoTier } from "./AbaCalculoTier";
 import { AbaMatrizRisco } from "./AbaMatrizRisco";
 import { FichaModeloModal } from "./FichaModeloModal";
@@ -33,13 +32,14 @@ import {
   dataAtribuicao,
   gestorPodeCancelar,
   dataFinalizacaoAnalise,
-  emAvaliacaoPreliminar,
+  analistaPodeAcrescentarDoc,
+  analistaPodeEditarAbas,
   gestorGevam,
   tempoAnaliseDias,
   gestorPodeAtribuir,
   solicitantePodeAlterar,
   solicitantePodeCancelar,
-  statusParaPerfil,
+  gevamPodeEditar,
 } from "./fluxo";
 import { FormAlterarSolicitacao } from "./FormAlterarSolicitacao";
 import { SelectField } from "../../components/ui/SelectField";
@@ -65,12 +65,13 @@ const ABA_POR_PENDENCIA: Record<string, AbaDetalhe> = {
 /** Ação que a página já abre aberta (atalhos do menu Ações da lista). */
 export type AcaoSolicitacao =
   | "pedir"
-  | "atualizar"
+  | "documentar"
   | "cancelar"
   | "enviar-gestor"
   | "validar"
   | "alterar"
-  | "atribuir";
+  | "atribuir"
+  | "responder";
 
 function ultimoPedido(s: Solicitacao) {
   return [...s.timeline].reverse().find((e) => e.tipo === "complementacao-pedida");
@@ -226,7 +227,7 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
     registrarMatrizRisco,
     recalcularTier,
     assumirAnalise,
-    atualizarSolicitacao,
+    acrescentarDocumentacao,
     cancelar,
     atribuirAnalista,
     alterarSolicitacao,
@@ -237,7 +238,7 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
 
   /** Atalho "Enviar para o gestor" da lista só abre o formulário se a análise estiver completa. */
   const bloqueadoNoInicio =
-    acaoInicial === "enviar-gestor" && !!s && (emAvaliacaoPreliminar(s) || pendenciasParaGestor(s).length > 0);
+    acaoInicial === "enviar-gestor" && !!s && pendenciasParaGestor(s).length > 0;
 
   // Analista abriu uma solicitação Submetido: ela passa a ser dele, Em análise.
   const assumir = profile === "analista" && s?.status === "Submetido";
@@ -267,12 +268,8 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
   const [observacao, setObservacao] = useState("");
   const [arquivoErro, setArquivoErro] = useState<string>();
 
-  // Popup de validação
-  const [inventariar, setInventariar] = useState("");
-  const [monitorar, setMonitorar] = useState("");
-  const [validarErro, setValidarErro] = useState<{ inv?: string; mon?: string }>({});
-
-  const crumbs = [{ label: "Consultar modelos", onClick: onVoltar }, { label: "Em andamento", onClick: onVoltar }, { label: numero }];
+  const lista = s?.status === "Validado" ? "Inventariado" : s?.status === "Cancelado" ? "Cancelado" : "Em andamento";
+  const crumbs = [{ label: "Consultar modelos", onClick: onVoltar }, { label: lista, onClick: onVoltar }, { label: numero }];
 
   if (!s) {
     return (
@@ -288,7 +285,10 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
   }
 
   const analistaPodeAgir = profile === "analista" && podeAgir(s, usuario);
-  const preliminar = emAvaliacaoPreliminar(s);
+  /** Abas de análise: editáveis pelo analista responsável desde a atribuição (Em análise e Em complementação). */
+  const podeEditarAbas = profile === "analista" && analistaPodeEditarAbas(s, usuario);
+  /** Acrescentar documentação: analista responsável, em qualquer status (o status não muda). */
+  const podeDocumentar = profile === "analista" && analistaPodeAcrescentarDoc(s, usuario);
   const comOutroAnalista =
     profile === "analista" && s.status === "Em análise" && s.analistaResponsavel !== usuario;
   const gestorPodeDecidir = profile === "gestor" && s.status === "Aguardando gestor";
@@ -299,8 +299,11 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
     (isSolicitante && solicitantePodeCancelar(s));
   const podeAlterar = isSolicitante && solicitantePodeAlterar(s);
   const podeAtribuir = profile === "gestor" && gestorPodeAtribuir(s);
+  /** Analista responsável ou gestor: Editar solicitação e Alterar solicitante, em qualquer status em andamento. */
+  const perfilGevam = profile === "analista" || profile === "gestor" ? profile : undefined;
+  const podeEditarGevam = !!perfilGevam && gevamPodeEditar(s, profile, usuario);
   const pedidoAtual = ultimoPedido(s);
-  const statusVisto = statusParaPerfil(s.status, profile);
+  const statusVisto = s.status;
   const pendencias = pendenciasParaGestor(s);
   const { calculo, recalculo } = ultimos(s.calculosTier);
   const tierAtual = recalculo ?? calculo;
@@ -362,31 +365,22 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
     enviarComplementacao(s.numero, { arquivo: arquivo.name, observacao: observacao.trim() || undefined, autor: usuario });
     setArquivo(null);
     setObservacao("");
+    setAcao(null);
     setToast({ message: "Complementação enviada.", detail: `A solicitação voltou para Em análise com ${s.analistaResponsavel}.` });
   }
 
   function abrirValidacao() {
-    setInventariar("");
-    setMonitorar("");
-    setValidarErro({});
     setAcao("validar");
   }
 
+  /** Toda solicitação validada entra no inventário: situação Ativo, não monitorado. */
   function confirmarValidacao() {
     if (!s) return;
-    const erros = {
-      inv: inventariar ? undefined : "Escolha Sim ou Não.",
-      mon: monitorar ? undefined : "Escolha Sim ou Não.",
-    };
-    if (erros.inv || erros.mon) {
-      setValidarErro(erros);
-      return;
-    }
-    const inv = validar(s.numero, { inventariado: inventariar === "Sim", monitorado: monitorar === "Sim", autor: usuario });
+    const inv = validar(s.numero, { autor: usuario });
     setAcao(null);
     setToast({
-      message: "Solicitação validada e finalizada.",
-      detail: inv ? `Modelo incluído no inventário (${inv}).` : "O modelo não foi incluído no inventário.",
+      message: "Solicitação validada.",
+      detail: `Modelo incluído no inventário (${inv}), Ativo e não monitorado.`,
     });
   }
 
@@ -399,61 +393,76 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
     description: "Encerra a solicitação. A justificativa fica visível para todos.",
   };
 
-  // ── Ações do analista: menu "Ações" na aba Status de Acompanhamento ──
-  // Fora de Submetido/Em análise (ex.: Em complementação) o analista responsável só pode cancelar.
-  const acoesAnalista: ActionMenuItem[] = !analistaPodeAgir
-    ? [{ ...itemCancelar, separated: false }]
-    : preliminar
-    ? [
-        {
-          key: "atualizar",
-          label: "Atualizar solicitação",
-          icon: "upload",
-          description: "Relatório ok: registre o TAP sem pendências e libere a análise.",
-        },
-        {
-          key: "pedir",
-          label: "Pedir complementação",
-          icon: "doc",
-          description: "Relatório com pendências: envie o TAP com as pendências ao solicitante.",
-        },
-        itemCancelar,
-      ]
-    : [
-        {
-          key: "atualizar",
-          label: "Atualizar solicitação",
-          icon: "upload",
-          description: "Registre documentos ou informações recebidos por outros meios.",
-        },
-        {
-          key: "pedir",
-          label: "Pedir complementação",
-          icon: "doc",
-          description: "Peça esclarecimentos ou informações ao solicitante.",
-        },
-        {
-          key: "enviar-gestor",
-          label: "Enviar para o gestor",
-          icon: "chev-right",
-          description: pendencias.length
-            ? `Antes, preencha ${pendencias.join(", ")}.`
-            : "Peça o aval do gestor para finalizar a validação.",
-        },
-        itemCancelar,
-      ];
-
-  // ── Ações do solicitante ─────────────────────────────────────────────────
-  const acoesSolicitante: ActionMenuItem[] = [
+  // ── Editar solicitação (analista responsável e gestor): dados e também o solicitante ──
+  const itensEdicaoGevam: ActionMenuItem[] = [
     {
       key: "alterar",
       label: "Editar solicitação",
       icon: "edit",
-      description: "Corrija os dados enquanto nenhum analista assumiu.",
-      disabled: !podeAlterar,
-      disabledReason: "Só é possível editar enquanto nenhum analista assumiu (status Submetido).",
+      separated: true,
+      description: "Corrija os dados ou troque o solicitante. O status não muda.",
     },
-    { ...itemCancelar, description: "Desista da solicitação. Informe o motivo." },
+  ];
+
+  // ── Ações do analista: menu "Ações" na aba Status de Acompanhamento ──
+  const acoesAnalista: ActionMenuItem[] = [
+    ...(podeDocumentar
+      ? [
+          {
+            key: "documentar",
+            label: "Acrescentar documentação",
+            icon: "upload" as const,
+            description: "TAP sem pendências ou qualquer outro documento. O status não muda.",
+          },
+        ]
+      : []),
+    ...(analistaPodeAgir
+      ? [
+          {
+            key: "pedir",
+            label: "Pedir complementação",
+            icon: "doc" as const,
+            description: "Peça documentos ou esclarecimentos ao solicitante (ex.: TAP com pendências).",
+          },
+          {
+            key: "enviar-gestor",
+            label: "Enviar para o gestor",
+            icon: "chev-right" as const,
+            description: pendencias.length
+              ? `Antes, preencha ${pendencias.join(", ")}.`
+              : "Peça o aval do gestor para finalizar a validação.",
+          },
+        ]
+      : []),
+    ...(podeEditarGevam ? itensEdicaoGevam : []),
+    ...(podeCancelar ? [{ ...itemCancelar, separated: podeDocumentar || analistaPodeAgir || podeEditarGevam }] : []),
+  ];
+
+  // ── Ações do solicitante ─────────────────────────────────────────────────
+  // "Editar solicitação" só aparece em Submetido (nos outros status o item some do menu).
+  // "Responder complementação" só aparece em Em complementação: a resposta fica no menu Ações.
+  const acoesSolicitante: ActionMenuItem[] = [
+    ...(solicitantePodeResponder
+      ? [
+          {
+            key: "responder",
+            label: "Responder complementação",
+            icon: "upload" as const,
+            description: "Envie o documento que o analista pediu para a análise continuar.",
+          },
+        ]
+      : []),
+    ...(podeAlterar
+      ? [
+          {
+            key: "alterar",
+            label: "Editar solicitação",
+            icon: "edit" as const,
+            description: "Corrija os dados enquanto nenhum analista assumiu.",
+          },
+        ]
+      : []),
+    { ...itemCancelar, separated: podeAlterar, description: "Desista da solicitação. Informe o motivo." },
   ];
 
   // ── Ações do gestor fora da decisão ──────────────────────────────────────
@@ -467,19 +476,18 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
           ? "A solicitação passa para Em análise com o analista escolhido."
           : `Hoje com ${s.analistaResponsavel}.`,
     },
+    ...(podeEditarGevam ? itensEdicaoGevam : []),
     { ...itemCancelar, description: "Encerra a solicitação. Informe o motivo." },
   ];
 
   const menu: ActionMenuItem[] =
     profile === "analista"
-      ? analistaPodeAgir || podeCancelar
-        ? acoesAnalista
-        : []
+      ? acoesAnalista
       : isSolicitante
         ? podeCancelar
           ? acoesSolicitante
           : []
-        : podeAtribuir || podeCancelar
+        : podeAtribuir || podeCancelar || podeEditarGevam
           ? acoesGestor
           : [];
 
@@ -515,7 +523,7 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
       )}
 
       {/* ── Pendências para enviar ao gestor (analista) ───────────────────── */}
-      {analistaPodeAgir && !preliminar && pendencias.length > 0 && (
+      {analistaPodeAgir && pendencias.length > 0 && (
         <InlineAlert
           tone={tentouEnviar ? "warning" : "info"}
           title={
@@ -545,18 +553,7 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
 
       {!isSolicitante && (
         <div className="mb-6">
-          <Tabs
-            items={ABAS.map((a) => ({ ...a, disabled: a.key !== "solicitacao" && preliminar }))}
-            activeKey={aba}
-            onChange={setAba}
-          />
-          {preliminar && (
-            <p className="mt-2 text-aux text-ink-3">
-              {analistaPodeAgir
-                ? "Cálculo do Tier, Matriz de Risco e Informações do Modelo são liberadas quando você emitir o TAP: sem pendências em Ações › Atualizar solicitação, ou com pendências em Ações › Pedir complementação."
-                : "Cálculo do Tier, Matriz de Risco e Informações do Modelo são liberadas quando o analista emitir o TAP."}
-            </p>
-          )}
+          <Tabs items={ABAS} activeKey={aba} onChange={setAba} />
         </div>
       )}
 
@@ -565,7 +562,7 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
           key={s.calculosTier?.length ?? 0}
           informacoes={s.informacoesAdicionais}
           calculos={s.calculosTier}
-          editavel={analistaPodeAgir}
+          editavel={podeEditarAbas}
           onCalcular={(parametros) => {
             calcularTier(s.numero, { parametros, autor: usuario });
             const pontos = calcularPontuacao(parametros);
@@ -586,7 +583,7 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
           key={`${s.matrizesRisco?.length ?? 0}-${tierAtual?.tier ?? ""}`}
           registros={s.matrizesRisco}
           tierCalculado={tierAtual?.tier}
-          editavel={analistaPodeAgir}
+          editavel={podeEditarAbas}
           onRegistrar={(dados) => {
             const primeira = !s.matrizesRisco?.length;
             registrarMatrizRisco(s.numero, { ...dados, autor: usuario });
@@ -605,7 +602,7 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
       {aba === "informacoes-modelo" && (
         <AbaInformacoesModelo
           dados={s.informacoesModelo}
-          editavel={analistaPodeAgir}
+          editavel={podeEditarAbas}
           acoes={
             <Button variant="secondary" icon="download" onClick={() => setFichaAberta(true)}>
               Gerar ficha do modelo
@@ -645,25 +642,22 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
         )}
 
         {/* ── Finalizada ─────────────────────────────────────────────────── */}
-        {s.status === "Validada" && s.conclusao && (
+        {s.status === "Validado" && s.conclusao && (
           <Panel title="Solicitação finalizada" className="border-success-line">
             <dl className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
               <Info label="Resultado">
-                <StatusBadge status="Validada" />
+                <StatusBadge status="Validado" />
               </Info>
-              <Info label="Validada por">
+              <Info label="Validado por">
                 {s.conclusao.gestor} · {formatDate(s.conclusao.data)}
               </Info>
-              <Info label="Inventariado">
-                {s.conclusao.inventariado ? `Sim · ${s.conclusao.numeroInventario}` : "Não"}
-              </Info>
-              <Info label="Monitorado">{s.conclusao.monitorado ? "Sim" : "Não"}</Info>
+              <Info label="Nº do inventário">{s.conclusao.numeroInventario ?? VAZIO}</Info>
             </dl>
           </Panel>
         )}
 
         {/* ── Cancelada ──────────────────────────────────────────────────── */}
-        {s.status === "Cancelada" && s.cancelamento && (
+        {s.status === "Cancelado" && s.cancelamento && (
           <Panel
             title={`Solicitação cancelada pelo ${s.cancelamento.por === "gestor" ? "gestor GEVAM" : s.cancelamento.por}`}
             className="border-line-strong"
@@ -678,36 +672,35 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
         )}
 
         {/* ── Atualizar solicitação (analista) ───────────────────────────── */}
-        {analistaPodeAgir && acao === "atualizar" && (
-          <FormAtualizacao
-            preliminar={preliminar}
+        {podeDocumentar && acao === "documentar" && (
+          <FormAcrescentarDocumentacao
             onCancelar={() => setAcao(null)}
             onConfirmar={(dados) => {
-              atualizarSolicitacao(s.numero, { ...dados, autor: usuario });
+              acrescentarDocumentacao(s.numero, { ...dados, autor: usuario });
               setAcao(null);
-              if (dados.tapSemPendencias) {
-                setAba("calculo-tier");
-                setToast({ message: "Solicitação atualizada.", detail: "TAP registrado. Siga com o Cálculo do Tier." });
-              } else {
-                setToast({ message: "Solicitação atualizada.", detail: "A atualização foi registrada no histórico." });
-              }
+              setToast({ message: "Documentação acrescentada.", detail: "O documento está no histórico e em Arquivos." });
             }}
           />
         )}
 
         {/* ── Editar solicitação (solicitante, enquanto Submetido) ────────── */}
-        {podeAlterar && acao === "alterar" && (
+        {(podeAlterar || podeEditarGevam) && acao === "alterar" && (
           <FormAlterarSolicitacao
             solicitacao={s}
+            porGevam={podeEditarGevam}
             onCancelar={() => setAcao(null)}
-            onConfirmar={(campos, novoRelatorio) => {
-              alterarSolicitacao(s.numero, { campos, novoRelatorio, autor: usuario });
+            onConfirmar={(campos, novoRelatorio, novoSolicitante) => {
+              // Um único registro no histórico, mesmo quando também troca o solicitante.
+              alterarSolicitacao(s.numero, { campos, novoRelatorio, solicitante: novoSolicitante, autor: usuario, perfil: perfilGevam });
+              const trocou = perfilGevam && novoSolicitante && novoSolicitante !== s.solicitante;
               setAcao(null);
               setToast({
                 message: "Solicitação editada.",
                 detail: novoRelatorio
                   ? "Relatório de desenvolvimento substituído. A edição foi registrada no histórico."
-                  : "A edição foi registrada no histórico.",
+                  : trocou
+                    ? `Solicitante agora é ${novoSolicitante}. A edição foi registrada no histórico.`
+                    : "A edição foi registrada no histórico.",
               });
             }}
           />
@@ -806,8 +799,8 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
               {profile === "gestor" && (
                 <p className="text-body text-ink-2">
                   Leia os documentos em <b className="text-ink">Arquivos</b> e confira as abas Cálculo do Tier, Matriz de
-                  Risco e Informações do Modelo. Em <b className="text-ink">Finalizar validação</b> você dá o aval, decide
-                  se o modelo será inventariado e monitorado, e a solicitação fica com status Validada.
+                  Risco e Informações do Modelo. Em <b className="text-ink">Finalizar validação</b> você dá o aval: a solicitação
+                  fica com status Validado e o modelo entra no inventário (Ativo, não monitorado).
                 </p>
               )}
             </div>
@@ -829,7 +822,12 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
                 anexo={s.anexoPedidoComplementacao}
                 onAnexo={abrirAnexo}
               />
-              {solicitantePodeResponder ? (
+              {solicitantePodeResponder && acao !== "responder" ? (
+                <p className="text-body text-ink-2">
+                  Para responder, clique em <b className="text-ink">Ações</b> &gt;{" "}
+                  <b className="text-ink">Responder complementação</b>. A análise só continua depois da sua resposta.
+                </p>
+              ) : solicitantePodeResponder ? (
                 <>
                   <p className="text-body text-ink-2">
                     Anexe o documento solicitado e clique em <b className="text-ink">Enviar complementação</b>. A
@@ -857,7 +855,10 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
                       hint="Opcional. Até 500 caracteres."
                     />
                   </div>
-                  <div className="flex justify-end border-t border-line-soft pt-4">
+                  <div className="flex justify-end gap-3 border-t border-line-soft pt-4">
+                    <Button variant="secondary" onClick={() => setAcao(null)}>
+                      Cancelar
+                    </Button>
                     <Button variant="primary" icon="upload" onClick={enviarResposta}>
                       Enviar complementação
                     </Button>
@@ -887,53 +888,37 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
         {analistaPodeAgir && acao === "pedir" && (
           <FormEncaminhamento
             id="pedido"
-            titulo={preliminar ? "Enviar TAP com pendências ao solicitante" : "Pedir complementação ao solicitante"}
+            titulo="Pedir complementação ao solicitante"
             explicacao={
-              preliminar ? (
-                <>
-                  Anexe o <b className="text-ink">TAP com as pendências</b> do relatório de desenvolvimento. Ele fica
-                  registrado como o TAP da solicitação (não é preciso emitir outro) e as abas de análise são liberadas. A
-                  solicitação passa para <b className="text-ink">Em complementação</b> e volta para{" "}
-                  <b className="text-ink">Em análise</b> quando {s.solicitante} responder.
-                </>
-              ) : (
-                <>
-                  O pedido vai para <b className="text-ink">{s.solicitante}</b>. A solicitação passa para{" "}
-                  <b className="text-ink">Em complementação</b> e volta para <b className="text-ink">Em análise</b>{" "}
-                  quando o solicitante enviar o anexo.
-                </>
-              )
+              <>
+                O pedido vai para <b className="text-ink">{s.solicitante}</b>. A solicitação passa para{" "}
+                <b className="text-ink">Em complementação</b> e volta para <b className="text-ink">Em análise</b>{" "}
+                quando o solicitante enviar o anexo. Se o relatório de desenvolvimento tiver pendências, anexe aqui o
+                TAP com as pendências.
+              </>
             }
             placeholder="Ex.: Preencher a planilha anexa com os resultados de backtesting do último trimestre."
             hint="O solicitante verá exatamente este texto, junto com o anexo."
-            anexoLabel={preliminar ? "TAP com pendências" : "Anexo para o solicitante"}
-            anexoHint={
-              preliminar
-                ? "TAP com as pendências apontadas. PDF, DOC, XLSX ou CSV até 20 MB"
-                : "Documento com o pedido, planilha a preencher ou parecer. PDF, DOC, XLSX ou CSV até 20 MB"
-            }
-            botao={preliminar ? "Enviar TAP" : "Enviar pedido"}
+            anexoLabel="Anexo para o solicitante"
+            anexoHint="TAP com pendências, documento com o pedido ou planilha a preencher. PDF, DOC, XLSX ou CSV até 20 MB"
+            botao="Enviar pedido"
             icon="doc"
             onCancelar={() => setAcao(null)}
             onEnviar={(anexo, texto) => {
-              pedirComplementacao(s.numero, { texto, anexo, autor: usuario, tapComPendencias: preliminar });
+              pedirComplementacao(s.numero, { texto, anexo, autor: usuario });
               setAcao(null);
-              setToast(
-                preliminar
-                  ? { message: "TAP com pendências enviado.", detail: `${s.solicitante} precisa resolver as pendências. As abas de análise estão liberadas.` }
-                  : { message: "Complementação solicitada.", detail: `${s.solicitante} precisa enviar o anexo.` },
-              );
+              setToast({ message: "Complementação solicitada.", detail: `${s.solicitante} precisa enviar o anexo.` });
             }}
           />
         )}
 
-        {analistaPodeAgir && acao === "enviar-gestor" && !preliminar && pendencias.length === 0 && (
+        {analistaPodeAgir && acao === "enviar-gestor" && pendencias.length === 0 && (
           <Panel title="Enviar para o gestor" className="border-info-line">
             <div className="flex flex-col gap-5">
               <p className="text-body text-ink-2">
                 Você está pedindo o <b className="text-ink">aval do gestor</b>. A solicitação passa para{" "}
-                <b className="text-ink">Aguardando gestor</b>; o gestor lê os documentos e as abas e finaliza a validação,
-                decidindo se o modelo será inventariado e monitorado. Não é preciso anexar nada.
+                <b className="text-ink">Aguardando gestor</b>; o gestor lê os documentos e as abas e finaliza a validação;
+                o modelo entra no inventário. Não é preciso anexar nada.
               </p>
               <div className="flex justify-end gap-3 border-t border-line-soft pt-4">
                 <Button variant="secondary" onClick={() => setAcao(null)}>
@@ -972,7 +957,11 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
               <Info label="Tipo de modelo">{s.tipoModelo ?? VAZIO}</Info>
               <Info label="Assunto">{s.assunto}</Info>
               <Info label="Tier">
-                {tierAtual ? (
+                {matrizAtual && matrizAtual.tier !== tierAtual?.tier ? (
+                  <>
+                    {matrizAtual.tier} <span className="text-ink-3">(definido na Matriz de Risco)</span>
+                  </>
+                ) : tierAtual ? (
                   `${tierAtual.tier} · ${tierAtual.resultado} pontos`
                 ) : (
                   <span className="text-ink-3">Aguardando cálculo</span>
@@ -993,8 +982,10 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
               <Info label="Data de finalização da análise">{finalizadaEm ? formatDate(finalizadaEm) : VAZIO}</Info>
               <Info label="Tempo de análise">
                 {diasAnalise === undefined ? VAZIO : `${diasAnalise} ${diasAnalise === 1 ? "dia" : "dias"}`}
-                {diasAnalise !== undefined && !finalizadaEm && s.status !== "Cancelada" && (
-                  <span className="text-ink-3"> (em andamento)</span>
+                {diasAnalise !== undefined && !finalizadaEm && s.status !== "Cancelado" && (
+                  <span className="text-ink-3">
+                    {s.status === "Em complementação" ? " (pausado: aguardando o solicitante)" : " (em andamento)"}
+                  </span>
                 )}
               </Info>
               <Info label="Gestor GEVAM">{gestorGevam(s) ?? VAZIO}</Info>
@@ -1006,7 +997,7 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
         <HistoricoEArquivos timeline={s.timeline} onAbrirAnexo={abrirAnexo} />
       </div>
 
-      {/* ── Popup de validação (gestor) ──────────────────────────────────── */}
+      {/* ── Confirmação de Finalizar validação (gestor) ─────────────────────── */}
       <Modal
         open={gestorPodeDecidir && acao === "validar"}
         title="Finalizar validação"
@@ -1024,46 +1015,16 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
       >
         <div className="flex flex-col gap-5">
           <p className="text-body text-ink-2">
-            <b className="text-ink">{s.numero}</b> · {s.nomeModelo} fica com status <b className="text-ink">Validada</b> e
-            sai da lista Em andamento.
+            <b className="text-ink">{s.numero}</b> · {s.nomeModelo} fica com status <b className="text-ink">Validado</b>,
+            sai da lista Em andamento e entra no inventário como <b className="text-ink">Ativo</b> e{" "}
+            <b className="text-ink">não monitorado</b>. Situação e monitoramento podem ser alterados depois, na página
+            do modelo.
           </p>
           {matrizAtual && (
             <p className="rounded-svm border border-line-soft bg-surface-alt px-4 py-3 text-body text-ink-2">
               Matriz de Risco do analista: <b className="text-ink">{matrizAtual.tier}</b> · nota{" "}
               <b className="text-ink">{matrizAtual.nota}</b> · classificação de risco{" "}
               <b className="text-ink">{matrizAtual.classificacaoRisco}</b>
-            </p>
-          )}
-          <RadioGroupField
-            id="validar-inventariar"
-            label="O modelo será inventariado?"
-            required
-            options={["Sim", "Não"]}
-            value={inventariar}
-            onChange={(v) => {
-              setInventariar(v);
-              setValidarErro((e) => ({ ...e, inv: undefined }));
-            }}
-            error={validarErro.inv}
-            fullWidth
-          />
-          <RadioGroupField
-            id="validar-monitorar"
-            label="O modelo será monitorado?"
-            required
-            options={["Sim", "Não"]}
-            value={monitorar}
-            onChange={(v) => {
-              setMonitorar(v);
-              setValidarErro((e) => ({ ...e, mon: undefined }));
-            }}
-            error={validarErro.mon}
-            fullWidth
-          />
-          {inventariar === "Sim" && (
-            <p className="text-aux text-ink-2">
-              O modelo entra na aba Inventariado com resultado Validado
-              {monitorar ? ` e monitoramento "${monitorar === "Sim" ? "Em monitoramento" : "Não monitorado"}"` : ""}.
             </p>
           )}
         </div>

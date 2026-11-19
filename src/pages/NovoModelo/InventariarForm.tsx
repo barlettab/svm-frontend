@@ -11,12 +11,10 @@ import {
   publicoOptions,
   situacaoModeloOptions,
   tipoModeloOptions,
-  validadoOptions,
 } from "../../data/options";
 
 export interface InventariarDados {
   situacaoModelo: string;
-  validado: string;
   monitoramento: string;
   nomeModelo: string;
   tipoModelo: string;
@@ -78,18 +76,8 @@ export function InventariarForm({ form, onChange, file, onFileChange, onAvancar 
             />
 
             <SelectField
-              id="validado"
-              label="Validado?"
-              required
-              value={form.validado}
-              onChange={(value) => updateField("validado", value)}
-              options={validadoOptions}
-              error={errors.validado}
-            />
-
-            <SelectField
               id="monitoramento"
-              label="Monitoramento"
+              label="Monitoramento 2ª Linha (GEVAM)"
               required
               value={form.monitoramento}
               onChange={(value) => updateField("monitoramento", value)}

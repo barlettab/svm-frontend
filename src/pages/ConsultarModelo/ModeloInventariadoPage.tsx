@@ -10,10 +10,17 @@ import { FileUpload } from "../../components/ui/FileUpload";
 import { SelectField } from "../../components/ui/SelectField";
 import { TextareaField } from "../../components/ui/TextareaField";
 import { RadioGroupField } from "../../components/ui/RadioGroupField";
-import { Modal } from "../../components/ui/Modal";
+import { ToggleField } from "../../components/ui/ToggleField";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { Toast } from "../../components/ui/Toast";
-import type { SituacaoModeloInventario } from "../../types";
+import type { InformacoesModelo, SituacaoModeloInventario } from "../../types";
+import { CamposInformacoesModelo } from "../../components/modelo/CamposDadosModelo";
+import {
+  INFORMACOES_MODELO_VAZIAS,
+  semErros,
+  validarInformacoesModelo,
+  type ErrosInformacoesModelo,
+} from "../../components/modelo/dadosModelo";
 import { formatDate } from "./formatDate";
 import { HistoricoEArquivos, Info } from "./DetalheComum";
 import { ResumoInformacoesAdicionais, ResumoInformacoesModelo } from "../../components/modelo/ResumoDadosModelo";
@@ -28,13 +35,14 @@ interface ModeloInventariadoPageProps {
 }
 
 /**
- * Página do modelo inventariado: mesmas informações e histórico da solicitação de origem,
- * sem pedido de complementação. Analista pode incluir documentos recebidos por fora
- * (Teams, e-mail…); só o gestor altera a situação do modelo.
+ * Página do modelo inventariado: mesmas informações e histórico da solicitação de origem.
+ * Analista inclui documentos recebidos por fora (Teams, e-mail…). Analista e gestor editam
+ * a situação (Ativo / Inativo / Suspenso), o monitoramento pela GEVAM (toggle) e os textos
+ * de Informações do Modelo; cada mudança vai para o histórico. O solicitante só consulta.
  */
 export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoPageProps) {
   const { profile } = useProfile();
-  const { inventario, solicitacoes, alterarSituacao, adicionarDocumento } = useSolicitacoes();
+  const { inventario, solicitacoes, editarModelo, adicionarDocumento } = useSolicitacoes();
   const usuario = currentUserNameByProfile[profile];
 
   const modelo = inventario.find((m) => m.numero === numero);
@@ -43,7 +51,7 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
     : undefined;
 
   const podeAdicionarDocumento = profile === "analista" && solicitacao !== undefined;
-  const podeAlterarSituacao = profile === "gestor";
+  const podeEditar = profile === "analista" || profile === "gestor";
 
   const [toast, setToast] = useState<{ message: string; detail?: string; tone?: "success" | "info" } | null>(null);
 
@@ -54,9 +62,12 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
   const [texto, setTexto] = useState("");
   const [erros, setErros] = useState<{ anexo?: string; origem?: string }>({});
 
-  // Alterar situação (gestor)
-  const [situacaoAberta, setSituacaoAberta] = useState(false);
-  const [novaSituacao, setNovaSituacao] = useState<SituacaoModeloInventario | null>(null);
+  // Editar modelo (analista e gestor)
+  const [edicaoAberta, setEdicaoAberta] = useState(false);
+  const [situacao, setSituacao] = useState<SituacaoModeloInventario>("Ativo");
+  const [monitorado, setMonitorado] = useState(false);
+  const [textos, setTextos] = useState<InformacoesModelo>(INFORMACOES_MODELO_VAZIAS);
+  const [errosTextos, setErrosTextos] = useState<ErrosInformacoesModelo>({});
 
   const crumbs = [
     { label: "Consultar modelos", onClick: onVoltar },
@@ -103,28 +114,46 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
     setToast({ message: "Documento adicionado ao histórico.", detail: anexo!.name });
   }
 
-  function abrirSituacao() {
-    setNovaSituacao(modelo!.situacao);
-    setSituacaoAberta(true);
+  const informacoesModelo = modelo.informacoesModelo ?? solicitacao?.informacoesModelo;
+
+  function abrirEdicao() {
+    setSituacao(modelo!.situacao);
+    setMonitorado(modelo!.monitoramento === "Em monitoramento");
+    setTextos(informacoesModelo ?? INFORMACOES_MODELO_VAZIAS);
+    setErrosTextos({});
+    setFormAberto(false);
+    setEdicaoAberta(true);
   }
 
-  function salvarSituacao() {
-    if (!novaSituacao || novaSituacao === modelo!.situacao) return;
-    alterarSituacao(modelo!.numero, novaSituacao, usuario);
-    setSituacaoAberta(false);
-    setToast({ message: "Situação do modelo alterada.", detail: `${modelo!.nomeModelo} agora está ${novaSituacao}.` });
+  function salvarEdicao() {
+    const e = validarInformacoesModelo(textos);
+    setErrosTextos(e);
+    if (!semErros(e)) return;
+    editarModelo(modelo!.numero, { situacao, monitorado, informacoesModelo: textos, autor: usuario });
+    setEdicaoAberta(false);
+    setToast({
+      message: "Modelo atualizado.",
+      detail: `${situacao} · ${monitorado ? "monitorado" : "não monitorado"} pela GEVAM. As alterações foram registradas no histórico.`,
+    });
   }
 
   const headerActions = (
     <>
-      {podeAdicionarDocumento && !formAberto && (
-        <Button variant="primary" icon="upload" onClick={() => setFormAberto(true)}>
-          Adicionar documento
+      {podeAdicionarDocumento && !formAberto && !edicaoAberta && (
+        <Button
+          variant="secondary"
+          icon="upload"
+          onClick={() => {
+            setEdicaoAberta(false);
+            setFormAberto(true);
+          }}
+        >
+          Acrescentar documentação
         </Button>
       )}
-      {podeAlterarSituacao && (
-        <Button variant="primary" icon="edit" onClick={abrirSituacao}>
-          Alterar situação
+      {podeEditar && !edicaoAberta && (
+        <Button variant="primary" icon="edit" onClick={abrirEdicao}>
+          Editar modelo
         </Button>
       )}
     </>
@@ -143,7 +172,7 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
       <div className="flex flex-col gap-5">
         {/* ── Adicionar documento ao histórico (analista) ─────────────────── */}
         {podeAdicionarDocumento && formAberto && (
-          <Panel title="Adicionar documento ao histórico" className="border-info-line">
+          <Panel title="Acrescentar documentação" className="border-info-line">
             <div className="flex flex-col gap-5">
               <p className="text-body text-ink-2">
                 Use para registrar um documento que chegou por fora do sistema (Teams, e-mail, reunião) e que o
@@ -192,7 +221,56 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
                   Cancelar
                 </Button>
                 <Button variant="primary" icon="upload" onClick={salvarDocumento}>
-                  Adicionar ao histórico
+                  Acrescentar
+                </Button>
+              </div>
+            </div>
+          </Panel>
+        )}
+
+        {/* ── Editar modelo (analista e gestor) ───────────────────────────── */}
+        {podeEditar && edicaoAberta && (
+          <Panel title="Editar modelo" className="border-info-line">
+            <div className="flex flex-col gap-6">
+              <p className="text-body text-ink-2">
+                Altere a situação, o monitoramento pela GEVAM e os textos de Informações do Modelo. Cada alteração fica
+                registrada no histórico com o seu nome.
+              </p>
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <RadioGroupField
+                  id="editar-situacao"
+                  label="Situação do modelo"
+                  required
+                  value={situacao}
+                  onChange={(v) => setSituacao(v as SituacaoModeloInventario)}
+                  options={SITUACOES}
+                />
+                <ToggleField
+                  id="editar-monitorado"
+                  label="Monitoramento 2ª Linha (GEVAM)"
+                  checked={monitorado}
+                  onChange={setMonitorado}
+                  hint="Indica se a 2ª linha (GEVAM) acompanha este modelo. O acompanhamento é feito fora do sistema."
+                />
+              </div>
+              <div className="border-t border-line-soft pt-5">
+                <h3 className="mb-4 text-section font-semibold text-ink">Informações do Modelo</h3>
+                <CamposInformacoesModelo
+                  idPrefix="editar-info"
+                  value={textos}
+                  onChange={(v) => {
+                    setTextos(v);
+                    setErrosTextos({});
+                  }}
+                  errors={errosTextos}
+                />
+              </div>
+              <div className="flex justify-end gap-3 border-t border-line-soft pt-4">
+                <Button variant="secondary" onClick={() => setEdicaoAberta(false)}>
+                  Cancelar
+                </Button>
+                <Button variant="primary" icon="check" onClick={salvarEdicao}>
+                  Salvar alterações
                 </Button>
               </div>
             </div>
@@ -207,10 +285,7 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
             <Info label="Situação do modelo">
               <StatusBadge status={modelo.situacao} />
             </Info>
-            <Info label="Resultado da validação">
-              <StatusBadge status={modelo.resultadoValidacao} />
-            </Info>
-            <Info label="Monitoramento">
+            <Info label="Monitoramento 2ª Linha (GEVAM)">
               <StatusBadge status={modelo.monitoramento} />
             </Info>
             <Info label="Área gestora">{modelo.areaGestora}</Info>
@@ -223,7 +298,7 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
             {solicitacao && <Info label="Data da submissão">{formatDate(solicitacao.dataSubmissao)}</Info>}
             <Info label="Data do inventário">{formatDate(modelo.dataInventario)}</Info>
             {solicitacao?.conclusao && (
-              <Info label="Validada por">
+              <Info label="Validado por">
                 {solicitacao.conclusao.gestor} · {formatDate(solicitacao.conclusao.data)}
               </Info>
             )}
@@ -239,9 +314,9 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
             <ResumoInformacoesAdicionais dados={(modelo.informacoesAdicionais ?? solicitacao?.informacoesAdicionais)!} />
           </Panel>
         )}
-        {(modelo.informacoesModelo ?? solicitacao?.informacoesModelo) && (
+        {informacoesModelo && !edicaoAberta && (
           <Panel title="Informações do Modelo">
-            <ResumoInformacoesModelo dados={(modelo.informacoesModelo ?? solicitacao?.informacoesModelo)!} />
+            <ResumoInformacoesModelo dados={informacoesModelo} />
           </Panel>
         )}
 
@@ -254,44 +329,6 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
           </Panel>
         )}
       </div>
-
-      {/* ── Popup de situação (gestor) ──────────────────────────────────── */}
-      <Modal
-        open={podeAlterarSituacao && situacaoAberta}
-        title="Alterar situação do modelo"
-        width="sm"
-        onClose={() => setSituacaoAberta(false)}
-        footer={
-          <>
-            <Button variant="secondary" onClick={() => setSituacaoAberta(false)}>
-              Cancelar
-            </Button>
-            <Button
-              variant="primary"
-              icon="check"
-              disabled={!novaSituacao || novaSituacao === modelo.situacao}
-              onClick={salvarSituacao}
-            >
-              Salvar situação
-            </Button>
-          </>
-        }
-      >
-        <div className="flex flex-col gap-4">
-          <p className="text-body text-ink-2">
-            Situação atual: <b className="text-ink">{modelo.situacao}</b>. A alteração fica registrada no histórico.
-          </p>
-          <RadioGroupField
-            id="situacao-modelo"
-            label="Nova situação"
-            required
-            value={novaSituacao ?? ""}
-            onChange={(v) => setNovaSituacao(v as SituacaoModeloInventario)}
-            options={SITUACOES}
-            fullWidth
-          />
-        </div>
-      </Modal>
 
       <Toast
         open={toast !== null}

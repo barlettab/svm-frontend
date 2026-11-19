@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useProfile } from "../../context/ProfileContext";
 import { useSolicitacoes } from "../../context/SolicitacoesContext";
-import { currentSolicitante, currentUserNameByProfile } from "../../data/currentUser";
+import { currentSolicitante } from "../../data/currentUser";
 import {
   analistaFilterOptions,
   areaGestoraFilterOptions,
@@ -15,132 +15,13 @@ import { StatCard } from "../../components/ui/StatCard";
 import { Table, type TableColumn } from "../../components/ui/Table";
 import { StatusBadge } from "../../components/ui/Badge";
 import { InlineAlert } from "../../components/ui/ErrorState";
-import { Toast } from "../../components/ui/Toast";
 import { Button } from "../../components/ui/Button";
-import { SOLICITACAO_ACTIONS, type SolicitacaoAction } from "../../components/ui/RowActions";
-import { ActionMenu, type ActionMenuItem } from "../../components/ui/ActionMenu";
-import type { Profile, Solicitacao, SolicitacaoStatus } from "../../types";
-
-import { pendenciasParaGestor } from "../../components/modelo/dadosModelo";
+import type { Solicitacao, SolicitacaoStatus } from "../../types";
 import { type AcaoSolicitacao } from "./SolicitacaoDetalhePage";
-import {
-  analistaPodeAgir,
-  analistaPodeCancelar,
-  emAvaliacaoPreliminar,
-  gestorPodeCancelar,
-  gestorPodeAtribuir,
-  solicitantePodeAlterar,
-  solicitantePodeCancelar,
-  statusParaPerfil,
-} from "./fluxo";
-
-const ANALISTA = currentUserNameByProfile.analista;
-
-/**
- * Itens do menu "Ações" de cada linha. "Visualizar" não entra: é o botão "Abrir".
- * Para o analista, as ações seguem o fluxo: avaliação preliminar (atualizar, complementar
- * ou cancelar) e depois análise (complementar ou enviar ao gestor).
- */
-function menuItems(row: Solicitacao, profile: Profile): ActionMenuItem[] {
-  const item = (key: SolicitacaoAction, extra?: Partial<ActionMenuItem>): ActionMenuItem => ({
-    key,
-    label: SOLICITACAO_ACTIONS[key].label,
-    icon: SOLICITACAO_ACTIONS[key].icon,
-    danger: SOLICITACAO_ACTIONS[key].danger,
-    ...extra,
-  });
-  const alterar = item("alterar", {
-    description: "Corrija os dados enquanto nenhum analista assumiu.",
-    disabled: profile !== "solicitante" || !solicitantePodeAlterar(row),
-    disabledReason:
-      profile !== "solicitante"
-        ? "Só o solicitante edita a solicitação."
-        : "Só é possível editar enquanto nenhum analista assumiu (status Submetido).",
-  });
-  const atribuir = item("atribuir-analista", {
-    description: row.status === "Submetido" ? "Passa para Em análise com o analista escolhido." : `Hoje com ${row.analistaResponsavel}.`,
-    disabled: profile !== "gestor" || !gestorPodeAtribuir(row),
-    disabledReason:
-      profile === "analista" ? "Ao abrir uma solicitação Submetido, ela é atribuída a você." : "Só o gestor atribui.",
-  });
-  const comuns = [alterar, atribuir, item("alterar-solicitante")];
-
-  // Solicitante: só Editar e Cancelar no menu (Abrir é o botão ao lado).
-  if (profile === "solicitante") {
-    return [
-      { ...alterar, label: "Editar solicitação" },
-      item("cancelar", {
-        separated: true,
-        description: "Desista da solicitação. Informe o motivo.",
-        disabled: !solicitantePodeCancelar(row),
-      }),
-    ];
-  }
-
-  if (profile === "analista") {
-    const pode = analistaPodeAgir(row, ANALISTA);
-    const preliminar = emAvaliacaoPreliminar(row);
-    const motivo =
-      row.status === "Em complementação"
-        ? "Aguardando o solicitante."
-        : row.status === "Aguardando gestor"
-          ? "Aguardando decisão do gestor."
-          : row.status === "Em análise"
-            ? `Em análise com ${row.analistaResponsavel}.`
-            : "Indisponível neste status.";
-    return [
-      item("atualizar-solicitacao", {
-        description: preliminar
-          ? "Relatório ok: registre o TAP sem pendências e libere a análise."
-          : "Registre documentos ou informações recebidos por outros meios.",
-        disabled: !pode,
-        disabledReason: motivo,
-      }),
-      item("solicitar-complementacao", {
-        description: preliminar
-          ? "Relatório com pendências: envie o TAP com as pendências ao solicitante."
-          : "Peça um documento ou informação ao solicitante.",
-        disabled: !pode,
-        disabledReason: motivo,
-      }),
-      item("enviar-gestor", {
-        description: pendenciasParaGestor(row).length
-          ? `Antes, preencha ${pendenciasParaGestor(row).join(", ")}.`
-          : "Peça o aval do gestor para finalizar a validação.",
-        disabled: !pode || preliminar,
-        disabledReason: !pode ? motivo : "Antes, emita o TAP (avaliação preliminar).",
-      }),
-      { ...comuns[0], separated: true },
-      ...comuns.slice(1),
-      item("cancelar", {
-        separated: true,
-        description: "Encerra a solicitação. A justificativa fica visível para todos.",
-        disabled: !analistaPodeCancelar(row, ANALISTA),
-        disabledReason: `Só o analista responsável (${row.analistaResponsavel}), o gestor ou o solicitante cancelam.`,
-      }),
-    ];
-  }
-
-  // gestor
-  const comGestor = row.status === "Aguardando gestor";
-  const motivoGestor = "Disponível quando o analista enviar para o gestor.";
-  return [
-    item("validar", {
-      description: "Dá o aval à validação do analista e finaliza (status Validada).",
-      disabled: !comGestor,
-      disabledReason: motivoGestor,
-    }),
-    { ...comuns[0], separated: true },
-    ...comuns.slice(1),
-    item("cancelar", {
-      separated: true,
-      description: "Encerra a solicitação. Informe o motivo.",
-      disabled: !gestorPodeCancelar(row),
-    }),
-  ];
-}
 
 interface Filters {
+  /** "Todos" ou um status em andamento (como o perfil o vê). */
+  status: string;
   numero: string;
   areaGestora: string;
   nomeModelo: string;
@@ -148,7 +29,10 @@ interface Filters {
   analista: string;
 }
 
+const TODOS = "Todos";
+
 const DEFAULT_FILTERS: Filters = {
+  status: TODOS,
   numero: "",
   areaGestora: "Todas",
   nomeModelo: "",
@@ -161,7 +45,11 @@ function formatDate(iso: string) {
   return `${d}/${m}/${y}`;
 }
 
+/** Opções do filtro "Status da solicitação" (iguais para os três perfis; o solicitante também vê "Aguardando gestor"). */
+const OPCOES_STATUS: string[] = [TODOS, "Submetido", "Em análise", "Em complementação", "Aguardando gestor"];
+
 function matches(solicitacao: Solicitacao, filters: Filters) {
+  if (filters.status !== TODOS && solicitacao.status !== filters.status) return false;
   if (
     filters.numero &&
     !solicitacao.numero.toLowerCase().includes(filters.numero.toLowerCase())
@@ -199,7 +87,7 @@ export function EmAndamentoTab({ onAbrir }: EmAndamentoTabProps) {
   const { solicitacoes: todas } = useSolicitacoes();
   // Validadas e canceladas estão finalizadas: saem de Em andamento.
   const solicitacoes = useMemo(
-    () => todas.filter((s) => s.status !== "Validada" && s.status !== "Cancelada"),
+    () => todas.filter((s) => s.status !== "Validado" && s.status !== "Cancelado"),
     [todas],
   );
 
@@ -216,10 +104,13 @@ export function EmAndamentoTab({ onAbrir }: EmAndamentoTabProps) {
 
   const [draft, setDraft] = useState<Filters>(DEFAULT_FILTERS);
   const [applied, setApplied] = useState<Filters>(DEFAULT_FILTERS);
-  const [statusFilter, setStatusFilter] = useState<SolicitacaoStatus | null>(
-    null,
-  );
-  const [toast, setToast] = useState<string | null>(null);
+  // Ao trocar de perfil, os filtros voltam ao padrão.
+  const [perfilDosFiltros, setPerfilDosFiltros] = useState(profile);
+  if (profile !== perfilDosFiltros) {
+    setPerfilDosFiltros(profile);
+    setDraft(DEFAULT_FILTERS);
+    setApplied(DEFAULT_FILTERS);
+  }
 
   const counts = useMemo(() => {
     return {
@@ -234,16 +125,18 @@ export function EmAndamentoTab({ onAbrir }: EmAndamentoTabProps) {
     };
   }, [solicitacoes]);
 
-  const filtered = useMemo(() => {
-    return visibleSolicitacoes.filter((s) => {
-      if (statusFilter && s.status !== statusFilter) return false;
-      return matches(s, applied);
-    });
-  }, [visibleSolicitacoes, applied, statusFilter]);
+  const filtered = useMemo(
+    () => visibleSolicitacoes.filter((s) => matches(s, applied)),
+    [visibleSolicitacoes, applied],
+  );
 
+  /** Card de status = atalho do filtro "Status da solicitação" (aplica na hora; clicar de novo limpa). */
   function toggleStatusFilter(status: SolicitacaoStatus) {
-    setStatusFilter((current) => (current === status ? null : status));
+    const novo = applied.status === status ? TODOS : status;
+    setDraft((f) => ({ ...f, status: novo }));
+    setApplied((f) => ({ ...f, status: novo }));
   }
+  const statusFilter = applied.status;
 
   function handleSearch() {
     setApplied(draft);
@@ -252,34 +145,13 @@ export function EmAndamentoTab({ onAbrir }: EmAndamentoTabProps) {
   function handleClear() {
     setDraft(DEFAULT_FILTERS);
     setApplied(DEFAULT_FILTERS);
-    setStatusFilter(null);
-  }
-
-  function handleRowAction(action: SolicitacaoAction, row: Solicitacao) {
-    if (action === "visualizar") {
-      onAbrir(row.numero);
-      return;
-    }
-    const atalhos: Partial<Record<SolicitacaoAction, AcaoSolicitacao>> = {
-      "solicitar-complementacao": "pedir",
-      "atualizar-solicitacao": "atualizar",
-      cancelar: "cancelar",
-      "enviar-gestor": "enviar-gestor",
-      validar: "validar",
-      alterar: "alterar",
-      "atribuir-analista": "atribuir",
-    };
-    if (atalhos[action]) {
-      onAbrir(row.numero, atalhos[action]);
-      return;
-    }
-    setToast(`${SOLICITACAO_ACTIONS[action].label} (${row.numero}): funcionalidade ainda não implementada.`);
   }
 
   const columns: TableColumn<Solicitacao>[] = [
     { header: "Nº da solicitação", render: (row) => row.numero },
     { header: "Nome do modelo", render: (row) => row.nomeModelo },
-    { header: "Área gestora", render: (row) => row.areaGestora },
+    // O solicitante só vê a área dele (já indicada acima da lista): a coluna sairia repetida.
+    ...(isSolicitante ? [] : [{ header: "Área gestora", render: (row: Solicitacao) => row.areaGestora }]),
     { header: "Assunto", render: (row) => row.assunto },
     { header: "Solicitante", render: (row) => row.solicitante },
     { header: "Data da submissão", render: (row) => formatDate(row.dataSubmissao) },
@@ -289,26 +161,16 @@ export function EmAndamentoTab({ onAbrir }: EmAndamentoTabProps) {
     },
     {
       header: "Status",
-      render: (row) => <StatusBadge status={statusParaPerfil(row.status, profile)} />,
+      render: (row) => <StatusBadge status={row.status} />,
     },
     {
       header: "Ação",
       align: "right",
       render: (row) => (
         <div className="flex items-center justify-end gap-2">
-          {isSolicitante && row.status === "Em complementação" && (
-            <Button variant="primary" icon="upload" onClick={() => onAbrir(row.numero)} className="h-[34px] whitespace-nowrap px-3">
-              Complementar
-            </Button>
-          )}
           <Button variant="secondary" icon="eye" onClick={() => onAbrir(row.numero)} className="h-[34px] px-3">
             Abrir
           </Button>
-          <ActionMenu
-            ariaLabel={`Ações da solicitação ${row.numero}`}
-            items={menuItems(row, profile)}
-            onSelect={(key) => handleRowAction(key as SolicitacaoAction, row)}
-          />
         </div>
       ),
     },
@@ -360,20 +222,18 @@ export function EmAndamentoTab({ onAbrir }: EmAndamentoTabProps) {
           tone="warning"
           title={
             pendentesComplementacao.length === 1
-              ? "1 solicitação aguarda sua complementação"
-              : `${pendentesComplementacao.length} solicitações aguardam sua complementação`
+              ? "Existe 1 solicitação que exige complementação"
+              : `Existem ${pendentesComplementacao.length} solicitações que exigem complementação`
           }
         >
-          <p>O analista pediu informações adicionais. Envie o anexo solicitado para que a análise continue.</p>
-          <ul className="mt-2 flex flex-col gap-1.5">
+          <p>
+            É preciso que o solicitante envie a complementação para dar continuidade à análise do especialista. Abra a
+            solicitação e use <b className="text-ink">Ações &gt; Responder complementação</b>.
+          </p>
+          <ul className="mt-2 flex flex-col gap-1">
             {pendentesComplementacao.map((s) => (
-              <li key={s.numero} className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span>
-                  <span className="font-semibold text-ink">{s.numero}</span> · {s.nomeModelo}
-                </span>
-                <Button variant="link" onClick={() => onAbrir(s.numero)} className="h-auto p-0">
-                  Ver pedido e complementar
-                </Button>
+              <li key={s.numero}>
+                <span className="font-semibold text-ink">{s.numero}</span> · {s.nomeModelo}
               </li>
             ))}
           </ul>
@@ -387,6 +247,13 @@ export function EmAndamentoTab({ onAbrir }: EmAndamentoTabProps) {
           value={draft.numero}
           onChange={(value) => setDraft((f) => ({ ...f, numero: value }))}
           placeholder="Ex.: REQ-2026-001"
+        />
+        <FilterSelectField
+          id="filtro-status"
+          label="Status da solicitação"
+          value={draft.status}
+          onChange={(value) => setDraft((f) => ({ ...f, status: value }))}
+          options={OPCOES_STATUS}
         />
         {showCards ? (
           <FilterSelectField
@@ -436,12 +303,6 @@ export function EmAndamentoTab({ onAbrir }: EmAndamentoTabProps) {
         emptyDescription="Tente alterar os filtros ou os termos da pesquisa."
       />
 
-      <Toast
-        open={toast !== null}
-        tone="info"
-        message={toast ?? ""}
-        onClose={() => setToast(null)}
-      />
     </div>
   );
 }

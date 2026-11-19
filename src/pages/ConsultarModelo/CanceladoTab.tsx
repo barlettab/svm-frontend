@@ -1,14 +1,14 @@
 import { useMemo, useState } from "react";
+import { useProfile } from "../../context/ProfileContext";
 import { useSolicitacoes } from "../../context/SolicitacoesContext";
+import { currentSolicitante } from "../../data/currentUser";
 import { areaGestoraFilterOptions } from "../../data/filterOptions";
 import { FilterTextField } from "../../components/ui/FilterTextField";
 import { FilterSelectField } from "../../components/ui/FilterSelectField";
 import { FilterBar } from "../../components/ui/FilterBar";
+import { ReadOnlyField } from "../../components/ui/ReadOnlyField";
 import { Table, type TableColumn } from "../../components/ui/Table";
-import { Drawer } from "../../components/ui/Drawer";
-import { DetailRow } from "../../components/ui/DetailRow";
-import { InlineAlert } from "../../components/ui/ErrorState";
-import { IconButton } from "../../components/ui/Button";
+import { Button } from "../../components/ui/Button";
 import type { SolicitacaoCancelada } from "../../types";
 
 const EMPTY_VALUE = "—";
@@ -51,15 +51,23 @@ function matches(solicitacao: SolicitacaoCancelada, filters: Filters) {
   return true;
 }
 
-export function CanceladoTab() {
+/**
+ * Aba "Cancelado": lista as canceladas; Abrir leva à página da solicitação (sem painel lateral).
+ * O solicitante vê só as canceladas da área dele (como em Em andamento).
+ */
+export function CanceladoTab({ onAbrir }: { onAbrir: (numero: string) => void }) {
+  const { profile } = useProfile();
+  const soDaArea = profile === "solicitante";
   const [draft, setDraft] = useState<Filters>(DEFAULT_FILTERS);
   const [applied, setApplied] = useState<Filters>(DEFAULT_FILTERS);
-  const [selected, setSelected] = useState<SolicitacaoCancelada | null>(null);
   const { cancelados } = useSolicitacoes();
 
   const filtered = useMemo(
-    () => cancelados.filter((s) => matches(s, applied)),
-    [cancelados, applied],
+    () =>
+      cancelados.filter(
+        (s) => (!soDaArea || s.areaGestora === currentSolicitante.areaGestora) && matches(s, applied),
+      ),
+    [cancelados, applied, soDaArea],
   );
 
   function handleSearch() {
@@ -74,7 +82,8 @@ export function CanceladoTab() {
   const columns: TableColumn<SolicitacaoCancelada>[] = [
     { header: "Nº da solicitação", render: (row) => row.numero },
     { header: "Nome do modelo", render: (row) => row.nomeModelo },
-    { header: "Área gestora", render: (row) => row.areaGestora },
+    // O solicitante só vê a área dele (indicada acima da lista): a coluna sairia repetida.
+    ...(soDaArea ? [] : [{ header: "Área gestora", render: (row: SolicitacaoCancelada) => row.areaGestora }]),
     { header: "Assunto", render: (row) => row.assunto ?? EMPTY_VALUE },
     { header: "Solicitante", render: (row) => row.solicitante ?? EMPTY_VALUE },
     {
@@ -93,24 +102,23 @@ export function CanceladoTab() {
     },
     {
       header: "Ação",
-      align: "center",
+      align: "right",
       render: (row) => (
-        <div className="flex items-center justify-center">
-          <IconButton
-            icon="eye"
-            label="Visualizar solicitação"
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelected(row);
-            }}
-          />
-        </div>
+        <Button variant="secondary" icon="eye" onClick={() => onAbrir(row.numero)} className="h-[34px] px-3">
+          Abrir
+        </Button>
       ),
     },
   ];
 
   return (
     <div>
+      {soDaArea && (
+        <p className="mb-4 text-body text-ink-3">
+          Exibindo solicitações canceladas da área{" "}
+          <span className="font-semibold text-ink">{currentSolicitante.areaGestora}</span>.
+        </p>
+      )}
       <FilterBar onSearch={handleSearch} onClear={handleClear}>
         <FilterTextField
           id="cancel-filtro-numero"
@@ -119,13 +127,17 @@ export function CanceladoTab() {
           onChange={(value) => setDraft((f) => ({ ...f, numero: value }))}
           placeholder="Ex.: REQ-2026-001"
         />
-        <FilterSelectField
-          id="cancel-filtro-area"
-          label="Área gestora"
-          value={draft.areaGestora}
-          onChange={(value) => setDraft((f) => ({ ...f, areaGestora: value }))}
-          options={areaGestoraFilterOptions}
-        />
+        {soDaArea ? (
+          <ReadOnlyField label="Área gestora" value={currentSolicitante.areaGestora} />
+        ) : (
+          <FilterSelectField
+            id="cancel-filtro-area"
+            label="Área gestora"
+            value={draft.areaGestora}
+            onChange={(value) => setDraft((f) => ({ ...f, areaGestora: value }))}
+            options={areaGestoraFilterOptions}
+          />
+        )}
         <FilterTextField
           id="cancel-filtro-nome-modelo"
           label="Nome do modelo"
@@ -144,41 +156,6 @@ export function CanceladoTab() {
         emptyDescription="Tente alterar os filtros ou os termos da pesquisa."
       />
 
-      <Drawer
-        open={selected !== null}
-        title={selected?.numero ?? ""}
-        onClose={() => setSelected(null)}
-      >
-        {selected && (
-          <dl>
-            <DetailRow label="Nome do modelo" value={selected.nomeModelo} />
-            <DetailRow label="Área gestora" value={selected.areaGestora} />
-            <DetailRow
-              label="Assunto"
-              value={selected.assunto ?? EMPTY_VALUE}
-            />
-            <DetailRow
-              label="Solicitante"
-              value={selected.solicitante ?? EMPTY_VALUE}
-            />
-            <DetailRow
-              label="Analista responsável"
-              value={selected.analistaResponsavel ?? EMPTY_VALUE}
-            />
-            <DetailRow
-              label="Data do cancelamento"
-              value={selected.dataCancelamento}
-            />
-            <DetailRow label="Cancelada por" value={canceladoPorLabel(selected)} />
-
-            <div className="mt-4">
-              <InlineAlert tone="error" title="Justificativa de cancelamento">
-                {selected.justificativa}
-              </InlineAlert>
-            </div>
-          </dl>
-        )}
-      </Drawer>
     </div>
   );
 }

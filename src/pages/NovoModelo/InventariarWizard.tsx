@@ -32,9 +32,8 @@ const PASSOS: { key: Passo; label: string }[] = [
 ];
 
 const DADOS_VAZIOS: InventariarDados = {
-  situacaoModelo: "",
-  validado: "",
-  monitoramento: "",
+  situacaoModelo: "Ativo",
+  monitoramento: "Não monitorado",
   nomeModelo: "",
   tipoModelo: "",
   publico: "",

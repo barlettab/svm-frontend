@@ -57,6 +57,8 @@ export function SubmeterForm() {
       }
     });
     if (!file) nextErrors.anexo = "Anexe o relatório de desenvolvimento do modelo.";
+    // O seletor só oferece PDF, mas arrastar para o quadro aceita qualquer arquivo: confere aqui.
+    else if (!/\.pdf$/i.test(file.name)) nextErrors.anexo = "O relatório deve ser um arquivo PDF.";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
@@ -151,6 +153,8 @@ export function SubmeterForm() {
               id="anexo"
               label="Relatório de desenvolvimento do modelo"
               required
+              accept=".pdf"
+              hint="Somente PDF, até 20 MB"
               file={file}
               onChange={(f) => {
                 setFile(f);

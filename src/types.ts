@@ -30,7 +30,7 @@ export const TABS_BY_PROFILE: Record<Profile, NovoModeloTab[]> = {
 export type ConsultarModeloTab = "em-andamento" | "inventariado" | "cancelado";
 
 export const CONSULTAR_TABS_BY_PROFILE: Record<Profile, ConsultarModeloTab[]> = {
-  solicitante: ["em-andamento"],
+  solicitante: ["em-andamento", "inventariado", "cancelado"],
   analista: ["em-andamento", "inventariado", "cancelado"],
   gestor: ["em-andamento", "inventariado", "cancelado"],
 };
@@ -67,8 +67,8 @@ export type SolicitacaoStatus =
   | "Em análise"
   | "Em complementação"
   | "Aguardando gestor"
-  | "Validada"
-  | "Cancelada";
+  | "Validado"
+  | "Cancelado";
 
 /** Quem pode cancelar: o analista responsável, o gestor GEVAM ou o próprio solicitante, sempre com justificativa. */
 export type CanceladoPor = "analista" | "gestor" | "solicitante";
@@ -192,19 +192,12 @@ export interface Solicitacao {
     autor: string;
     data: string;
   };
-  /** Decisão final do gestor ao validar. */
+  /** Aval do gestor: toda solicitação Validado entra no inventário (Ativo, não monitorado). */
   conclusao?: {
     data: string;
     gestor: string;
-    inventariado: boolean;
-    monitorado: boolean;
     numeroInventario?: string;
   };
-  /**
-   * TAP emitido sem pendências ("Atualizar solicitação"). Encerra a avaliação
-   * preliminar e libera a fase de análise.
-   */
-  tap?: { anexo: string; data: string; autor: string; observacao?: string; comPendencias?: boolean };
   /** Preenchido quando o analista ou o próprio solicitante cancela a solicitação. */
   cancelamento?: { data: string; autor: string; justificativa: string; por: CanceladoPor };
   /** Preenchidas pelo analista; obrigatórias para enviar ao gestor. */
@@ -222,11 +215,12 @@ export interface Solicitacao {
   };
 }
 
-export type ResultadoValidacao = "Validado" | "Não validado";
-export type MonitoramentoInventario =
-  | "Em monitoramento"
-  | "Não monitorado"
-  | "Não se aplica";
+/**
+ * Monitoramento pela GEVAM (toggle na página do modelo). Todo modelo entra no inventário
+ * como "Não monitorado". Não existe "Resultado da validação": tudo no inventário foi validado
+ * (o que não foi validado foi cancelado).
+ */
+export type MonitoramentoInventario = "Em monitoramento" | "Não monitorado";
 export type SituacaoModeloInventario = "Ativo" | "Inativo" | "Suspenso";
 
 export interface ModeloInventariado {
@@ -238,7 +232,6 @@ export interface ModeloInventariado {
   areaGestora: string;
   assunto: string;
   publico: string;
-  resultadoValidacao: ResultadoValidacao;
   monitoramento: MonitoramentoInventario;
   situacao: SituacaoModeloInventario;
   analistaResponsavel: string;
