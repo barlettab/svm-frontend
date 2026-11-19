@@ -15,6 +15,9 @@ const TAB_LABELS: Record<ConsultarModeloTab, string> = {
   cancelado: "Cancelado",
 };
 
+/** Para o solicitante a aba Inventariado se chama “Validado”. */
+// Os nomes das abas são os mesmos para todos os perfis (o solicitante também vê “Inventariado”).
+
 export function ConsultarModeloPage() {
   const { profile } = useProfile();
   const availableTabs = CONSULTAR_TABS_BY_PROFILE[profile];
@@ -59,8 +62,10 @@ export function ConsultarModeloPage() {
 
       <div className="mt-6">
         {activeTab === "em-andamento" && <EmAndamentoTab onAbrir={(numero, acao) => setAberta({ numero, acao })} />}
-        {activeTab === "inventariado" && <InventariadoTab onAbrir={setModeloAberto} />}
-        {activeTab === "cancelado" && <CanceladoTab />}
+        {activeTab === "inventariado" && (
+          <InventariadoTab onAbrir={setModeloAberto} />
+        )}
+        {activeTab === "cancelado" && <CanceladoTab onAbrir={(numero) => setAberta({ numero })} />}
       </div>
     </div>
   );

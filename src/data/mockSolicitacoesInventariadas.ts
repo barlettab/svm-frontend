@@ -1,5 +1,6 @@
 import type { Solicitacao } from "../types";
 import { mockInventario } from "./mockInventario";
+import { exemploCalculos, exemploInformacoesAdicionais, exemploInformacoesModelo } from "./mockDadosModelo";
 
 /**
  * Solicitações já finalizadas que deram origem aos modelos do inventário mockado.
@@ -20,7 +21,6 @@ export const mockSolicitacoesInventariadas: Solicitacao[] = mockInventario
     const numero = m.numeroSolicitacao!;
     const fim = m.dataInventario;
     const monitorado = m.monitoramento === "Em monitoramento";
-    const parecer = `Parecer técnico ${numero}.pdf`;
     return {
       numero,
       nomeModelo: m.nomeModelo,
@@ -30,28 +30,59 @@ export const mockSolicitacoesInventariadas: Solicitacao[] = mockInventario
       solicitante: SOLICITANTES[i % SOLICITANTES.length],
       dataSubmissao: diasAntes(fim, 30),
       analistaResponsavel: m.analistaResponsavel,
-      status: "Validada",
+      status: "Validado",
       tipoModelo: m.tipoModelo,
       objetivo: m.objetivo,
-      conclusao: { data: fim, gestor: GESTOR, inventariado: true, monitorado, numeroInventario: m.numero },
+      informacoesAdicionais: exemploInformacoesAdicionais,
+      informacoesModelo: exemploInformacoesModelo,
+      calculosTier: exemploCalculos(m.analistaResponsavel, diasAntes(fim, 7)),
+      conclusao: { data: fim, gestor: GESTOR, numeroInventario: m.numero },
       timeline: [
         { data: diasAntes(fim, 30), descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
-        { data: diasAntes(fim, 29), descricao: "Encaminhada para análise técnica." },
-        { data: diasAntes(fim, 27), descricao: "Em análise pela GEVAM." },
+        {
+          data: diasAntes(fim, 27),
+          descricao: `Solicitação atribuída a ${m.analistaResponsavel}.`,
+          autor: m.analistaResponsavel,
+          tipo: "atribuida",
+        },
+        {
+          data: diasAntes(fim, 26),
+          descricao: "Documentação acrescentada pelo analista.",
+        detalhe: "TAP sem pendências.",
+          autor: m.analistaResponsavel,
+          anexos: [`TAP ${numero}.pdf`],
+          tipo: "documento-adicionado",
+        },
         {
           data: diasAntes(fim, 5),
-          descricao: "Análise concluída e enviada para o gestor.",
+          descricao: "Análise concluída e enviada para o gestor. Aval solicitado.",
           autor: m.analistaResponsavel,
-          anexos: [parecer],
           tipo: "enviada-gestor",
         },
         {
           data: fim,
-          descricao: `Validação finalizada com resultado ${m.resultadoValidacao}. Modelo incluído no inventário (${m.numero}).`,
-          detalhe: `Inventariado: Sim · Monitorado: ${monitorado ? "Sim" : "Não"}`,
+          descricao: `Solicitação validada pelo gestor. Modelo incluído no inventário (${m.numero}).`,
+          detalhe: "Situação: Ativo · Monitoramento 2ª Linha (GEVAM): Não",
           autor: GESTOR,
           tipo: "validada",
         },
+        // Entra sempre Ativo e não monitorado; se mudou depois, há um único registro "Modelo editado no inventário.".
+        ...(monitorado || m.situacao !== "Ativo"
+          ? [
+              {
+                data: fim,
+                descricao: "Modelo editado no inventário.",
+                detalhe: [
+                  m.situacao !== "Ativo" ? `Situação: Ativo → ${m.situacao}` : "",
+                  monitorado ? "Monitoramento 2ª Linha (GEVAM): Não → Sim" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" · "),
+                autor: GESTOR,
+                tipo: "situacao-alterada" as const,
+              },
+            ]
+          : []),
       ],
     };
   });

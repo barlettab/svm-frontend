@@ -1,4 +1,5 @@
 import type { Solicitacao } from "../types";
+import { exemploCalculos, exemploInformacoesAdicionais, exemploInformacoesModelo } from "./mockDadosModelo";
 
 export const mockSolicitacoes: Solicitacao[] = [
   {
@@ -10,10 +11,12 @@ export const mockSolicitacoes: Solicitacao[] = [
     solicitante: "João Pereira",
     dataSubmissao: "2026-07-02",
     analistaResponsavel: "Maria Santos",
+    dataAtribuicao: "2026-07-03T09:15",
     status: "Em análise",
+    tipoModelo: "Estatístico",
+    objetivo: "Estimar a probabilidade de inadimplência de pessoas físicas na concessão de crédito pessoal.",
     timeline: [
       { data: "2026-07-02", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
-      { data: "2026-07-03", descricao: "Encaminhada para análise técnica." },
       { data: "2026-07-05", descricao: "Em análise pela GEVAM." },
     ],
   },
@@ -26,10 +29,12 @@ export const mockSolicitacoes: Solicitacao[] = [
     solicitante: "Ana Costa",
     dataSubmissao: "2026-07-10",
     analistaResponsavel: "Carlos Oliveira",
+    dataAtribuicao: "2026-07-11T10:40",
     status: "Em complementação",
+    tipoModelo: "Machine Learning",
+    objetivo: "Identificar transações de cartão com indício de fraude em tempo real.",
     timeline: [
       { data: "2026-07-10", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
-      { data: "2026-07-11", descricao: "Encaminhada para análise técnica." },
       { data: "2026-07-14", descricao: "Complementação solicitada ao solicitante.", autor: "Carlos Oliveira", tipo: "complementacao-pedida" },
     ],
     complementacao:
@@ -43,8 +48,10 @@ export const mockSolicitacoes: Solicitacao[] = [
     publico: "Externo",
     solicitante: "Marcos Lima",
     dataSubmissao: "2026-07-15",
-    analistaResponsavel: "Fernanda Alves",
+    analistaResponsavel: "Não atribuído",
     status: "Submetido",
+    tipoModelo: "Inteligência Artificial",
+    objetivo: "Estimar a propensão de compra de produtos para ações de marketing.",
     timeline: [
       { data: "2026-07-15", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
     ],
@@ -59,10 +66,24 @@ export const mockSolicitacoes: Solicitacao[] = [
     dataSubmissao: "2026-07-18",
     analistaResponsavel: "Maria Santos",
     status: "Em análise",
+    tipoModelo: "Estatístico",
+    objetivo: "Prever a demanda de atendimento nas agências para dimensionar equipes.",
     timeline: [
       { data: "2026-07-18", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
-      { data: "2026-07-19", descricao: "Encaminhada para análise técnica." },
-      { data: "2026-07-21", descricao: "Em análise pela GEVAM." },
+      {
+        data: "2026-07-19",
+        descricao: "Solicitação atribuída a Maria Santos.",
+        autor: "Maria Santos",
+        tipo: "atribuida",
+      },
+      {
+        data: "2026-07-23",
+        descricao: "Documentação acrescentada pelo analista.",
+        detalhe: "TAP sem pendências.",
+        autor: "Maria Santos",
+        anexos: ["TAP REQ-2026-004.pdf"],
+        tipo: "documento-adicionado",
+      },
     ],
   },
   {
@@ -75,6 +96,8 @@ export const mockSolicitacoes: Solicitacao[] = [
     dataSubmissao: "2026-07-20",
     analistaResponsavel: "Não atribuído",
     status: "Submetido",
+    tipoModelo: "Machine Learning",
+    objetivo: "Estimar o risco de desligamento voluntário de colaboradores.",
     timeline: [
       { data: "2026-07-20", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
     ],
@@ -88,10 +111,12 @@ export const mockSolicitacoes: Solicitacao[] = [
     solicitante: "Camila Dias",
     dataSubmissao: "2026-07-22",
     analistaResponsavel: "Carlos Oliveira",
+    dataAtribuicao: "2026-07-23T14:05",
     status: "Em complementação",
+    tipoModelo: "Estatístico",
+    objetivo: "Definir o limite de crédito de clientes pessoa jurídica.",
     timeline: [
       { data: "2026-07-22", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
-      { data: "2026-07-23", descricao: "Encaminhada para análise técnica." },
       { data: "2026-07-25", descricao: "Complementação solicitada ao solicitante.", autor: "Carlos Oliveira", tipo: "complementacao-pedida" },
     ],
     complementacao:
@@ -100,32 +125,47 @@ export const mockSolicitacoes: Solicitacao[] = [
   {
     numero: "REQ-2026-007",
     nomeModelo: "Modelo Recomendação de Produtos",
-    areaGestora: "Marketing",
+    areaGestora: "Financeiro",
     assunto: "Outro",
     publico: "Externo",
     solicitante: "Eduardo Nunes",
     dataSubmissao: "2026-08-01",
     analistaResponsavel: "Fernanda Alves",
+    dataAtribuicao: "2026-08-02T08:50",
     status: "Aguardando gestor",
     tipoModelo: "Inteligência Artificial",
     objetivo: "Recomendar produtos com base no histórico de compras do cliente.",
-    encaminhamento: {
-      tipo: "enviada-gestor",
-      texto: "Testes de desempenho e estabilidade aprovados. Recomendo validar e monitorar trimestralmente o KS.",
-      autor: "Fernanda Alves",
-      data: "2026-08-12",
-      anexo: "Parecer técnico REQ-2026-007.pdf",
-    },
+    informacoesAdicionais: exemploInformacoesAdicionais,
+    informacoesModelo: exemploInformacoesModelo,
+    calculosTier: exemploCalculos("Fernanda Alves", "2026-08-10"),
+    matrizesRisco: [
+      {
+        id: "matriz-req-007",
+        tipo: "Cálculo",
+        prazoRevalidacaoMeses: "12",
+        alcadaSugerida: "Diretoria de Riscos",
+        tier: "Gestão Flexível",
+        nota: "B",
+        classificacaoRisco: "Baixo",
+        data: "2026-08-10T15:20:00",
+        usuario: "Fernanda Alves",
+      },
+    ],
+    encaminhamento: { tipo: "enviada-gestor", autor: "Fernanda Alves", data: "2026-08-12" },
     timeline: [
       { data: "2026-08-01", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
-      { data: "2026-08-02", descricao: "Encaminhada para análise técnica." },
-      { data: "2026-08-04", descricao: "Em análise pela GEVAM." },
+      {
+        data: "2026-08-04",
+        descricao: "Documentação acrescentada pelo analista.",
+        detalhe: "TAP sem pendências.",
+        autor: "Fernanda Alves",
+        anexos: ["TAP REQ-2026-007.pdf"],
+        tipo: "documento-adicionado",
+      },
       {
         data: "2026-08-12",
-        descricao: "Análise concluída e enviada para o gestor.",
-        detalhe: "Testes de desempenho e estabilidade aprovados. Recomendo validar e monitorar trimestralmente o KS.",
+        descricao: "Análise concluída e enviada para o gestor. Aval solicitado.",
         autor: "Fernanda Alves",
-        anexos: ["Parecer técnico REQ-2026-007.pdf"],
         tipo: "enviada-gestor",
       },
     ],
@@ -138,8 +178,10 @@ export const mockSolicitacoes: Solicitacao[] = [
     publico: "Interno",
     solicitante: "Patrícia Gomes",
     dataSubmissao: "2026-08-05",
-    analistaResponsavel: "Maria Santos",
+    analistaResponsavel: "Não atribuído",
     status: "Submetido",
+    tipoModelo: "Estatístico",
+    objetivo: "Priorizar a cobrança de clientes em atraso conforme a chance de recuperação.",
     timeline: [
       { data: "2026-08-05", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
     ],
@@ -154,6 +196,8 @@ export const mockSolicitacoes: Solicitacao[] = [
     dataSubmissao: "2026-08-10",
     analistaResponsavel: "Não atribuído",
     status: "Submetido",
+    tipoModelo: "Machine Learning",
+    objetivo: "Detectar anomalias em processos operacionais para tratamento preventivo.",
     timeline: [
       { data: "2026-08-10", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
     ],

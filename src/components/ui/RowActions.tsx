@@ -11,8 +11,8 @@ export type SolicitacaoAction =
   | "atribuir-analista"
   | "alterar-solicitante"
   | "solicitar-complementacao"
+  | "atualizar-solicitacao"
   | "enviar-gestor"
-  | "devolver-analista"
   | "validar"
   | "cancelar";
 
@@ -25,9 +25,9 @@ export const SOLICITACAO_ACTIONS: Record<
   "atribuir-analista": { icon: "user", label: "Atribuir solicitação para analista" },
   "alterar-solicitante": { icon: "alterar-solicitante", label: "Alterar solicitante" },
   "solicitar-complementacao": { icon: "doc", label: "Pedir complementação" },
+  "atualizar-solicitacao": { icon: "upload", label: "Atualizar solicitação" },
   "enviar-gestor": { icon: "chev-right", label: "Enviar para o gestor" },
-  "devolver-analista": { icon: "x", label: "Recusar" },
-  validar: { icon: "check", label: "Aceitar" },
+  validar: { icon: "check", label: "Finalizar validação" },
   cancelar: { icon: "trash", label: "Cancelar solicitação", danger: true },
 };
 

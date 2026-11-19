@@ -40,7 +40,7 @@ function generateRequestCode() {
 export function SubmeterForm() {
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
   const [file, setFile] = useState<File | null>(null);
-  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>(
+  const [errors, setErrors] = useState<Partial<Record<keyof FormState | "anexo", string>>>(
     {},
   );
   const [successCode, setSuccessCode] = useState<string | null>(null);
@@ -50,12 +50,15 @@ export function SubmeterForm() {
   }
 
   function validate(): boolean {
-    const nextErrors: Partial<Record<keyof FormState, string>> = {};
+    const nextErrors: Partial<Record<keyof FormState | "anexo", string>> = {};
     (Object.keys(form) as (keyof FormState)[]).forEach((field) => {
       if (!form[field].trim()) {
         nextErrors[field] = "Campo obrigatório";
       }
     });
+    if (!file) nextErrors.anexo = "Anexe o relatório de desenvolvimento do modelo.";
+    // O seletor só oferece PDF, mas arrastar para o quadro aceita qualquer arquivo: confere aqui.
+    else if (!/\.pdf$/i.test(file.name)) nextErrors.anexo = "O relatório deve ser um arquivo PDF.";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
@@ -146,7 +149,20 @@ export function SubmeterForm() {
               fullWidth
             />
 
-            <FileUpload id="anexo" file={file} onChange={setFile} fullWidth />
+            <FileUpload
+              id="anexo"
+              label="Relatório de desenvolvimento do modelo"
+              required
+              accept=".pdf"
+              hint="Somente PDF, até 20 MB"
+              file={file}
+              onChange={(f) => {
+                setFile(f);
+                if (f) setErrors((e) => ({ ...e, anexo: undefined }));
+              }}
+              error={errors.anexo}
+              fullWidth
+            />
           </FormGrid>
 
           <FormActions>

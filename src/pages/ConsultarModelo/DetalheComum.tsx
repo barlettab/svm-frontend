@@ -24,6 +24,8 @@ const ICONE: Partial<Record<NonNullable<TimelineEvent["tipo"]>, IconName>> = {
   "devolvida-analista": "arrow-left",
   "complementacao-pedida": "doc",
   "documento-adicionado": "paperclip",
+  "tap-emitido": "check",
+  atualizacao: "upload",
   "situacao-alterada": "edit",
 };
 

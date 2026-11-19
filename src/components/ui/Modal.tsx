@@ -11,10 +11,10 @@ interface ModalProps {
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
-  width?: "sm" | "md" | "lg";
+  width?: "sm" | "md" | "lg" | "xl";
 }
 
-const WIDTHS = { sm: "max-w-[420px]", md: "max-w-[560px]", lg: "max-w-[760px]" };
+const WIDTHS = { sm: "max-w-[420px]", md: "max-w-[560px]", lg: "max-w-[760px]", xl: "max-w-[1080px]" };
 
 /** Modal: overlay 40%, sombra forte, cabeçalho com borda, sem raio grande. */
 export function Modal({ open, title, onClose, children, footer, width = "md" }: ModalProps) {

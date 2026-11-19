@@ -8,6 +8,8 @@ interface FormFieldProps {
   required?: boolean;
   error?: string;
   hint?: string;
+  /** Texto de ajuda mostrado no ícone (i) ao lado do label. */
+  info?: string;
   children: ReactNode;
   fullWidth?: boolean;
 }
@@ -19,6 +21,7 @@ export function FormField({
   required,
   error,
   hint,
+  info,
   children,
   fullWidth,
 }: FormFieldProps) {
@@ -29,6 +32,29 @@ export function FormField({
         className="mb-2 block text-label uppercase tracking-[0.4px] text-ink-2"
       >
         {label}
+        {info && (
+          // Fica fora do <label> no clique (preventDefault) para não focar o campo ao abrir a dica.
+          <span
+            className="group relative ml-1 inline-flex align-[-2px] normal-case tracking-normal"
+            onClick={(e) => e.preventDefault()}
+          >
+            <span
+              tabIndex={0}
+              aria-describedby={`${htmlFor}-info`}
+              aria-label="Ajuda"
+              className="inline-flex cursor-help rounded-full text-ink-2 outline-none hover:text-primary focus-visible:text-primary focus-visible:ring-2 focus-visible:ring-primary/40"
+            >
+              <Icon name="info" size={13} />
+            </span>
+            <span
+              id={`${htmlFor}-info`}
+              role="tooltip"
+              className="pointer-events-none invisible absolute left-1/2 top-full z-20 mt-2 w-72 max-w-[calc(100vw-32px)] -translate-x-1/2 rounded-svm bg-ink px-3 py-2 text-aux font-normal leading-snug text-white opacity-0 shadow-lg transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+            >
+              {info}
+            </span>
+          </span>
+        )}
         {required && <span className="ml-1 text-error">*</span>}
       </label>
       {children}

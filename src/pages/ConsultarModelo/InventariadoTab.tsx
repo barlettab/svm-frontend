@@ -1,5 +1,7 @@
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
+import { useProfile } from "../../context/ProfileContext";
 import { useSolicitacoes } from "../../context/SolicitacoesContext";
+import { currentSolicitante } from "../../data/currentUser";
 import {
   analistaFilterOptions,
   areaGestoraFilterOptions,
@@ -8,13 +10,22 @@ import {
 import { FilterTextField } from "../../components/ui/FilterTextField";
 import { FilterSelectField } from "../../components/ui/FilterSelectField";
 import { FilterBar } from "../../components/ui/FilterBar";
+import { ReadOnlyField } from "../../components/ui/ReadOnlyField";
 import { IndicatorPanel, type IndicatorGroup } from "../../components/ui/IndicatorPanel";
 import { Table, type TableColumn } from "../../components/ui/Table";
 import { StatusBadge } from "../../components/ui/Badge";
 import { Icon } from "../../components/ui/Icon";
 import type { ModeloInventariado } from "../../types";
 
-interface Filters {
+/** Linha da aba: um modelo do inventário (toda solicitação Validado entra no inventário). */
+type Linha = ModeloInventariado;
+
+type IndicatorField = "monitoramento" | "situacao";
+
+const TODOS = "Todos";
+
+/** Filtros da barra. Os campos de indicador guardam o rótulo exibido (ex.: "Ativos") ou "Todos". */
+interface Filters extends Record<IndicatorField, string> {
   numero: string;
   areaGestora: string;
   nomeModelo: string;
@@ -26,33 +37,26 @@ const DEFAULT_FILTERS: Filters = {
   numero: "",
   areaGestora: "Todas",
   nomeModelo: "",
-  assunto: "Todos",
-  analista: "Todos",
+  assunto: TODOS,
+  analista: TODOS,
+  monitoramento: TODOS,
+  situacao: TODOS,
 };
 
-type IndicatorField = "resultadoValidacao" | "monitoramento" | "situacao";
+const INDICATOR_FIELDS: IndicatorField[] = ["monitoramento", "situacao"];
 
-/** Cada indicador = um campo + um valor. Clicar nele filtra a tabela por esse par. */
+/** Cada indicador = um campo + um valor. Alimenta o painel (contagem) e as opções dos filtros. */
 const INDICATORS: {
   title: string;
   field: IndicatorField;
   items: { key: string; label: string; value: string; color: string }[];
 }[] = [
   {
-    title: "Resultado da validação",
-    field: "resultadoValidacao",
-    items: [
-      { key: "val-ok", label: "Validados", value: "Validado", color: "var(--color-success)" },
-      { key: "val-no", label: "Não validados", value: "Não validado", color: "var(--color-error)" },
-    ],
-  },
-  {
-    title: "Monitoramento",
+    title: "Monitoramento 2ª Linha (GEVAM)",
     field: "monitoramento",
     items: [
       { key: "mon-sim", label: "Monitorados", value: "Em monitoramento", color: "var(--color-primary)" },
       { key: "mon-nao", label: "Não monitorados", value: "Não monitorado", color: "var(--color-ink-4)" },
-      { key: "mon-na", label: "Não se aplica", value: "Não se aplica", color: "var(--color-line-strong)" },
     ],
   },
   {
@@ -66,21 +70,31 @@ const INDICATORS: {
   },
 ];
 
-const INDICATOR_BY_KEY = Object.fromEntries(
-  INDICATORS.flatMap((group) =>
-    group.items.map((item) => [item.key, { ...item, field: group.field, group: group.title }]),
-  ),
+const INDICATOR_ITEMS = INDICATORS.flatMap((group) =>
+  group.items.map((item) => ({ ...item, field: group.field, group: group.title })),
 );
+
+/** Item do indicador selecionado em um campo do filtro (undefined = "Todos"). */
+const itemDoFiltro = (field: IndicatorField, label: string) =>
+  INDICATOR_ITEMS.find((i) => i.field === field && i.label === label);
+
+/** Opções do select: "Todos" + rótulos dos indicadores do grupo. */
+const opcoesDoGrupo = (field: IndicatorField) => [
+  TODOS,
+  ...INDICATORS.find((g) => g.field === field)!.items.map((i) => i.label),
+];
 
 function formatDate(iso: string) {
   const [y, m, d] = iso.split("-");
   return `${d}/${m}/${y}`;
 }
 
-function matches(modelo: ModeloInventariado, filters: Filters) {
+function matches(modelo: Linha, filters: Filters) {
+  const numero = filters.numero.trim().toLowerCase();
   if (
-    filters.numero &&
-    !modelo.numero.toLowerCase().includes(filters.numero.toLowerCase())
+    numero &&
+    !modelo.numero.toLowerCase().includes(numero) &&
+    !modelo.numeroSolicitacao?.toLowerCase().includes(numero)
   )
     return false;
   if (filters.areaGestora !== "Todas" && modelo.areaGestora !== filters.areaGestora)
@@ -94,18 +108,34 @@ function matches(modelo: ModeloInventariado, filters: Filters) {
     return false;
   if (filters.analista !== "Todos" && modelo.analistaResponsavel !== filters.analista)
     return false;
+  for (const field of INDICATOR_FIELDS) {
+    const item = itemDoFiltro(field, filters[field]);
+    if (item && modelo[field] !== item.value) return false;
+  }
   return true;
 }
 
-export function InventariadoTab({ onAbrir }: { onAbrir: (numero: string) => void }) {
-  // Inventário compartilhado: modelos validados pelo gestor com "inventariar = Sim" entram aqui.
+/**
+ * Aba "Inventariado": todos os modelos do inventário (toda solicitação Validado entra nele).
+ * O solicitante também tem esta aba, com o mesmo nome: só a área dele (quadros e lista) e só leitura.
+ */
+export function InventariadoTab({
+  onAbrir,
+}: {
+  /** Abre a página do modelo inventariado (nº do inventário). */
+  onAbrir: (numero: string) => void;
+}) {
+  const { profile } = useProfile();
+  const visaoSolicitante = profile === "solicitante";
   const { inventario } = useSolicitacoes();
+  const linhas: Linha[] = useMemo(
+    () => inventario.filter((m) => !visaoSolicitante || m.areaGestora === currentSolicitante.areaGestora),
+    [inventario, visaoSolicitante],
+  );
   const [draft, setDraft] = useState<Filters>(DEFAULT_FILTERS);
   const [applied, setApplied] = useState<Filters>(DEFAULT_FILTERS);
-  const [indicator, setIndicator] = useState<string | null>(null);
-  const resultsRef = useRef<HTMLDivElement>(null);
-
-  const active = indicator ? INDICATOR_BY_KEY[indicator] : null;
+  /** Filtros de Monitoramento / Situação em uso (viram etiquetas acima da tabela). */
+  const ativos = INDICATOR_FIELDS.map((f) => itemDoFiltro(f, applied[f])).filter((i) => i !== undefined);
 
   const groups: IndicatorGroup[] = useMemo(
     () =>
@@ -115,27 +145,13 @@ export function InventariadoTab({ onAbrir }: { onAbrir: (numero: string) => void
           key: item.key,
           label: item.label,
           color: item.color,
-          count: inventario.filter((m) => m[group.field] === item.value).length,
+          count: linhas.filter((m) => m[group.field] === item.value).length,
         })),
       })),
-    [inventario],
+    [linhas],
   );
 
-  const filtered = useMemo(
-    () =>
-      inventario.filter(
-        (m) => (!active || m[active.field] === active.value) && matches(m, applied),
-      ),
-    [applied, active, inventario],
-  );
-
-  function handleIndicator(key: string | null) {
-    setIndicator(key);
-    if (key) {
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      resultsRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
-    }
-  }
+  const filtered = useMemo(() => linhas.filter((m) => matches(m, applied)), [applied, linhas]);
 
   function handleSearch() {
     setApplied(draft);
@@ -144,12 +160,16 @@ export function InventariadoTab({ onAbrir }: { onAbrir: (numero: string) => void
   function handleClear() {
     setDraft(DEFAULT_FILTERS);
     setApplied(DEFAULT_FILTERS);
-    setIndicator(null);
   }
 
-  const hl = (field: IndicatorField) => active?.field === field;
+  function removerIndicador(field: IndicatorField) {
+    setDraft((f) => ({ ...f, [field]: TODOS }));
+    setApplied((f) => ({ ...f, [field]: TODOS }));
+  }
 
-  const columns: TableColumn<ModeloInventariado>[] = [
+  const hl = (field: IndicatorField) => ativos.some((i) => i.field === field);
+
+  const columns: TableColumn<Linha>[] = [
     {
       header: "Modelo",
       render: (row) => (
@@ -162,12 +182,7 @@ export function InventariadoTab({ onAbrir }: { onAbrir: (numero: string) => void
     { header: "Tipo de modelo", render: (row) => row.tipoModelo },
     { header: "Assunto", render: (row) => row.assunto },
     {
-      header: "Validação",
-      highlight: hl("resultadoValidacao"),
-      render: (row) => <StatusBadge status={row.resultadoValidacao} />,
-    },
-    {
-      header: "Monitoramento",
+      header: "Monitoramento 2ª Linha (GEVAM)",
       highlight: hl("monitoramento"),
       render: (row) => <StatusBadge status={row.monitoramento} />,
     },
@@ -178,8 +193,8 @@ export function InventariadoTab({ onAbrir }: { onAbrir: (numero: string) => void
     },
     { header: "Analista", render: (row) => row.analistaResponsavel },
     {
-      header: "Inventariado em",
-      render: (row) => <span className="whitespace-nowrap">{formatDate(row.dataInventario)}</span>,
+      header: "Validado em",
+      render: (row) => <span className="whitespace-nowrap">{row.dataInventario ? formatDate(row.dataInventario) : "—"}</span>,
     },
     {
       header: "Ação",
@@ -197,40 +212,50 @@ export function InventariadoTab({ onAbrir }: { onAbrir: (numero: string) => void
     },
   ];
 
-  const total = inventario.length;
-  const resultTitle = active
-    ? `${filtered.length} ${filtered.length === 1 ? "modelo" : "modelos"} — ${active.label.toLowerCase()}`
-    : filtered.length === total
-      ? `${total} modelos inventariados`
-      : `${filtered.length} de ${total} modelos`;
+  /** Cards e totais contam o que o perfil vê: todo o inventário, ou só a área do solicitante. */
+  const total = linhas.length;
+  const resultTitle = visaoSolicitante
+    ? filtered.length === linhas.length
+      ? `${linhas.length} ${linhas.length === 1 ? "modelo inventariado" : "modelos inventariados"}`
+      : `${filtered.length} de ${linhas.length} modelos inventariados`
+    : filtered.length === linhas.length
+      ? `${linhas.length} modelos inventariados`
+      : `${filtered.length} de ${linhas.length} modelos inventariados`;
 
   return (
     <div>
+      {visaoSolicitante && (
+        <p className="mb-4 text-body text-ink-3">
+          Exibindo modelos inventariados da área{" "}
+          <span className="font-semibold text-ink">{currentSolicitante.areaGestora}</span>.
+        </p>
+      )}
+
       <IndicatorPanel
         totalLabel="Modelos inventariados"
         total={total}
         groups={groups}
-        activeKey={indicator}
-        onSelect={handleIndicator}
       />
 
       <FilterBar onSearch={handleSearch} onClear={handleClear}>
         <FilterTextField
           id="inv-filtro-numero"
-          label="Nº da solicitação"
+          label="Nº da solicitação ou do inventário"
           value={draft.numero}
           onChange={(value) => setDraft((f) => ({ ...f, numero: value }))}
           placeholder="Ex.: INV-2026-001"
         />
-        <FilterSelectField
-          id="inv-filtro-area"
-          label="Área gestora"
-          value={draft.areaGestora}
-          onChange={(value) =>
-            setDraft((f) => ({ ...f, areaGestora: value }))
-          }
-          options={areaGestoraFilterOptions}
-        />
+        {visaoSolicitante ? (
+          <ReadOnlyField label="Área gestora" value={currentSolicitante.areaGestora} />
+        ) : (
+          <FilterSelectField
+            id="inv-filtro-area"
+            label="Área gestora"
+            value={draft.areaGestora}
+            onChange={(value) => setDraft((f) => ({ ...f, areaGestora: value }))}
+            options={areaGestoraFilterOptions}
+          />
+        )}
         <FilterTextField
           id="inv-filtro-nome-modelo"
           label="Nome do modelo"
@@ -253,24 +278,42 @@ export function InventariadoTab({ onAbrir }: { onAbrir: (numero: string) => void
           onChange={(value) => setDraft((f) => ({ ...f, analista: value }))}
           options={analistaFilterOptions}
         />
+        <FilterSelectField
+          id="inv-filtro-monitoramento"
+          label="Monitoramento 2ª Linha (GEVAM)"
+          value={draft.monitoramento}
+          onChange={(value) => setDraft((f) => ({ ...f, monitoramento: value }))}
+          options={opcoesDoGrupo("monitoramento")}
+        />
+        <FilterSelectField
+          id="inv-filtro-situacao"
+          label="Situação do modelo"
+          value={draft.situacao}
+          onChange={(value) => setDraft((f) => ({ ...f, situacao: value }))}
+          options={opcoesDoGrupo("situacao")}
+        />
       </FilterBar>
 
-      <div ref={resultsRef} className="scroll-mt-4">
+      <div>
         <div className="flex flex-wrap items-center justify-between gap-3 border border-b-0 border-line bg-surface px-5 py-3.5">
           <h2 className="text-section font-semibold text-ink" aria-live="polite">
             {resultTitle}
-            {active && <span className="ml-2 text-body font-normal text-ink-2">de {total} inventariados</span>}
           </h2>
-          {active && (
-            <button
-              type="button"
-              onClick={() => setIndicator(null)}
-              aria-label={`Remover filtro ${active.group}: ${active.label}`}
-              className="inline-flex h-7 items-center gap-1.5 rounded-full border border-info-line bg-info-bg px-3 text-aux font-semibold text-primary hover:border-primary"
-            >
-              {active.group}: {active.label}
-              <Icon name="x" size={12} />
-            </button>
+          {ativos.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {ativos.map((i) => (
+                <button
+                  key={i.key}
+                  type="button"
+                  onClick={() => removerIndicador(i.field)}
+                  aria-label={`Remover filtro ${i.group}: ${i.label}`}
+                  className="inline-flex h-7 items-center gap-1.5 rounded-full border border-info-line bg-info-bg px-3 text-aux font-semibold text-primary hover:border-primary"
+                >
+                  {i.group}: {i.label}
+                  <Icon name="x" size={12} />
+                </button>
+              ))}
+            </div>
           )}
         </div>
         <Table
@@ -279,7 +322,7 @@ export function InventariadoTab({ onAbrir }: { onAbrir: (numero: string) => void
           rowKey={(row) => row.numero}
           minWidth={1000}
           emptyTitle="Nenhum modelo encontrado."
-          emptyDescription="Nenhum modelo atende ao indicador e aos filtros aplicados. Remova um filtro ou clique em Limpar."
+          emptyDescription="Nenhum modelo atende aos filtros aplicados. Remova um filtro ou clique em Limpar."
         />
       </div>
     </div>

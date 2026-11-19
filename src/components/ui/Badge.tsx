@@ -38,16 +38,13 @@ export const STATUS_TONE: Record<string, Tone> = {
   "Em análise": "amber",
   "Em complementação": "amber",
   "Aguardando gestor": "blue",
-  Validada: "green",
   Validado: "green",
-  "Não validado": "red",
   Cancelado: "slate",
   Ativo: "green",
   Inativo: "slate",
   Suspenso: "amber",
   "Em monitoramento": "blue",
   "Não monitorado": "slate",
-  "Não se aplica": "slate",
 };
 
 export function StatusBadge({ status }: { status: string }) {
