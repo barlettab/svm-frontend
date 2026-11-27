@@ -13,14 +13,15 @@ import { FilterBar } from "../../components/ui/FilterBar";
 import { ReadOnlyField } from "../../components/ui/ReadOnlyField";
 import { IndicatorPanel, type IndicatorGroup } from "../../components/ui/IndicatorPanel";
 import { Table, type TableColumn } from "../../components/ui/Table";
+import { Button } from "../../components/ui/Button";
 import { StatusBadge } from "../../components/ui/Badge";
 import { Icon } from "../../components/ui/Icon";
 import type { ModeloInventariado } from "../../types";
 
-/** Linha da aba: um modelo do inventário (toda solicitação Validado entra no inventário). */
+/** Linha da aba: um modelo do inventário (validado pela GEVAM ou não: modelos antigos podem estar sem validação). */
 type Linha = ModeloInventariado;
 
-type IndicatorField = "monitoramento" | "situacao";
+type IndicatorField = "validacao" | "monitoramento" | "situacao";
 
 const TODOS = "Todos";
 
@@ -39,11 +40,12 @@ const DEFAULT_FILTERS: Filters = {
   nomeModelo: "",
   assunto: TODOS,
   analista: TODOS,
+  validacao: TODOS,
   monitoramento: TODOS,
   situacao: TODOS,
 };
 
-const INDICATOR_FIELDS: IndicatorField[] = ["monitoramento", "situacao"];
+const INDICATOR_FIELDS: IndicatorField[] = ["validacao", "monitoramento", "situacao"];
 
 /** Cada indicador = um campo + um valor. Alimenta o painel (contagem) e as opções dos filtros. */
 const INDICATORS: {
@@ -51,6 +53,14 @@ const INDICATORS: {
   field: IndicatorField;
   items: { key: string; label: string; value: string; color: string }[];
 }[] = [
+  {
+    title: "Validação GEVAM",
+    field: "validacao",
+    items: [
+      { key: "val-sim", label: "Validados", value: "Validado", color: "var(--color-success)" },
+      { key: "val-nao", label: "Não validados", value: "Não validado", color: "var(--color-ink-4)" },
+    ],
+  },
   {
     title: "Monitoramento 2ª Linha (GEVAM)",
     field: "monitoramento",
@@ -116,7 +126,8 @@ function matches(modelo: Linha, filters: Filters) {
 }
 
 /**
- * Aba "Inventariado": todos os modelos do inventário (toda solicitação Validado entra nele).
+ * Aba "Inventariado": todos os modelos do inventário. Toda solicitação Validado entra nele; modelos antigos
+ * podem estar no inventário sem validação da GEVAM ("Não validado").
  * O solicitante também tem esta aba, com o mesmo nome: só a área dele (quadros e lista) e só leitura.
  */
 export function InventariadoTab({
@@ -182,6 +193,11 @@ export function InventariadoTab({
     { header: "Tipo de modelo", render: (row) => row.tipoModelo },
     { header: "Assunto", render: (row) => row.assunto },
     {
+      header: "Validação GEVAM",
+      highlight: hl("validacao"),
+      render: (row) => <StatusBadge status={row.validacao} />,
+    },
+    {
       header: "Monitoramento 2ª Linha (GEVAM)",
       highlight: hl("monitoramento"),
       render: (row) => <StatusBadge status={row.monitoramento} />,
@@ -194,20 +210,28 @@ export function InventariadoTab({
     { header: "Analista", render: (row) => row.analistaResponsavel },
     {
       header: "Validado em",
-      render: (row) => <span className="whitespace-nowrap">{row.dataInventario ? formatDate(row.dataInventario) : "—"}</span>,
+      render: (row) => (
+        <span className="whitespace-nowrap">
+          {row.validacao === "Validado" && row.dataInventario ? formatDate(row.dataInventario) : "—"}
+        </span>
+      ),
     },
     {
       header: "Ação",
       align: "right",
       render: (row) => (
-        <button
-          type="button"
-          onClick={() => onAbrir(row.numero)}
-          aria-label={`Visualizar ${row.nomeModelo}`}
-          className="inline-flex size-9 items-center justify-center rounded-svm text-primary hover:bg-info-bg"
-        >
-          <Icon name="eye" size={18} />
-        </button>
+        // Igual às outras abas: botão "Abrir" (não só o ícone de olho).
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            variant="secondary"
+            icon="eye"
+            onClick={() => onAbrir(row.numero)}
+            aria-label={`Abrir ${row.nomeModelo}`}
+            className="h-[34px] px-3"
+          >
+            Abrir
+          </Button>
+        </div>
       ),
     },
   ];
@@ -240,10 +264,10 @@ export function InventariadoTab({
       <FilterBar onSearch={handleSearch} onClear={handleClear}>
         <FilterTextField
           id="inv-filtro-numero"
-          label="Nº da solicitação ou do inventário"
+          label="Nº da solicitação"
           value={draft.numero}
           onChange={(value) => setDraft((f) => ({ ...f, numero: value }))}
-          placeholder="Ex.: INV-2026-001"
+          placeholder="Ex.: 101"
         />
         {visaoSolicitante ? (
           <ReadOnlyField label="Área gestora" value={currentSolicitante.areaGestora} />
@@ -277,6 +301,13 @@ export function InventariadoTab({
           value={draft.analista}
           onChange={(value) => setDraft((f) => ({ ...f, analista: value }))}
           options={analistaFilterOptions}
+        />
+        <FilterSelectField
+          id="inv-filtro-validacao"
+          label="Validação GEVAM"
+          value={draft.validacao}
+          onChange={(value) => setDraft((f) => ({ ...f, validacao: value }))}
+          options={opcoesDoGrupo("validacao")}
         />
         <FilterSelectField
           id="inv-filtro-monitoramento"
@@ -320,7 +351,7 @@ export function InventariadoTab({
           columns={columns}
           rows={filtered}
           rowKey={(row) => row.numero}
-          minWidth={1000}
+          minWidth={1100}
           emptyTitle="Nenhum modelo encontrado."
           emptyDescription="Nenhum modelo atende aos filtros aplicados. Remova um filtro ou clique em Limpar."
         />

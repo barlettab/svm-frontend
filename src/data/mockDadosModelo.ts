@@ -13,7 +13,7 @@ export const exemploInformacoesAdicionais: InformacoesAdicionais = {
 
 export const exemploInformacoesModelo: InformacoesModelo = {
   contextualizacao:
-    "Modelo de score para concessão de crédito pessoal e cheque especial a clientes PF correntistas (canais agência e app). Apoia a decisão de aprovação e a definição de limite.\nJustificativa: substitui o Score PF v2 (INV-2023-004), que perdeu desempenho após a mudança do perfil da carteira em 2024.",
+    "Modelo de score para concessão de crédito pessoal e cheque especial a clientes PF correntistas (canais agência e app). Apoia a decisão de aprovação e a definição de limite.\nJustificativa: substitui o Score PF v2 (solicitação 412), que perdeu desempenho após a mudança do perfil da carteira em 2024.",
   metodologia:
     "Regressão logística com variáveis categorizadas (WoE). Evento: atraso acima de 90 dias em até 12 meses. Bases internas de cadastro e comportamento + bureau; 14 variáveis finais.",
   resultados:

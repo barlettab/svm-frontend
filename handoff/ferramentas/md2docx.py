@@ -12,6 +12,11 @@ Uso:
 Formatos do .md entendidos: # título, ## seção (quebra de página a partir da 2ª), ### subtítulo,
 > história, listas com "-" (até 3 níveis) e "1." (numeradas, com recuo), tabelas com "|",
 ![legenda](img/arquivo.png) seguida de *legenda*, blocos ```mermaid, **negrito** e `código`.
+
+Padrão visual (o mesmo do "Fluxo do Solicitante.docx"), aplicado qualquer que seja o modelo:
+Aptos 11 pt, texto justificado, espaçamento entre linhas 1,15 e 8 pt depois do parágrafo; título e
+seções em negrito 14 pt com faixa cinza; listas e passos numerados sem espaço entre os itens;
+marcadores ▪ (1º nível) e o (2º nível).
 """
 import os, re, shutil, struct, sys
 from xml.sax.saxutils import escape
@@ -50,6 +55,48 @@ for parte in PARTES_COMENTARIO:
 open(ct_path, "w", encoding="utf8").write(ct)
 new_rels = []
 pic_id = [1000]
+
+# ── Padrão visual dos documentos (igual ao "Fluxo do Solicitante.docx") ──────────────────────
+# Fonte Aptos 11 pt; espaçamento entre linhas 1,15 e 8 pt depois de cada parágrafo; itens de
+# lista sem espaço entre si (Parágrafo da Lista com espaçamento contextual); marcadores ▪ e o.
+FONTE = "Aptos"
+st_path = os.path.join(UN, "word/styles.xml")
+st = open(st_path, encoding="utf8").read()
+st = re.sub(
+    r"<w:docDefaults>.*?</w:docDefaults>",
+    '<w:docDefaults><w:rPrDefault><w:rPr>'
+    f'<w:rFonts w:ascii="{FONTE}" w:hAnsi="{FONTE}" w:eastAsia="{FONTE}" w:cs="{FONTE}"/>'
+    '<w:sz w:val="22"/><w:szCs w:val="22"/><w:lang w:val="pt-BR"/></w:rPr></w:rPrDefault>'
+    '<w:pPrDefault><w:pPr><w:spacing w:after="160" w:line="276" w:lineRule="auto"/></w:pPr></w:pPrDefault>'
+    "</w:docDefaults>",
+    st, flags=re.S,
+)
+st = re.sub(
+    r'<w:style w:type="paragraph" w:styleId="ListParagraph">.*?</w:style>',
+    '<w:style w:type="paragraph" w:styleId="ListParagraph"><w:name w:val="List Paragraph"/>'
+    '<w:basedOn w:val="Normal"/><w:uiPriority w:val="34"/><w:qFormat/>'
+    '<w:pPr><w:ind w:left="720"/><w:contextualSpacing/></w:pPr></w:style>',
+    st, flags=re.S,
+)
+open(st_path, "w", encoding="utf8").write(st)
+
+nb_path = os.path.join(UN, "word/numbering.xml")
+nb = open(nb_path, encoding="utf8").read()
+MARCADOR = {0: ("\uf0a7", "Wingdings"), 1: ("o", "Courier New"), 2: ("\uf0a7", "Wingdings")}  # ▪, o, ▪
+
+
+def _nivel(m):
+    """Troca o marcador de um nível de lista (grupo 1 = nível, 2 = atributos, 3 = conteúdo)."""
+    lvl = int(m.group(1))
+    txt, fonte = MARCADOR[lvl % 3]
+    corpo = re.sub(r'<w:lvlText w:val="[^"]*"/>', f'<w:lvlText w:val="{txt}"/>', m.group(3))
+    corpo = re.sub(r"<w:rPr>.*?</w:rPr>", "", corpo, flags=re.S)
+    corpo = corpo.replace("</w:pPr>", f'</w:pPr><w:rPr><w:rFonts w:ascii="{fonte}" w:hAnsi="{fonte}" w:hint="default"/></w:rPr>', 1)
+    return f'<w:lvl w:ilvl="{lvl}"{m.group(2)}>{corpo}</w:lvl>'
+
+
+nb = re.sub(r'<w:lvl w:ilvl="(\d)"([^>]*)>(.*?)</w:lvl>', _nivel, nb, flags=re.S)
+open(nb_path, "w", encoding="utf8").write(nb)
 
 
 def png_size(path):
@@ -123,7 +170,7 @@ def subsection(t, center=False):
 
 
 def bullet(t, lvl):
-    body.append(f'<w:p><w:pPr><w:numPr><w:ilvl w:val="{lvl}"/><w:numId w:val="2"/></w:numPr><w:spacing w:after="0"/><w:jc w:val="both"/></w:pPr>{runs(t)}</w:p>')
+    body.append(f'<w:p><w:pPr><w:pStyle w:val="ListParagraph"/><w:numPr><w:ilvl w:val="{lvl}"/><w:numId w:val="2"/></w:numPr><w:jc w:val="both"/></w:pPr>{runs(t)}</w:p>')
 
 
 def cell(t, header, sz):
@@ -175,7 +222,7 @@ while i < len(lines):
         image(os.path.join(FLUXOS, f"fluxo{fluxo_n}.png"))
         continue
     if s.startswith("# "):
-        body.append(para(runs(s[2:], B, 32))); i += 1; continue
+        section(s[2:], quebra=False); i += 1; continue
     if s.startswith("## "):
         sec_count += 1
         section(s[3:], quebra=sec_count > 1); i += 1; continue
@@ -215,7 +262,7 @@ while i < len(lines):
     m = re.match(r"^( *)(\d+)\. (.*)$", ln)
     if m:
         ind = 284 + 284 * (len(m.group(1)) // 3)
-        body.append(para(runs(f"{m.group(2)}. {m.group(3)}"), f'<w:spacing w:after="40"/><w:ind w:left="{ind + 284}" w:hanging="284"/>'))
+        body.append(para(runs(f"{m.group(2)}. {m.group(3)}"), f'<w:pStyle w:val="ListParagraph"/><w:ind w:left="{ind + 284}" w:hanging="284"/>'))
         i += 1; continue
     if re.match(r"^\*[^*].*\*$", s):
         body.append(para(runs(s[1:-1], "<w:i/><w:iCs/>", 20), "", "center")); i += 1; continue

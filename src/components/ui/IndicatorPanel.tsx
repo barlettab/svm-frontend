@@ -24,7 +24,7 @@ export function IndicatorPanel({ totalLabel, total, groups }: IndicatorPanelProp
   return (
     <section
       aria-label="Resumo"
-      className="mb-5 grid grid-cols-1 rounded-svm border border-line bg-surface sm:grid-cols-3"
+      className={`mb-5 grid grid-cols-1 rounded-svm border border-line bg-surface ${groups.length >= 3 ? "sm:grid-cols-2 lg:grid-cols-4" : "sm:grid-cols-3"}`}
     >
       <div className="flex flex-col gap-1.5 border-b border-line-soft px-6 py-5 sm:border-r">
         <span className="text-label font-semibold uppercase tracking-[0.5px] text-ink-2">{totalLabel}</span>

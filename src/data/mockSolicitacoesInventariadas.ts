@@ -7,7 +7,7 @@ import { exemploCalculos, exemploInformacoesAdicionais, exemploInformacoesModelo
  * Geradas a partir do inventário para que a página do modelo tenha histórico e arquivos.
  */
 const SOLICITANTES = ["João Pereira", "Ana Costa", "Rafael Lima", "Juliana Rocha", "Pedro Martins"];
-const GESTOR = "Carlos Oliveira";
+const GESTOR = "Ricardo Mendes";
 
 function diasAntes(iso: string, dias: number) {
   const d = new Date(`${iso}T12:00:00`);

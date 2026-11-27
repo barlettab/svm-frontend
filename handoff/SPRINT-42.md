@@ -42,17 +42,18 @@ O solicitante vê o status **Aguardando gestor** como ele é (não é mais troca
 
 | Ação | Submetido | Em análise | Em complementação | Aguardando gestor | Validado / Cancelado |
 | --- | --- | --- | --- | --- | --- |
-| Abrir | ✅ e assume² | ✅ | ✅ | ✅ (leitura) | ✅ (abas Inventariado e Cancelado) |
-| Acrescentar documentação (TAP ou outro documento) | ✅² | ✅ | ✅ | ✅ | ✅ Validado: na página do modelo (HA-13); Cancelado: na página da solicitação. Sem mudar o status³ |
-| Preencher Cálculo do Tier, Matriz de Risco e Informações do Modelo | ✅² | ✅ | ✅ | ❌ (leitura) | — |
-| Pedir complementação (inclusive com o TAP com pendências) | ✅² | ✅ | ❌ | ❌ | — |
+| Abrir | ✅ (leitura, não assume) | ✅ | ✅ | ✅ (leitura) | ✅ (abas Inventariado e Cancelado) |
+| Assumir solicitação (menu Ações) | ✅² | — | — | — | — |
+| Acrescentar documentação (TAP ou outro documento) | ❌² | ✅ | ✅ | ✅ | ✅ Validado: na página do modelo (HA-13); Cancelado: na página da solicitação. Sem mudar o status³ |
+| Preencher Cálculo do Tier, Matriz de Risco e Informações do Modelo | ❌² | ✅ | ✅ | ❌ (leitura) | — |
+| Pedir complementação (inclusive com o TAP com pendências) | ❌² | ✅ | ❌ | ❌ | — |
 | Gerar ficha do modelo | — | ✅ | ✅ | ✅ | — |
 | Enviar para o gestor | — | ✅ com as três abas preenchidas | ❌ | ❌ | — |
-| Editar solicitação (dados informados pelo solicitante e o próprio solicitante) | ✅² | ✅ | ✅ | ✅ | — |
-| Cancelar solicitação | ✅ | ✅ | ✅ | ✅ | — |
+| Editar solicitação: **só trocar o solicitante** (os dados informados pelo solicitante ficam só para leitura) | ❌² | ✅ | ✅ | ✅ | — |
+| Cancelar solicitação | ❌² | ✅ | ✅ | ✅ | — |
 | Editar modelo inventariado (situação, monitoramento e Informações do Modelo) | — | — | — | — | ✅ Validado (HA-15) |
 
-² Ao abrir uma solicitação “Submetido”, o analista passa a ser o responsável e o status vira “Em análise”; a partir daí as abas de análise já podem ser preenchidas. As colunas “Em análise” em diante valem **só para o analista responsável**; outro analista vê tudo em modo leitura.
+² Abrir uma solicitação “Submetido” não muda nada: o menu **Ações** mostra só “Assumir solicitação”. Ao clicar nela, o analista passa a ser o responsável e o status vira “Em análise”; só então aparecem as outras ações e as abas de análise podem ser preenchidas. As colunas “Em análise” em diante valem **só para o analista responsável**; outro analista vê tudo em modo leitura.
 
 ³ Os validados são abertos pela aba **Inventariado** (página do modelo) e os cancelados pela aba **Cancelado** (página da solicitação) (HG-06). O status não muda: Validado continua Validado; Cancelado continua Cancelado.
 
@@ -61,15 +62,18 @@ O solicitante vê o status **Aguardando gestor** como ele é (não é mais troca
 | Ação | Submetido | Em análise | Em complementação | Aguardando gestor | Validado / Cancelado |
 | --- | --- | --- | --- | --- | --- |
 | Abrir e conferir as abas (leitura) | ✅ | ✅ | ✅ | ✅ | ✅ (abas Inventariado e Cancelado) |
+| Assumir solicitação (ele mesmo analisa) | ✅⁴ | — | — | — | — |
 | Atribuir a um analista | ✅ | — | — | — | — |
 | Reatribuir analista | — | ✅ | ✅ | ✅ | — |
 | Gerar ficha do modelo | — | ✅ | ✅ | ✅ | — |
-| Editar solicitação (dados informados pelo solicitante e o próprio solicitante) | ✅ | ✅ | ✅ | ✅ | — |
+| Editar solicitação: **só trocar o solicitante** (os dados informados pelo solicitante ficam só para leitura) | ✅ | ✅ | ✅ | ✅ | — |
 | Finalizar validação | ❌ | ❌ | ❌ | ✅ | — |
 | Cancelar solicitação | ✅ | ✅ | ✅ | ✅ | — |
 | Editar modelo inventariado (situação, monitoramento e Informações do Modelo) | — | — | — | — | ✅ Validado (HA-15) |
 
-O gestor **não** edita as abas de análise e **não** recusa a validação: a revisão do gestor acontece por e-mail, fora do sistema, antes do aval formal.
+⁴ O gestor também pode **assumir** uma solicitação “Submetido” (Ações > “Assumir solicitação”). Aí ele passa a ser o **responsável** e faz **tudo o que o analista responsável faz** (tabela 1.2): acrescentar documentação, pedir complementação, preencher Cálculo do Tier, Matriz de Risco e Informações do Modelo, enviar para o gestor. Continua tendo as ações de gestor (reatribuir, editar, cancelar e finalizar a validação). Depois de enviar para o gestor, **ele mesmo pode finalizar a validação** (HG-04).
+
+Se **não** assumiu a solicitação, o gestor **não** edita as abas de análise. Ele **não** recusa a validação: a revisão do gestor acontece por e-mail, fora do sistema, antes do aval formal.
 
 ### 1.4. Botão Ações
 
@@ -80,8 +84,8 @@ O botão **Ações** fica no canto superior direito da aba **Status de Acompanha
 | Item do menu | Aparece quando | O que faz |
 | --- | --- | --- |
 | Editar solicitação | **Só em Submetido.** Nos outros status o item **não aparece** no menu (some; não fica desabilitado). | Abre o formulário de edição (HS-04) |
-| Responder complementação | **Só em Em complementação** | Abre o formulário de resposta (HS-05) |
-| Cancelar solicitação | Submetido, Em análise, Em complementação ou Aguardando gestor | Pede a justificativa e cancela (HS-06) |
+| Responder complementação | **Só em Em complementação** | Abre a janela (popup) de resposta (HS-05) |
+| Cancelar solicitação | Submetido, Em análise, Em complementação ou Aguardando gestor | Abre a janela (popup) que pede a justificativa e cancela (HS-06) |
 
 Em solicitações Validado ou Cancelado o solicitante não tem o botão Ações.
 
@@ -89,20 +93,22 @@ Em solicitações Validado ou Cancelado o solicitante não tem o botão Ações.
 
 | Item do menu | Aparece quando | O que faz |
 | --- | --- | --- |
-| Acrescentar documentação | **Qualquer status**, inclusive Em complementação, Aguardando gestor e Cancelado (para Validado, o botão fica na página do modelo, HA-13) | Inclui um documento (TAP ou outro); o status não muda (HA-04) |
-| Pedir complementação | Em análise | Envia o pedido com anexo ao solicitante; status Em complementação (HA-05) |
-| Enviar para o gestor | Em análise. Se faltar alguma aba, a linha de apoio diz “Antes, preencha …” e, ao clicar, aparece o aviso de abas pendentes | Pede o aval do gestor, sem anexo; status Aguardando gestor (HA-11) |
-| Editar solicitação | Qualquer status em andamento | Corrige os dados informados pelo solicitante e permite trocar o solicitante; status não muda (HA-14) |
-| Cancelar solicitação | Qualquer status em andamento (Submetido, Em análise, Em complementação, Aguardando gestor) | Pede a justificativa e cancela (HA-12) |
+| Assumir solicitação | Submetido (é a **única** opção do menu nesse status) | O analista passa a ser o responsável e o status vira Em análise; só então aparecem as outras ações (HA-02) |
+| Acrescentar documentação | **Qualquer status**, inclusive Em complementação, Aguardando gestor e Cancelado (para Validado, o botão fica na página do modelo, HA-13) | Abre a janela (popup) que inclui um documento (TAP ou outro); o status não muda (HA-04) |
+| Pedir complementação | Em análise | Abre a janela (popup) que envia o pedido com anexo ao solicitante; status Em complementação (HA-05) |
+| Enviar para o gestor | Em análise. Se faltar alguma aba, a linha de apoio diz “Antes, preencha …” e, ao clicar, aparece o aviso de abas pendentes | Abre a janela (popup) que pede o aval do gestor, sem anexo; status Aguardando gestor (HA-11) |
+| Editar solicitação | Qualquer status em andamento | Só troca o solicitante: os dados informados pelo solicitante aparecem só para leitura (o analista corrige o que ele mesmo inseriu nas abas de análise); status não muda (HA-14) |
+| Cancelar solicitação | Qualquer status em andamento depois de assumir (Em análise, Em complementação, Aguardando gestor) | Abre a janela (popup) que pede a justificativa e cancela (HA-12) |
 
 **Gestor GEVAM** (Figura 26)
 
 | Item do menu | Aparece quando | O que faz |
 | --- | --- | --- |
+| Assumir solicitação | Submetido | O próprio gestor passa a ser o responsável; status Em análise. Daí em diante o menu também traz as ações do analista responsável: Acrescentar documentação, Pedir complementação e Enviar para o gestor (HG-02) |
 | Atribuir a um analista | Submetido | Escolhe o analista; status Em análise (HG-02) |
 | Reatribuir analista | Em análise, Em complementação ou Aguardando gestor | Troca o analista responsável; status não muda (HG-02) |
-| Editar solicitação | Qualquer status em andamento | Corrige os dados informados pelo solicitante e permite trocar o solicitante; status não muda (HG-08) |
-| Cancelar solicitação | Qualquer status em andamento | Pede a justificativa e cancela (HG-05) |
+| Editar solicitação | Qualquer status em andamento | Só troca o solicitante: os dados informados pelo solicitante aparecem só para leitura; status não muda (HG-08) |
+| Cancelar solicitação | Qualquer status em andamento | Abre a janela (popup) que pede a justificativa e cancela (HG-05) |
 
 **Finalizar validação** não fica no menu Ações: é um botão próprio no topo da página, que aparece para o gestor quando a solicitação está **Aguardando gestor** (HG-04). Em solicitações Validado ou Cancelado o gestor não tem o botão Ações.
 
@@ -114,14 +120,14 @@ Regra geral: cada botão **só aparece para quem pode usá-lo**. Quando a ação
 
 | Botão | Onde | Quem vê | O que faz |
 | --- | --- | --- | --- |
-| Abrir | Cada linha de Em andamento, Cancelado e Inventariado (nesta aba é o ícone de olho) | Todos | Em andamento e Cancelado: abre a solicitação em página própria. Inventariado: abre a página do modelo. Para o analista, abrir uma solicitação “Submetido” **assume** a solicitação (HA-02); nos demais casos só abre |
+| Abrir | Cada linha de Em andamento, Cancelado e Inventariado (o mesmo botão “Abrir” nas três abas, não só o ícone de olho) | Todos | Em andamento e Cancelado: abre a solicitação em página própria. Inventariado: abre a página do modelo. Abrir só abre, inclusive para o analista numa solicitação “Submetido”: para assumir, ele usa **Ações** > “Assumir solicitação” (HA-02) |
 | Pesquisar / Limpar | Barra de filtros | Todos | Aplica os filtros / volta todos os filtros para “Todos” |
 
 **Dentro da solicitação**
 
 | Botão | Onde | Quem vê | O que faz |
 | --- | --- | --- | --- |
-| Ações | Canto superior direito da aba Status de Acompanhamento | Solicitante, analista responsável e gestor, só quando há algum item para ele (seção 1.4) | Abre o menu com as ações do perfil. Escolher um item abre o formulário da ação na própria página |
+| Ações | Canto superior direito da aba Status de Acompanhamento | Solicitante, analista responsável e gestor, só quando há algum item para ele (seção 1.4) | Abre o menu com as ações do perfil. Escolher um item abre a ação: Responder complementação, Cancelar solicitação, Acrescentar documentação, Pedir complementação e Enviar para o gestor abrem numa janela (popup); Atribuir / Reatribuir analista também abre numa janela (popup); Editar solicitação abre na própria página |
 | Finalizar validação | Topo da página | Gestor, só em “Aguardando gestor” | Abre a janela Finalizar validação (HG-04) |
 | Gerar ficha do modelo | Topo da aba Informações do Modelo | Analista e gestor | Abre a pré-visualização da ficha, com **Baixar Excel** (arquivo .xlsx), **Imprimir / PDF** e **Fechar** (HA-10) |
 | Voltar para a lista | Topo da página | Todos | Volta para a aba de onde a solicitação foi aberta |
@@ -130,7 +136,7 @@ Regra geral: cada botão **só aparece para quem pode usá-lo**. Quando a ação
 
 | Formulário | Botão que grava | O que grava |
 | --- | --- | --- |
-| Editar solicitação | **Salvar alterações** | Os dados; para analista e gestor, também o solicitante; só para o solicitante, o novo relatório escolhido (HS-04, HA-14) |
+| Editar solicitação | **Salvar alterações** | Solicitante: os dados e o novo relatório escolhido. Analista e gestor: **só o solicitante** (HS-04, HA-14, HG-08) |
 | Responder complementação (Ações) | **Enviar complementação** | O anexo e a observação; status volta para Em análise (HS-05) |
 | Cancelar solicitação | **Cancelar solicitação** (o botão **Voltar** desiste sem cancelar) | A justificativa; status Cancelado (HS-06) |
 | Acrescentar documentação | **Acrescentar** | O documento e a descrição; status não muda (HA-04) |
@@ -147,7 +153,7 @@ Todos os formulários têm também **Cancelar**, que fecha o formulário sem gra
 | --- | --- | --- |
 | Cálculo do Tier | **Calcular Tier**, depois **Recalcular** | Gravam um cálculo novo no histórico do Tier; nada é sobrescrito (HA-07) |
 | Matriz de Risco | **Calcular**, depois **Recalcular** e **Cancelar** | Calcular/Recalcular gravam uma linha nova no histórico da matriz; Cancelar volta aos valores salvos. Recalcular e Cancelar só ficam ativos quando algo mudou (HA-08) |
-| Informações do Modelo | **Salvar** e **Voltar** | Salvar valida as seções obrigatórias, grava o texto e mostra o que ainda falta para enviar ao gestor; Voltar vai para a aba Matriz de Risco sem gravar (HA-09) |
+| Informações do Modelo | **Salvar** | Salvar valida as seções obrigatórias, grava o texto e mostra o que ainda falta para enviar ao gestor (HA-09). Não há botão Voltar: a navegação é pelas abas do topo |
 
 Fora desses casos (outro perfil, outro analista ou depois do envio ao gestor) as abas ficam em modo leitura e esses botões não aparecem.
 
@@ -155,8 +161,8 @@ Fora desses casos (outro perfil, outro analista ou depois do envio ao gestor) as
 
 | Botão | Quem vê | O que faz |
 | --- | --- | --- |
-| Acrescentar documentação | Analista | Abre o formulário (Documento, Recebido por, Observações); o botão **Acrescentar** grava (HA-13) |
-| Editar modelo | Analista e gestor | Abre o formulário com Situação (Ativo, Inativo, Suspenso), o toggle **Monitoramento 2ª Linha (GEVAM)** e os textos de Informações do Modelo; **Salvar alterações** grava e registra cada mudança no histórico (HA-15) |
+| Acrescentar documentação | Analista | Abre a janela (popup) com Documento, Recebido por e Observações; o botão **Acrescentar** grava (HA-13) |
+| Editar modelo | Analista e gestor | Abre o formulário com Situação (Ativo, Inativo, Suspenso), Validação GEVAM (Validado, Não validado), o toggle **Monitoramento 2ª Linha (GEVAM)** e os textos de Informações do Modelo; **Salvar alterações** grava e registra cada mudança no histórico (HA-15) |
 | Voltar para a lista | Todos | Volta para a aba Inventariado (Validado, para o solicitante) |
 
 **Em Novo Modelo**
@@ -177,7 +183,7 @@ Seta grossa = ação deste perfil · seta fina = ação de outro perfil.
 ```mermaid
 flowchart TB
     INI(["Envia a solicitação com o<br/>relatório de desenvolvimento"]) ==> SUB["Submetido"]:::status
-    SUB ==>|"Edita os dados<br/>(pode substituir o relatório)"| SUB
+    SUB ==>|"Edita os dados<br/>(pode remover e incluir anexos)"| SUB
     SUB -->|"Analista assume<br/>ou gestor atribui"| ANA["Em análise"]:::status
     ANA -->|"Analista pede complementação<br/>(ex.: TAP com pendências)"| COMP["Em complementação"]:::status
     COMP ==>|"Ações > Responder complementação"| ANA
@@ -202,12 +208,11 @@ flowchart TB
 - **Onde:** Novo Modelo > Solicitação.
 - **Disponível quando:** sempre.
 - **O que acontece:**
-  - Campos, nesta ordem, todos obrigatórios: Nome do modelo · Assunto, Tipo de modelo e Área gestora · Público · Objetivo (até 500 caracteres) · **Relatório de desenvolvimento do modelo** (anexo; **um arquivo PDF**, até 20 MB).
-  - Ao clicar em “Enviar”, a solicitação é criada com status **Submetido** e o sistema mostra o número gerado (REQ-AAAA-NNN).
+  - Campos, nesta ordem, todos obrigatórios: Nome do modelo · Assunto, Tipo de modelo e Área gestora · Público · Objetivo (até 500 caracteres) · **Anexo(s)** (pelo menos um; **quantos arquivos precisar, de qualquer tipo**, até 20 MB cada). Ao lado do nome do campo, um ícone **(i)** explica: “Esperamos o relatório de desenvolvimento do modelo em PDF, os scripts de código, as planilhas e qualquer outro arquivo que ajude na análise. Você pode anexar quantos arquivos precisar.”
+  - Ao clicar em “Enviar”, a solicitação é criada com status **Submetido** e o sistema mostra o número gerado: **só o número, sem prefixo nem traços** (ex.: 244).
 - **Não é possível:**
   - Enviar com campo vazio: aparece “Campo obrigatório” abaixo do campo.
-  - Enviar sem o relatório: aparece “Anexe o relatório de desenvolvimento do modelo.”
-  - Enviar relatório que não seja PDF (o seletor só oferece PDF, mas é possível arrastar outro arquivo): aparece “O relatório deve ser um arquivo PDF.”
+  - Enviar sem nenhum anexo: aparece “Campo obrigatório” abaixo de Anexo(s). O tipo do arquivo não é conferido.
 - **Mudanças em relação ao sistema atual:** para o Solicitante, retirar as abas superiores “Implantação” e “Metodologia e Monitoramento” e o campo textual “OBSERVAÇÕES” da aba “Solicitação”.
 
 ![Figura 1 – Formulário Novo Modelo > Solicitação.](img/01-solicitante-formulario.png)
@@ -244,7 +249,7 @@ flowchart TB
 - **Onde:** botão **Abrir**.
 - **O que aparece:** a aba “Status de Acompanhamento” com “Informações da solicitação” (HA-03), “Histórico da solicitação” e “Arquivos”.
 - O solicitante vê **todos os documentos**: os dele, os do analista (TAP, pedidos de complementação) e os do gestor.
-- **Não aparece para o solicitante:** as abas “Cálculo do Tier”, “Matriz de Risco” e “Informações do Modelo”.
+- **Não aparece para o solicitante:** as abas “Cálculo do Tier”, “Matriz de Risco” e “Informações do Modelo”. Também não aparece a seção **Informações do Modelo** na página do modelo inventariado nem na solicitação cancelada (é só do analista e do gestor).
 
 ### HS-04. Editar a solicitação
 
@@ -254,17 +259,17 @@ flowchart TB
 - **Disponível quando:** apenas status **Submetido** (nenhum analista assumiu). Nos outros status o item “Editar solicitação” **não aparece** no menu Ações.
 - **O que acontece:**
   - Abre o formulário “Editar solicitação” com os mesmos campos da submissão, já preenchidos.
-  - Campo opcional **“Substituir relatório de desenvolvimento”**, com o nome do relatório atual abaixo. Se o solicitante enviar um novo arquivo, ele **substitui** o anterior: o arquivo antigo **não fica salvo** (sai do histórico e da seção Arquivos) e só o novo fica disponível para download.
-  - “Salvar alterações” grava os dados e registra no histórico **um único registro**: “Solicitação editada pelo solicitante.”, sem detalhar o que mudou. Quando há troca de relatório, o novo arquivo fica anexado a esse registro.
-- **Não é possível:** editar depois que um analista assumiu (o item some do menu); trocar o relatório por arquivo que não seja PDF (“O relatório deve ser um arquivo PDF.”).
+  - Campo **Anexo(s)**, com o mesmo (i) do envio: lista os arquivos já enviados, cada um com lixeira, e embaixo o quadro para incluir quantos arquivos novos precisar. Anexo removido **não fica salvo** (sai do histórico e da seção Arquivos).
+  - “Salvar alterações” grava os dados e registra no histórico **um único registro**: “Solicitação editada pelo solicitante.”, sem detalhar o que mudou. Os anexos novos ficam anexados a esse registro.
+- **Não é possível:** editar depois que um analista assumiu (o item some do menu); salvar sem nenhum anexo (“Campo obrigatório” abaixo de Anexo(s)).
 
 ![Figura 4 – Menu Ações do solicitante.](img/02-solicitante-acoes.png)
 
 *Figura 4 – Menu Ações do solicitante.*
 
-![Figura 5 – Formulário Editar solicitação, com um novo relatório de desenvolvimento escolhido para substituir o atual.](img/03-solicitante-editar.png)
+![Figura 5 – Formulário Editar solicitação, com os anexos já enviados (cada um com lixeira) e um anexo novo incluído.](img/03-solicitante-editar.png)
 
-*Figura 5 – Formulário Editar solicitação, com um novo relatório de desenvolvimento escolhido para substituir o atual.*
+*Figura 5 – Formulário Editar solicitação, com os anexos já enviados (cada um com lixeira) e um anexo novo incluído.*
 
 ### HS-05. Responder a uma complementação
 
@@ -272,16 +277,16 @@ flowchart TB
 
 - **Onde:** abrir a solicitação (botão **Abrir**) > **Ações** > **Responder complementação**. Não há botão de complementar na lista; o aviso do topo de Em andamento mostra quais solicitações esperam resposta.
 - **Disponível quando:** status **Em complementação**.
-- **O que aparece:** o painel “O analista pediu uma complementação”, com autor, data, texto e anexo do pedido (pode ser o **TAP com as pendências** do relatório), e o formulário de resposta.
+- **O que aparece:** o painel “O analista pediu uma complementação”, com autor, data, texto e anexo do pedido (pode ser o **TAP com as pendências** do relatório). A resposta é feita na janela (popup) aberta por Ações > Responder complementação.
 - **O que acontece:**
   - Campos: “Anexo da complementação” (obrigatório) e “Observação para o analista” (opcional, até 500 caracteres).
   - “Enviar complementação”: o status volta para **Em análise** com o mesmo analista, e o histórico registra **um único registro**: “Complementação enviada pelo solicitante.”
 - **Não é possível:** enviar sem anexo. Aparece “Anexe o documento solicitado pelo analista para enviar a complementação.”
 - Se a resposta não resolver tudo, o analista pede uma nova complementação (HA-05). Não há prazo nem limite de rodadas.
 
-![Figura 6 – Pedido do analista e formulário de resposta.](img/19-solicitante-responder.png)
+![Figura 6 – Janela (popup) Responder complementação: pedido do analista e campos de resposta.](img/19-solicitante-responder.png)
 
-*Figura 6 – Pedido do analista e formulário de resposta.*
+*Figura 6 – Janela (popup) Responder complementação: pedido do analista e campos de resposta.*
 
 ### HS-06. Cancelar a solicitação
 
@@ -292,9 +297,9 @@ flowchart TB
 - **O que acontece:** campo “Justificativa” obrigatório (até 1.000 caracteres). Ao confirmar, o status vira **Cancelado**, a solicitação sai de Em andamento e a página mostra “Solicitação cancelada pelo solicitante”, com nome, data e justificativa. A justificativa fica visível para todos.
 - **Não é possível:** cancelar sem justificativa (“Informe o motivo do cancelamento.”) ou desfazer o cancelamento.
 
-![Figura 7 – Formulário Cancelar solicitação (o mesmo para os três perfis).](img/16-cancelar-solicitacao.png)
+![Figura 7 – Janela (popup) Cancelar solicitação (a mesma para os três perfis).](img/16-cancelar-solicitacao.png)
 
-*Figura 7 – Formulário Cancelar solicitação (o mesmo para os três perfis).*
+*Figura 7 – Janela (popup) Cancelar solicitação (a mesma para os três perfis).*
 
 ### HS-07. Consultar os modelos inventariados e as solicitações canceladas
 
@@ -303,8 +308,8 @@ flowchart TB
 - **Onde:** Consultar modelo > **Inventariado** e **Cancelado** (novas abas para o solicitante, com os **mesmos nomes** da GEVAM).
 - **Inventariado:** é **a mesma aba Inventariado da GEVAM, com o mesmo nome**, mas só com os modelos da área do solicitante e só leitura. Sem filtro nem coluna “Status”.
   - No topo: “Exibindo modelos inventariados da área [área]”; o filtro Área gestora fica fixo na área dele.
-  - **Cards informativos** (sem clique), contando **só os modelos da área dele**: Modelos inventariados, Monitoramento 2ª Linha (GEVAM) (Monitorados, Não monitorados) e Situação do modelo (Ativos, Inativos, Suspensos), com quantidade, percentual e barra.
-  - Colunas: Modelo (nome e nº do inventário), Tipo de modelo, Assunto, Monitoramento 2ª Linha (GEVAM), Situação, Analista e Validado em. Filtros: Nº da solicitação ou do inventário, Nome do modelo, Assunto, Analista responsável, Monitoramento 2ª Linha (GEVAM) e Situação do modelo.
+  - **Cards informativos** (sem clique), contando **só os modelos da área dele**: Modelos inventariados, Validação GEVAM (Validados, Não validados), Monitoramento 2ª Linha (GEVAM) (Monitorados, Não monitorados) e Situação do modelo (Ativos, Inativos, Suspensos), com quantidade, percentual e barra.
+  - Colunas: Modelo (nome e nº da solicitação), Tipo de modelo, Assunto, Validação GEVAM, Monitoramento 2ª Linha (GEVAM), Situação, Analista e Validado em. Filtros: Nº da solicitação, Nome do modelo, Assunto, Analista responsável, Validação GEVAM, Monitoramento 2ª Linha (GEVAM) e Situação do modelo.
   - **Abrir** leva à página do modelo, **só em modo leitura** (sem botões de ação). O caminho no topo mostra “Consultar modelos > Inventariado”.
 - **Cancelado:** a mesma lista do analista e do gestor (HG-06), mas **só com as canceladas da área do solicitante** (“Exibindo solicitações canceladas da área Financeiro”); o filtro Área gestora fica fixo na área dele. **Abrir** leva à página da solicitação cancelada (justificativa, informações, histórico e arquivos), sem o botão Ações.
 - **Não aparece para o solicitante:** botões de ação nas páginas abertas por essas abas (é tudo só leitura).
@@ -327,7 +332,7 @@ Seta grossa = ação deste perfil · seta fina = ação de outro perfil.
 
 ```mermaid
 flowchart TB
-    SUB(["Submetido"]):::status ==>|"Abre e assume<br/>(ou gestor atribui)"| ANA["Em análise: lê o relatório de desenvolvimento<br/>abas Tier, Matriz e Informações já liberadas"]:::status
+    SUB(["Submetido"]):::status ==>|"Ações > Assumir solicitação<br/>(ou gestor atribui)"| ANA["Em análise: lê o relatório de desenvolvimento<br/>abas Tier, Matriz e Informações já liberadas"]:::status
     ANA ==>|"Acrescentar documentação (ex.: TAP sem pendências)<br/>Editar solicitação: dados e solicitante<br/>· status não muda"| ANA
     ANA ==>|"Pede complementação<br/>(ex.: TAP com pendências)"| COMP["Em complementação<br/>(abas continuam editáveis)"]:::status
     COMP -->|"Solicitante responde"| ANA
@@ -352,7 +357,7 @@ flowchart TB
 
 - **Onde:** Consultar modelo > Em andamento.
 - **O que aparece:**
-  - Quatro cards com a quantidade por status: **Novas submissões** (Submetido), **Em análise**, **Em complementação** e **Aguardando gestor** (novo). Clicar num card filtra a lista por aquele status.
+  - Quatro cards com a quantidade por status: **Novas submissões** (Submetido), **Em análise**, **Em complementação** e **Aguardando gestor** (novo). Os cards são só informativos: não são clicáveis e não filtram a lista (para filtrar, usar o filtro **Status da solicitação**).
   - Filtros: Nº da solicitação, **Status da solicitação** (novo: Todos, Submetido, Em análise, Em complementação e Aguardando gestor), Área gestora, Nome do modelo, Assunto e Analista responsável.
   - Os cards são **atalhos do filtro Status da solicitação**: clicar num card preenche o filtro com aquele status e aplica na hora; clicar de novo (ou em Limpar) volta para Todos. O card e o campo nunca ficam diferentes.
   - Em cada linha: só o botão **Abrir**. As ações (Acrescentar documentação, Pedir complementação, Enviar para o gestor e Cancelar) ficam no botão **Ações**, dentro da solicitação.
@@ -364,10 +369,10 @@ flowchart TB
 
 ### HA-02. Assumir uma solicitação
 
-> **Como** analista, **quero** abrir uma solicitação nova e ficar responsável por ela, **para** começar a análise.
+> **Como** analista, **quero** assumir uma solicitação nova e ficar responsável por ela, **para** começar a análise.
 
-- **Onde:** botão **Abrir** numa solicitação “Submetido”.
-- **O que acontece:** o analista passa a ser o **analista responsável**, o status vira **Em análise**, o sistema grava a **data e hora da atribuição** e mostra “Solicitação atribuída a você.” O histórico registra “Solicitação atribuída a [analista].” As abas **Cálculo do Tier, Matriz de Risco e Informações do Modelo já ficam liberadas** para preenchimento.
+- **Onde:** abrir a solicitação “Submetido” e clicar em **Ações** > “Assumir solicitação”. Abrir sozinho não muda nada: enquanto ninguém assume, essa é a única opção do menu Ações, aparece o aviso “Esta solicitação ainda não tem analista responsável. Para analisá-la, clique em Ações > Assumir solicitação.” e as abas ficam só para leitura.
+- **O que acontece:** o analista passa a ser o **analista responsável**, o status vira **Em análise**, o sistema grava a **data e hora da atribuição** e mostra “Solicitação atribuída a você.” O histórico registra “Solicitação atribuída a [analista].” Só então aparecem as outras ações no menu Ações e as abas **Cálculo do Tier, Matriz de Risco e Informações do Modelo** ficam liberadas para preenchimento.
 - A solicitação também pode chegar ao analista por atribuição do gestor (HG-02).
 - **Não é possível:** agir numa solicitação que está com outro analista. Aparece o aviso “Esta solicitação está em análise com [analista]. Só o analista responsável pode agir sobre ela.” e tudo fica em modo leitura.
 
@@ -437,7 +442,7 @@ flowchart TB
 
 > **Como** analista, **quero** preencher Cálculo do Tier, Matriz de Risco e Informações do Modelo assim que assumo a solicitação, **para** adiantar a análise.
 
-- **Quando:** as três abas ficam **liberadas desde a atribuição** (o analista assume ao abrir, ou o gestor atribui). Não dependem do TAP.
+- **Quando:** as três abas ficam **liberadas desde a atribuição** (o analista assume em Ações > “Assumir solicitação”, ou o gestor atribui). Não dependem do TAP.
 - **Quem edita:** só o analista responsável, enquanto a solicitação está **Em análise** ou **Em complementação**. Depois do envio ao gestor (e para gestor, solicitante e outros analistas) ficam em modo leitura.
 - **Para enviar ao gestor:** as três abas precisam estar preenchidas (HA-11). Enquanto faltar alguma, aparece no topo “Para enviar ao gestor, preencha as abas abaixo — Falta preencher: …”, com links para as abas.
 
@@ -570,7 +575,8 @@ flowchart TB
 > **Como** analista (ou gestor), **quero** corrigir os dados informados pelo solicitante e, se for preciso, trocar o solicitante, **para** que a solicitação reflita a realidade sem precisar cancelar e abrir outra.
 
 - **Onde:** dentro da solicitação, Ações > **Editar solicitação**. Não há item separado para trocar o solicitante: ele é um campo deste formulário.
-- **Disponível quando:** qualquer status em andamento (Submetido, Em análise, Em complementação, Aguardando gestor), para o **analista responsável** e para o **gestor**. Não vale em Validado nem Cancelado.
+- **Disponível quando:** qualquer status em andamento (Submetido, Em análise, Em complementação, Aguardando gestor), para o **analista responsável** e para o **gestor**. Não vale em Validado nem Cancelado. O analista, numa Submetido, precisa assumir antes (HA-02).
+- **Analista só altera o que ele mesmo inseriu:** para o analista, só o campo **Solicitante** fica editável; os dados informados pelo solicitante aparecem desabilitados (só leitura). O que o analista inseriu é corrigido onde foi inserido (Cálculo do Tier e Matriz de Risco por recálculo, Informações do Modelo e Acrescentar documentação). O gestor segue a mesma regra (HG-08).
 - **O que aparece:** o mesmo formulário do solicitante (HS-04), com o campo **Solicitante** no topo (obrigatório; vem preenchido com o atual) e depois Nome do modelo, Assunto, Tipo de modelo, Área gestora, Público e Objetivo, todos obrigatórios. **Não** há o campo de substituir o relatório de desenvolvimento (documentos novos entram por Acrescentar documentação). Quando o solicitante é trocado, aparece abaixo dos campos: “O solicitante passa de [anterior] para [novo], que passa a acompanhar a solicitação e a responder às complementações.”
 - **O que acontece:** “Salvar alterações” grava; o status não muda. O histórico registra **um único registro**: “Solicitação editada pelo analista.” (ou “pelo gestor GEVAM.”). Se o solicitante foi trocado, o registro traz o detalhe “Solicitante: [anterior] → [novo].”
 - **Não é possível:** salvar com campo vazio (“Campo obrigatório”).
@@ -582,18 +588,19 @@ flowchart TB
 
 ### HA-15. Editar o modelo inventariado
 
-> **Como** analista (ou gestor), **quero** alterar a situação de um modelo do inventário, indicar se ele é monitorado pela GEVAM e atualizar os textos de Informações do Modelo, **para** manter o inventário em dia depois da validação.
+> **Como** analista (ou gestor), **quero** alterar a situação e a validação GEVAM de um modelo do inventário, indicar se ele é monitorado pela GEVAM e atualizar os textos de Informações do Modelo, **para** manter o inventário em dia depois da validação.
 
 - **Onde:** Consultar modelo > Inventariado > abrir o modelo > botão **Editar modelo** (no topo da página).
 - **Disponível quando:** sempre, para **analista** e **gestor**, em qualquer modelo do inventário. O solicitante só consulta.
 - **Como o modelo entra no inventário:** todo modelo validado pelo gestor entra como **Ativo** e **não monitorado** (HG-04).
 - **O que acontece:** abre o painel “Editar modelo” com:
   - **Situação do modelo** (obrigatório): Ativo, Inativo ou Suspenso.
+  - **Validação GEVAM** (obrigatório): Validado ou Não validado.
   - **Monitoramento 2ª Linha (GEVAM)**: toggle Sim / Não. Indica se a 2ª linha acompanha o modelo; o acompanhamento é feito fora do sistema.
   - **Informações do Modelo**: as mesmas seções de texto da HA-09, já preenchidas, com as mesmas regras (obrigatórias e até 4.000 caracteres).
-- **Salvar alterações** grava e registra no histórico **um único registro**: “Modelo editado no inventário.”, com o resumo do que mudou no detalhe (ex.: “Situação: Ativo → Suspenso · Monitoramento 2ª Linha (GEVAM): Não → Sim · Informações do Modelo atualizadas”) e o nome de quem alterou. **Cancelar** fecha sem gravar.
+- **Salvar alterações** grava e registra no histórico **um único registro**: “Modelo editado no inventário.”, com o resumo do que mudou no detalhe (ex.: “Situação: Ativo → Suspenso · Validação GEVAM: Não validado → Validado · Monitoramento 2ª Linha (GEVAM): Não → Sim · Informações do Modelo atualizadas”) e o nome de quem alterou. **Cancelar** fecha sem gravar.
 - **Não é possível:** salvar com seção obrigatória de Informações do Modelo vazia (“Campo obrigatório”).
-- Não existe “Resultado da validação”: tudo o que está no inventário foi validado (o que não foi validado foi cancelado).
+- **Nem todo modelo do inventário foi validado:** modelos antigos, que entraram sem passar pela avaliação da GEVAM, ficam com Validação GEVAM = **Não validado** (e podem ser monitorados). Toda solicitação Validado entra como **Validado**.
 
 ![Figura 25 – Editar modelo: situação, Monitoramento 2ª Linha (GEVAM) e Informações do Modelo.](img/31-editar-modelo.png)
 
@@ -635,16 +642,17 @@ flowchart TB
 - **Onde:** Consultar modelo > Em andamento (mesma tela do analista, Figura 10), com os mesmos filtros, inclusive **Status da solicitação** (HA-01). O card **Aguardando gestor**, ou o filtro com esse status, mostra o que depende do gestor.
 - Na lista há só o botão **Abrir**. Finalizar validação, Atribuir / Reatribuir e Cancelar ficam dentro da solicitação.
 
-### HG-02. Atribuir ou reatribuir uma solicitação
+### HG-02. Assumir, atribuir ou reatribuir uma solicitação
 
-> **Como** gestor, **quero** atribuir uma solicitação a um analista ou trocar o analista responsável, **para** distribuir a carga de trabalho.
+> **Como** gestor, **quero** assumir eu mesmo uma solicitação, atribuí-la a um analista ou trocar o analista responsável, **para** distribuir a carga de trabalho.
 
-- **Onde:** dentro da solicitação, Ações > **Atribuir a um analista** (solicitação “Submetido”) ou **Reatribuir analista** (solicitação em andamento).
+- **Onde:** dentro da solicitação, Ações > **Assumir solicitação** ou **Atribuir a um analista** (solicitação “Submetido”), ou **Reatribuir analista** (solicitação em andamento).
+- **Assumir:** igual ao analista (HA-02). O gestor passa a ser o responsável, o status vira **Em análise** e o histórico registra “Solicitação atribuída a [gestor].” A partir daí ele faz **a mesma coisa que um analista**: as abas de análise ficam liberadas para ele e o menu Ações traz Acrescentar documentação, Pedir complementação e Enviar para o gestor. Ele continua podendo reatribuir para um analista.
 - **O que acontece:** campo “Analista” (obrigatório; lista sem o analista atual).
   - **Atribuir:** o status vira **Em análise** com o analista escolhido; grava a data de atribuição e o gestor GEVAM. Histórico: “Solicitação atribuída a [analista] pelo gestor.”
   - **Reatribuir:** o status não muda; mudam o analista responsável e a data de atribuição. Histórico: “Solicitação reatribuída de [anterior] para [novo] pelo gestor.”
 - **Não é possível:** atribuir sem escolher o analista (“Escolha o analista.”); atribuir solicitação Validado ou Cancelado.
-- O analista não atribui: para ele o item fica desabilitado com “Ao abrir uma solicitação Submetido, ela é atribuída a você.”
+- O analista não atribui a outra pessoa: ele só assume a solicitação para si (Ações > “Assumir solicitação”, HA-02).
 
 ![Figura 26 – Atribuir a um analista.](img/17-gestor-atribuir.png)
 
@@ -667,10 +675,10 @@ flowchart TB
 > **Como** gestor, **quero** dar o aval à validação, **para** concluir a validação independente e incluir o modelo no inventário.
 
 - **Onde:** botão **Finalizar validação** no topo da página da solicitação.
-- **Disponível quando:** status **Aguardando gestor**.
+- **Disponível quando:** status **Aguardando gestor**. Vale também quando o próprio gestor assumiu e analisou a solicitação (HG-02): ele envia para o gestor e ele mesmo finaliza.
 - **O que acontece:** abre uma confirmação “Finalizar validação”, que mostra a Matriz de Risco do analista (Tier, nota e classificação). **Não há perguntas**: todo modelo validado entra no inventário.
-- Ao confirmar, o status vira **Validado**, a solicitação sai de Em andamento e a página mostra “Solicitação finalizada” (Resultado, Validado por, Nº do inventário).
-  - O modelo entra em Consultar modelo > Inventariado com número INV-AAAA-NNN, situação **Ativo** e **não monitorado**, levando os dados de Cálculo do Tier, Matriz de Risco e Informações do Modelo. O histórico registra “Solicitação validada pelo gestor. Modelo incluído no inventário (INV-…).”
+- Ao confirmar, o status vira **Validado**, a solicitação sai de Em andamento e a página mostra “Solicitação finalizada” (Resultado e Validado por).
+  - O modelo entra em Consultar modelo > Inventariado com o **mesmo número da solicitação** (não há numeração própria de inventário), situação **Ativo**, **não monitorado** e Validação GEVAM **Validado**, levando os dados de Cálculo do Tier, Matriz de Risco e Informações do Modelo. O histórico registra “Solicitação validada pelo gestor. Modelo incluído no inventário.”
   - Situação e monitoramento são alterados depois, na página do modelo (HA-15).
 - **Cancelar**, na confirmação, fecha sem validar.
 
@@ -691,12 +699,12 @@ flowchart TB
 > **Como** gestor (ou analista), **quero** consultar os modelos do inventário e as solicitações canceladas, **para** acompanhar a carteira de modelos.
 
 - **Onde:** Consultar modelo > **Inventariado** e **Cancelado**. O solicitante também tem as duas abas, com os mesmos nomes: só a área dele e só leitura (HS-07).
-- **Inventariado:** lista **todos os modelos validados** — toda solicitação Validado entra no inventário. Não há filtro nem coluna “Status”.
-  - **Abrir** leva à página do modelo, onde o analista acrescenta documentação (HA-13) e analista e gestor editam o modelo (HA-15).
-  - A coluna “Inventariado em” virou **“Validado em”**; o filtro de número aceita o nº da solicitação ou do inventário.
-  - Cards **informativos** (sem clique): Modelos inventariados, Monitoramento 2ª Linha (GEVAM) (Monitorados, Não monitorados) e Situação do modelo (Ativos, Inativos, Suspensos), com quantidade, percentual e barra.
-  - **Não existe “Resultado da validação”:** tudo o que está no inventário foi validado; o que não foi validado foi cancelado (resultado desfavorável = cancelamento). Por isso não há card, filtro nem coluna de resultado.
-  - Filtros novos: “Monitoramento 2ª Linha (GEVAM)” (Todos, Monitorados, Não monitorados) e “Situação do modelo” (Todos, Ativos, Inativos, Suspensos). Os filtros em uso aparecem como etiquetas acima da tabela, removíveis pelo X.
+- **Inventariado:** lista **todos os modelos do inventário**: toda solicitação Validado entra nele (como Validado), e há modelos antigos que entraram sem avaliação da GEVAM (Não validado). Não há filtro nem coluna “Status”.
+  - **Abrir** leva à página do modelo, onde analista e gestor acrescentam documentação (HA-13) e editam o modelo (HA-15).
+  - A coluna “Inventariado em” virou **“Validado em”** (“—” para os não validados); o filtro de número é o nº da solicitação (o modelo no inventário tem o mesmo número).
+  - Cards **informativos** (sem clique): Modelos inventariados, Validação GEVAM (Validados, Não validados), Monitoramento 2ª Linha (GEVAM) (Monitorados, Não monitorados) e Situação do modelo (Ativos, Inativos, Suspensos), com quantidade, percentual e barra.
+  - **Validação GEVAM** (Validado / Não validado) substitui o antigo “Resultado da validação”, com card, filtro e coluna. Resultado desfavorável de uma solicitação continua virando **Cancelado** (não entra no inventário); “Não validado” é só para modelos antigos que estão no inventário sem avaliação da GEVAM.
+  - Filtros novos: “Validação GEVAM” (Todos, Validados, Não validados), “Monitoramento 2ª Linha (GEVAM)” (Todos, Monitorados, Não monitorados) e “Situação do modelo” (Todos, Ativos, Inativos, Suspensos). Os filtros em uso aparecem como etiquetas acima da tabela, removíveis pelo X.
 - **Cancelado:** lista com a coluna nova **“Cancelada por”** (Analista, Gestor GEVAM ou Solicitante) e a justificativa. **Abrir** leva à **página própria da solicitação** (não há mais painel lateral), com o painel “Solicitação cancelada pelo …” (autor, data e justificativa), as informações, o histórico e os arquivos. O analista responsável pode acrescentar documentação; o status continua Cancelado.
 
 ![Figura 29 – Inventariado, com os cards informativos e os filtros novos.](img/23-inventariado.png)
@@ -716,15 +724,15 @@ flowchart TB
 > **Como** gestor ou analista, **quero** registrar direto no inventário um modelo que já existe, **para** que ele passe a constar no inventário da GEVAM.
 
 - **Onde:** Novo Modelo > Inventariar.
-- **O que acontece:** as mesmas abas da solicitação, nesta ordem: “Inventariar” (dados do modelo) → “Cálculo do Tier” → “Matriz de Risco” → “Informações do Modelo”. Cada aba só libera a seguinte quando está completa; o botão final é “Incluir no inventário”.
+- **O que acontece:** as mesmas abas da solicitação, nesta ordem: “Inventariar” (dados do modelo) → “Cálculo do Tier” → “Matriz de Risco” → “Informações do Modelo”. Cada aba só libera a seguinte quando está completa; o botão final é “Incluir no inventário”. Na aba Inventariar há o campo obrigatório **“Validado pela GEVAM?”** (Sim / Não): modelos antigos podem entrar no inventário sem terem passado pela avaliação da GEVAM.
 
-### HG-08. Editar a solicitação (inclusive trocar o solicitante)
+### HG-08. Trocar o solicitante e trocar o analista
 
-> **Como** gestor, **quero** corrigir os dados da solicitação e, se for preciso, trocar o solicitante, **para** manter a solicitação correta sem cancelar e abrir outra.
+> **Como** gestor, **quero** trocar o solicitante e trocar o analista responsável, **para** manter a solicitação com as pessoas certas sem cancelar e abrir outra.
 
-- **Onde:** dentro da solicitação, Ações > **Editar solicitação** (o solicitante é um campo do formulário).
+- **Trocar o solicitante:** Ações > **Editar solicitação**, igual ao analista (HA-14). Só o campo **Solicitante** é editável; os dados informados pelo solicitante (Nome do modelo, Assunto, Tipo de modelo, Área gestora, Público e Objetivo) ficam **só para leitura**. O histórico registra “Solicitação editada pelo gestor GEVAM.”, com o detalhe “Solicitante: [anterior] → [novo].”
+- **Trocar o analista:** Ações > **Reatribuir analista** (HG-02). **Só o gestor** troca o analista: o analista não passa a solicitação para outro analista.
 - **Disponível quando:** qualquer status em andamento.
-- **O que acontece:** igual a HA-14; o histórico registra a ação “pelo gestor GEVAM”.
 
 ---
 
@@ -735,8 +743,9 @@ flowchart TB
 - **TAP:** é um documento como outro qualquer. O TAP sem pendências entra por Acrescentar documentação; o TAP com pendências, como anexo de um pedido de complementação. Não há etapa de TAP no fluxo de status e ele não libera nem bloqueia as abas.
 - **Acrescentar documentação** nunca altera o status, em nenhum status.
 - **Novos dados da solicitação:** data/hora de atribuição, data/hora de finalização da análise, gestor GEVAM, cancelamento (data, autor, perfil e justificativa), histórico de Cálculo do Tier, histórico de Matriz de Risco e Informações do Modelo (seis textos).
-- **Substituição do relatório de desenvolvimento:** na edição (status Submetido), o novo arquivo substitui o anterior, que é **apagado** (não fica no histórico nem em Arquivos). O evento da edição guarda o novo arquivo.
-- **Anexos:** gravar o arquivo, ligar ao evento do histórico e servir o download. Limite de 20 MB; formatos PDF, DOC, DOCX, XLSX e CSV.
+- **Anexo(s) da solicitação:** vários arquivos por envio, de qualquer tipo (o tipo não é conferido), pelo menos um. Na edição (status Submetido), o solicitante remove anexos já enviados, que são **apagados** (não ficam no histórico nem em Arquivos), e inclui novos; o evento da edição guarda os novos.
+- **Anexos:** gravar o arquivo, ligar ao evento do histórico e servir o download. Limite de 20 MB por arquivo. Fora o Anexo(s) da solicitação, os demais campos de anexo seguem com PDF, DOC, DOCX, XLSX e CSV.
+- **Nº da solicitação:** só o número, sem prefixo nem traços (ex.: 244). O modelo no inventário usa **o mesmo número**; não existe mais o nº de inventário INV-AAAA-NNN. Modelo inventariado direto (Novo Modelo > Inventariar) recebe um número da mesma sequência.
 - **Tempo de análise:** calculado a partir do histórico — dias corridos da atribuição até o envio ao gestor, menos os dias entre cada “Complementação solicitada” e a “Complementação enviada” seguinte (todas as rodadas).
 - **Tier exibido:** o Tier da última Matriz de Risco, quando houver; senão, o do último cálculo/recálculo.
 - **Editar solicitação (GEVAM):** analista responsável e gestor, em qualquer status em andamento, editam os dados e trocam o solicitante no mesmo formulário; nunca muda o status; o histórico registra quem fez e só o que mudou. O novo solicitante passa a receber as notificações.
@@ -752,8 +761,9 @@ Os status e o resultado da validação mudaram. Na migração, os registros atua
 | --- | --- | --- |
 | Status “Finalizada e no inventário” (Validada e inventariada) | **Validado** | Continua no inventário, com a situação e o monitoramento que já tinha. |
 | Status “Validada” (fora do inventário) | **Validado** | Como todo Validado está no inventário, passa a constar nele: situação **Ativo**, **não monitorado** (ver ponto a confirmar 2). |
-| Resultado da validação “Não validado” | **Cancelado** | O que não foi validado é cancelado. O registro sai do inventário e vai para a aba Cancelado. |
-| Resultado da validação “Validado” | — | O campo deixa de existir: todo modelo do inventário foi validado. |
+| Resultado da validação “Não validado”, vindo de uma solicitação que a GEVAM reprovou | **Cancelado** | Resultado desfavorável = cancelamento. O registro sai do inventário e vai para a aba Cancelado. |
+| Resultado da validação “Não validado”, de modelo antigo inventariado sem avaliação da GEVAM | **Validação GEVAM = Não validado** | Continua no inventário, com a situação e o monitoramento que já tinha. |
+| Resultado da validação “Validado” | **Validação GEVAM = Validado** | O campo passa a se chamar Validação GEVAM. |
 | Status “Cancelada” | **Cancelado** | Só muda o nome. |
 | Monitoramento “Em monitoramento” | **Monitoramento 2ª Linha (GEVAM) = Sim** | Toggle na página do modelo. |
 | Monitoramento “Não monitorado” ou “Não se aplica” | **Monitoramento 2ª Linha (GEVAM) = Não** | “Não se aplica” deixa de existir. |
@@ -765,6 +775,6 @@ Tipos de referência: `Solicitacao`, `TimelineEvent`, `CalculoTier`, `MatrizRisc
 
 1. [ ] “Prazo de revalidação” e “Alçada sugerida” são digitados pelo analista (como no protótipo) ou calculados a partir do Tier e da classificação?
 2. [ ] **Migração das “Validada” fora do inventário (seção 5.1):** pela regra nova elas entram no inventário como Ativo e não monitorado. Confirmar se é isso mesmo ou se alguma deve ser tratada de outro jeito.
-3. [ ] **Migração dos “Não validado” (seção 5.1):** na aba Cancelado, quem aparece em “Cancelada por” e qual justificativa? Sugestão: “Gestor GEVAM” e “Não validado na validação independente (migração)”.
+3. [ ] **Migração dos “Não validado” que vieram de solicitação reprovada (seção 5.1):** como distinguir dos modelos antigos sem avaliação (ex.: ter ou não uma solicitação de origem)? E, na aba Cancelado, quem aparece em “Cancelada por” e qual justificativa? Sugestão: “Gestor GEVAM” e “Não validado na validação independente (migração)”.
 
-**Decididos nesta revisão:** os status finais passam a ser **Validado** e **Cancelado**; todo modelo validado entra no inventário como Ativo e não monitorado, sem perguntas na finalização; analista e gestor editam no inventário a situação, o Monitoramento 2ª Linha (GEVAM) (toggle) e as Informações do Modelo; não existe “Resultado da validação”; o solicitante tem a aba Inventariado (mesmo nome da GEVAM), só com a área dele e só leitura; cada ação gera um único registro no histórico; o Tempo de análise pausa durante a complementação; o Tier das Informações da solicitação segue a Matriz de Risco; Editar solicitação continua para analista responsável e gestor, e é nele que se troca o solicitante (não há item “Alterar solicitante”); na lista do solicitante não há botão Complementar: responder fica em Ações > Responder complementação, e o aviso do topo indica o que está pendente; o solicitante vê o status Aguardando gestor; a ficha é exportada em .xlsx com o logo do BRB. A lista Em andamento ganhou o filtro **Status da solicitação** nos três perfis (para o solicitante, sem “Aguardando gestor”, que ele vê como Em análise). De-para: “Finalizada e no inventário” e “Validada” viram **Validado**; “Não validado” vira **Cancelado** (seção 5.1).
+**Decididos nesta revisão:** os status finais passam a ser **Validado** e **Cancelado**; todo modelo validado entra no inventário como Ativo e não monitorado, sem perguntas na finalização; analista e gestor editam no inventário a situação, o Monitoramento 2ª Linha (GEVAM) (toggle) e as Informações do Modelo; o antigo “Resultado da validação” vira **Validação GEVAM** (Validado / Não validado: modelos antigos podem estar no inventário sem validação), editável em Editar modelo; o solicitante tem a aba Inventariado (mesmo nome da GEVAM), só com a área dele e só leitura; cada ação gera um único registro no histórico; o Tempo de análise pausa durante a complementação; o Tier das Informações da solicitação segue a Matriz de Risco; Editar solicitação continua para analista responsável e gestor, e é nele que se troca o solicitante (não há item “Alterar solicitante”); na lista do solicitante não há botão Complementar: responder fica em Ações > Responder complementação, e o aviso do topo indica o que está pendente; o solicitante vê o status Aguardando gestor; a ficha é exportada em .xlsx com o logo do BRB. A lista Em andamento ganhou o filtro **Status da solicitação** nos três perfis (para o solicitante, sem “Aguardando gestor”, que ele vê como Em análise). De-para: “Finalizada e no inventário” e “Validada” viram **Validado**; “Não validado” vira **Cancelado** (seção 5.1).

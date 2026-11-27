@@ -19,16 +19,21 @@ const WIDTHS = { sm: "max-w-[420px]", md: "max-w-[560px]", lg: "max-w-[760px]", 
 /** Modal: overlay 40%, sombra forte, cabeçalho com borda, sem raio grande. */
 export function Modal({ open, title, onClose, children, footer, width = "md" }: ModalProps) {
   const ref = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
 
+  // Foca a janela só ao abrir (não a cada render, para não tirar o foco do campo em que se digita).
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", onKey);
     ref.current?.focus();
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) return null;
 
@@ -40,13 +45,13 @@ export function Modal({ open, title, onClose, children, footer, width = "md" }: 
         aria-modal="true"
         aria-label={title}
         tabIndex={-1}
-        className={cx("w-full rounded-svm bg-surface shadow-modal outline-none", WIDTHS[width])}
+        className={cx("flex max-h-[calc(100vh-32px)] w-full flex-col rounded-svm bg-surface shadow-modal outline-none", WIDTHS[width])}
       >
         <header className="flex items-center justify-between gap-4 border-b border-line px-6 py-4">
           <h2 className="text-section font-semibold text-ink">{title}</h2>
           <IconButton icon="x" label="Fechar" onClick={onClose} />
         </header>
-        <div className="px-6 py-5 text-body text-ink">{children}</div>
+        <div className="overflow-y-auto px-6 py-5 text-body text-ink">{children}</div>
         <footer className="flex justify-end gap-3 border-t border-line px-6 py-4">
           {footer ?? (
             <Button variant="secondary" onClick={onClose}>

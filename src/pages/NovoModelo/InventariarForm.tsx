@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { TextField } from "../../components/ui/TextField";
 import { SelectField } from "../../components/ui/SelectField";
 import { TextareaField } from "../../components/ui/TextareaField";
-import { FileUpload } from "../../components/ui/FileUpload";
+import { MultiFileUpload, INFO_ANEXOS } from "../../components/ui/MultiFileUpload";
 import { PrimaryButton } from "../../components/ui/PrimaryButton";
 import { Panel, FormGrid, FormActions } from "../../components/ui/Panel";
 import {
@@ -15,6 +15,8 @@ import {
 
 export interface InventariarDados {
   situacaoModelo: string;
+  /** "Sim" ou "Não": o modelo foi validado pela GEVAM? (modelos antigos podem não ter sido). */
+  validado: string;
   monitoramento: string;
   nomeModelo: string;
   tipoModelo: string;
@@ -28,14 +30,14 @@ type FormState = InventariarDados;
 interface InventariarFormProps {
   form: InventariarDados;
   onChange: (form: InventariarDados) => void;
-  file: File | null;
-  onFileChange: (file: File | null) => void;
+  files: File[];
+  onFilesChange: (files: File[]) => void;
   /** Chamado com o formulário válido (botão Avançar). */
   onAvancar: () => void;
 }
 
 /** Passo 1 do inventário: dados do modelo. Estado fica no InventariarWizard. */
-export function InventariarForm({ form, onChange, file, onFileChange, onAvancar }: InventariarFormProps) {
+export function InventariarForm({ form, onChange, files, onFilesChange, onAvancar }: InventariarFormProps) {
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
 
   function updateField(field: keyof FormState, value: string) {
@@ -73,6 +75,16 @@ export function InventariarForm({ form, onChange, file, onFileChange, onAvancar 
               onChange={(value) => updateField("situacaoModelo", value)}
               options={situacaoModeloOptions}
               error={errors.situacaoModelo}
+            />
+
+            <SelectField
+              id="validado"
+              label="Validado pela GEVAM?"
+              required
+              value={form.validado}
+              onChange={(value) => updateField("validado", value)}
+              options={["Sim", "Não"]}
+              error={errors.validado}
             />
 
             <SelectField
@@ -134,7 +146,7 @@ export function InventariarForm({ form, onChange, file, onFileChange, onAvancar 
               error={errors.objetivo}
             />
 
-            <FileUpload id="anexo" file={file} onChange={onFileChange} fullWidth />
+            <MultiFileUpload id="anexo" label="Anexo(s)" info={INFO_ANEXOS} files={files} onChange={onFilesChange} />
           </FormGrid>
 
           <FormActions>

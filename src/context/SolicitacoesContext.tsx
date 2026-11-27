@@ -5,14 +5,14 @@ import { mockCancelados } from "../data/mockCancelados";
 import { mockSolicitacoesInventariadas } from "../data/mockSolicitacoesInventariadas";
 import { novoCalculo } from "../components/modelo/tier";
 import { novaMatriz } from "../components/modelo/matrizRisco";
-import { relatorioAtual } from "../pages/ConsultarModelo/fluxo";
+import { EDITADA_PELO_SOLICITANTE } from "../pages/ConsultarModelo/fluxo";
 import type {
   CanceladoPor,
   InformacoesAdicionais,
   InformacoesModelo,
   MatrizRisco,
   ModeloInventariado,
-  SituacaoModeloInventario,
+  SituacaoModeloInventario, ValidacaoInventario,
   Solicitacao,
   SolicitacaoCancelada,
 } from "../types";
@@ -23,8 +23,8 @@ import type {
  * (some ao recarregar); no sistema real cada ação abaixo é uma chamada ao servidor.
  *
  * Fluxo (detalhes em pages/ConsultarModelo/fluxo.ts):
- *   Submetido ── analista abre ──▶ Em análise (atribuída a ele)
- *   Submetido ── gestor atribui a um analista ──▶ Em análise (o gestor também pode reatribuir depois)
+ *   Submetido ── analista clica em Ações > Assumir solicitação ──▶ Em análise (atribuída a ele)
+ *   Submetido ── gestor atribui a um analista ou assume ele mesmo ──▶ Em análise (o gestor também pode reatribuir depois)
  *   Submetido ── solicitante: alterar os dados da solicitação ──▶ continua Submetido
  *   Qualquer status em andamento
  *     ── analista responsável, gestor ou solicitante: cancelar (justificativa) ──▶ Cancelado (aba Cancelado)
@@ -49,7 +49,7 @@ interface SolicitacoesContextValue {
   inventario: ModeloInventariado[];
   /** Aba Cancelado: todas as solicitações com status Cancelada, da mais recente para a mais antiga. */
   cancelados: SolicitacaoCancelada[];
-  /** Analista abriu uma Submetido: fica atribuída a ele e passa para Em análise. */
+  /** Analista clicou em Ações > Assumir solicitação numa Submetido: fica atribuída a ele e passa para Em análise. */
   assumirAnalise: (numero: string, analista: string) => void;
   /**
    * Analista acrescenta um documento (ex.: TAP sem pendências, documento recebido por e-mail).
@@ -60,18 +60,21 @@ interface SolicitacoesContextValue {
   atribuirAnalista: (numero: string, dados: { analista: string; autor: string }) => void;
   /** Solicitante altera os dados enquanto a solicitação está Submetido (nenhum analista assumiu). */
   /**
-   * Com novoRelatorio, o relatório de desenvolvimento é substituído: o arquivo anterior sai do
-   * histórico e dos Arquivos (não fica salvo) e o novo entra no evento da edição.
+   * Anexos: os removidos saem do histórico e dos Arquivos (não ficam salvos); os novos entram no
+   * evento da edição.
    */
   /**
-   * Editar solicitação. Solicitante: só em Submetido (pode substituir o relatório).
-   * Analista responsável ou gestor (`perfil`): em qualquer status em andamento, sem trocar o relatório.
+   * Editar solicitação. Solicitante: só em Submetido (pode remover e incluir anexos).
+   * Analista responsável ou gestor (`perfil`): em qualquer status em andamento, sem mexer nos anexos.
    */
   alterarSolicitacao: (
     numero: string,
     dados: {
       campos: DadosSolicitacao;
-      novoRelatorio?: string;
+      /** Solicitante: anexos já enviados que ele removeu. */
+      anexosRemovidos?: string[];
+      /** Solicitante: anexos novos. */
+      novosAnexos?: string[];
       /** GEVAM: novo solicitante (a troca entra no mesmo registro do histórico). */
       solicitante?: string;
       autor: string;
@@ -108,6 +111,7 @@ interface SolicitacoesContextValue {
     dados: {
       situacao: SituacaoModeloInventario;
       monitorado: boolean;
+      validacao: ValidacaoInventario;
       informacoesModelo?: InformacoesModelo;
       autor: string;
     },
@@ -115,7 +119,7 @@ interface SolicitacoesContextValue {
   /** Analista inclui no histórico um documento que chegou por fora do sistema. */
   adicionarDocumento: (
     numeroSolicitacao: string,
-    dados: { anexo: string; origem: string; texto?: string; autor: string },
+    dados: { anexo: string; origem: string; texto?: string; autor: string; perfil?: "analista" | "gestor" },
   ) => void;
 }
 
@@ -170,7 +174,7 @@ export function SolicitacoesProvider({ children }: { children: ReactNode }) {
 
     assumirAnalise: (numero, analista) =>
       atualizar(numero, (s) =>
-        // idempotente: o StrictMode chama o efeito da página duas vezes
+        // idempotente: só assume se ainda estiver Submetido
         s.status !== "Submetido"
           ? s
           : {
@@ -232,7 +236,7 @@ export function SolicitacoesProvider({ children }: { children: ReactNode }) {
       ),
 
     // Regra: cada ação gera um único registro no histórico, sem detalhar o que foi alterado.
-    alterarSolicitacao: (numero, { campos, novoRelatorio, solicitante, autor, perfil }) =>
+    alterarSolicitacao: (numero, { campos, anexosRemovidos = [], novosAnexos = [], solicitante, autor, perfil }) =>
       atualizar(numero, (s) => {
         if (perfil) {
           if (s.status === "Validado" || s.status === "Cancelado") return s;
@@ -256,25 +260,24 @@ export function SolicitacoesProvider({ children }: { children: ReactNode }) {
           };
         }
         if (s.status !== "Submetido") return s;
-        const anterior = relatorioAtual(s);
-        // O relatório substituído é descartado: some de todos os eventos (e, portanto, de Arquivos).
-        const timeline =
-          novoRelatorio && anterior
-            ? s.timeline.map((e) =>
-                e.anexos?.includes(anterior) ? { ...e, anexos: e.anexos.filter((a) => a !== anterior) } : e,
-              )
-            : s.timeline;
+        // Anexo removido é descartado: some de todos os eventos (e, portanto, de Arquivos).
+        const timeline = anexosRemovidos.length
+          ? s.timeline.map((e) =>
+              e.anexos?.some((a) => anexosRemovidos.includes(a))
+                ? { ...e, anexos: e.anexos.filter((a) => !anexosRemovidos.includes(a)) }
+                : e,
+            )
+          : s.timeline;
         return {
           ...s,
           ...campos,
-          relatorioDesenvolvimento: novoRelatorio ?? s.relatorioDesenvolvimento,
           timeline: [
             ...timeline,
             {
               data: hoje(),
-              descricao: "Solicitação editada pelo solicitante.",
+              descricao: EDITADA_PELO_SOLICITANTE,
               autor,
-              anexos: novoRelatorio ? [novoRelatorio] : undefined,
+              anexos: novosAnexos.length ? novosAnexos : undefined,
               tipo: "atualizacao",
             },
           ],
@@ -386,7 +389,8 @@ export function SolicitacoesProvider({ children }: { children: ReactNode }) {
       const s = solicitacoes.find((x) => x.numero === numero);
       if (!s) return undefined;
       const data = hoje();
-      const numeroInventario = `INV-${data.slice(0, 4)}-${String(inventario.length + 1).padStart(3, "0")}`;
+      // O nº do inventário é o próprio nº da solicitação.
+      const numeroInventario = s.numero;
       const novo: ModeloInventariado = {
         numero: numeroInventario,
         numeroSolicitacao: s.numero,
@@ -396,6 +400,7 @@ export function SolicitacoesProvider({ children }: { children: ReactNode }) {
         assunto: s.assunto,
         publico: s.publico,
         monitoramento: "Não monitorado",
+        validacao: "Validado",
         situacao: "Ativo",
         analistaResponsavel: s.analistaResponsavel,
         objetivo: s.objetivo ?? "Não informado",
@@ -414,7 +419,7 @@ export function SolicitacoesProvider({ children }: { children: ReactNode }) {
           ...x.timeline,
           {
             data,
-            descricao: `Solicitação validada pelo gestor. Modelo incluído no inventário (${numeroInventario}).`,
+            descricao: "Solicitação validada pelo gestor. Modelo incluído no inventário.",
             detalhe: "Situação: Ativo · Monitoramento 2ª Linha (GEVAM): Não",
             autor,
             tipo: "validada",
@@ -424,7 +429,7 @@ export function SolicitacoesProvider({ children }: { children: ReactNode }) {
       return numeroInventario;
     },
 
-    editarModelo: (numero, { situacao, monitorado, informacoesModelo, autor }) => {
+    editarModelo: (numero, { situacao, monitorado, validacao, informacoesModelo, autor }) => {
       const modelo = inventario.find((m) => m.numero === numero);
       if (!modelo) return;
       const monitoramento: ModeloInventariado["monitoramento"] = monitorado ? "Em monitoramento" : "Não monitorado";
@@ -433,6 +438,7 @@ export function SolicitacoesProvider({ children }: { children: ReactNode }) {
         JSON.stringify(informacoesModelo) !== JSON.stringify(modelo.informacoesModelo ?? {});
       const mudancas: string[] = [];
       if (situacao !== modelo.situacao) mudancas.push(`Situação: ${modelo.situacao} → ${situacao}`);
+      if (validacao !== modelo.validacao) mudancas.push(`Validação GEVAM: ${modelo.validacao} → ${validacao}`);
       if (monitoramento !== modelo.monitoramento)
         mudancas.push(`Monitoramento 2ª Linha (GEVAM): ${monitorado ? "Não → Sim" : "Sim → Não"}`);
       if (textosMudaram) mudancas.push("Informações do Modelo atualizadas");
@@ -448,7 +454,7 @@ export function SolicitacoesProvider({ children }: { children: ReactNode }) {
       setInventario((lista) =>
         lista.map((m) =>
           m.numero === numero
-            ? { ...m, situacao, monitoramento, informacoesModelo: textosMudaram ? informacoesModelo : m.informacoesModelo }
+            ? { ...m, situacao, monitoramento, validacao, informacoesModelo: textosMudaram ? informacoesModelo : m.informacoesModelo }
             : m,
         ),
       );
@@ -457,14 +463,14 @@ export function SolicitacoesProvider({ children }: { children: ReactNode }) {
       }
     },
 
-    adicionarDocumento: (numeroSolicitacao, { anexo, origem, texto, autor }) =>
+    adicionarDocumento: (numeroSolicitacao, { anexo, origem, texto, autor, perfil = "analista" }) =>
       atualizar(numeroSolicitacao, (s) => ({
         ...s,
         timeline: [
           ...s.timeline,
           {
             data: hoje(),
-            descricao: `Documentação acrescentada pelo analista (recebida por ${origem}).`,
+            descricao: `Documentação acrescentada pelo ${perfil === "gestor" ? "gestor GEVAM" : "analista"} (recebida por ${origem}).`,
             detalhe: texto,
             autor,
             anexos: [anexo],

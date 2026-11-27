@@ -2,7 +2,7 @@ import { useState, type FormEvent } from "react";
 import { PageHeader } from "../../components/layout/PageHeader";
 import { TextField } from "../../components/ui/TextField";
 import { SelectField } from "../../components/ui/SelectField";
-import { FileUpload } from "../../components/ui/FileUpload";
+import { MultiFileUpload, INFO_ANEXOS } from "../../components/ui/MultiFileUpload";
 import { PrimaryButton } from "../../components/ui/PrimaryButton";
 import { SuccessModal } from "../../components/ui/SuccessModal";
 import { Panel, FormGrid, FormActions } from "../../components/ui/Panel";
@@ -31,15 +31,14 @@ const INITIAL_STATE: FormState = {
   objetivo: "",
 };
 
+/** Nº da solicitação: só o número (ex.: 244), sem prefixo nem ano. */
 function generateRequestCode() {
-  const year = new Date().getFullYear();
-  const sequence = String(Math.floor(Math.random() * 900) + 100);
-  return `REQ-${year}-${sequence}`;
+  return String(Math.floor(Math.random() * 900) + 100);
 }
 
 export function SubmeterForm() {
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState | "anexo", string>>>(
     {},
   );
@@ -56,9 +55,8 @@ export function SubmeterForm() {
         nextErrors[field] = "Campo obrigatório";
       }
     });
-    if (!file) nextErrors.anexo = "Anexe o relatório de desenvolvimento do modelo.";
-    // O seletor só oferece PDF, mas arrastar para o quadro aceita qualquer arquivo: confere aqui.
-    else if (!/\.pdf$/i.test(file.name)) nextErrors.anexo = "O relatório deve ser um arquivo PDF.";
+    // Pelo menos um anexo; o tipo do arquivo não é conferido.
+    if (files.length === 0) nextErrors.anexo = "Campo obrigatório";
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   }
@@ -72,7 +70,7 @@ export function SubmeterForm() {
   function handleCloseModal() {
     setSuccessCode(null);
     setForm(INITIAL_STATE);
-    setFile(null);
+    setFiles([]);
     setErrors({});
   }
 
@@ -149,16 +147,15 @@ export function SubmeterForm() {
               fullWidth
             />
 
-            <FileUpload
+            <MultiFileUpload
               id="anexo"
-              label="Relatório de desenvolvimento do modelo"
+              label="Anexo(s)"
+              info={INFO_ANEXOS}
               required
-              accept=".pdf"
-              hint="Somente PDF, até 20 MB"
-              file={file}
-              onChange={(f) => {
-                setFile(f);
-                if (f) setErrors((e) => ({ ...e, anexo: undefined }));
+              files={files}
+              onChange={(fs) => {
+                setFiles(fs);
+                if (fs.length) setErrors((e) => ({ ...e, anexo: undefined }));
               }}
               error={errors.anexo}
               fullWidth

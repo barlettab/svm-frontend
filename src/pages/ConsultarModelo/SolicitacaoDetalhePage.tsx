@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useProfile } from "../../context/ProfileContext";
 import { useSolicitacoes } from "../../context/SolicitacoesContext";
 import { currentUserNameByProfile } from "../../data/currentUser";
@@ -28,6 +28,7 @@ import { Tabs } from "../../components/ui/Tabs";
 import { pendenciasParaGestor } from "../../components/modelo/dadosModelo";
 import {
   analistaPodeAgir as podeAgir,
+  analistaPodeAssumir,
   analistaPodeCancelar,
   dataAtribuicao,
   gestorPodeCancelar,
@@ -129,7 +130,7 @@ function Recado({
   );
 }
 
-/** Formulário padrão de encaminhamento: anexo obrigatório + observações opcionais. */
+/** Formulário padrão de encaminhamento (popup): anexo obrigatório + observações opcionais. */
 function FormEncaminhamento({
   id,
   titulo,
@@ -168,43 +169,48 @@ function FormEncaminhamento({
   }
 
   return (
-    <Panel title={titulo} className="border-info-line">
-      <div className="flex flex-col gap-5">
-        <p className="text-body text-ink-2">{explicacao}</p>
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          <FileUpload
-            id={`${id}-anexo`}
-            label={anexoLabel}
-            required
-            file={anexo}
-            onChange={(f) => {
-              setAnexo(f);
-              if (f) setErro(undefined);
-            }}
-            error={erro}
-            hint={anexoHint}
-          />
-          <TextareaField
-            id={`${id}-texto`}
-            label="Observações (opcional)"
-            value={texto}
-            onChange={setTexto}
-            placeholder={placeholder}
-            rows={5}
-            maxLength={1000}
-            hint={hint}
-          />
-        </div>
-        <div className="flex justify-end gap-3 border-t border-line-soft pt-4">
+    <Modal
+      open
+      title={titulo}
+      onClose={onCancelar}
+      width="lg"
+      footer={
+        <>
           <Button variant="secondary" onClick={onCancelar}>
             Cancelar
           </Button>
           <Button variant="primary" icon={icon} onClick={enviar}>
             {botao}
           </Button>
-        </div>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-5">
+        <p className="text-body text-ink-2">{explicacao}</p>
+        <FileUpload
+          id={`${id}-anexo`}
+          label={anexoLabel}
+          required
+          file={anexo}
+          onChange={(f) => {
+            setAnexo(f);
+            if (f) setErro(undefined);
+          }}
+          error={erro}
+          hint={anexoHint}
+        />
+        <TextareaField
+          id={`${id}-texto`}
+          label="Observações (opcional)"
+          value={texto}
+          onChange={setTexto}
+          placeholder={placeholder}
+          rows={4}
+          maxLength={1000}
+          hint={hint}
+        />
       </div>
-    </Panel>
+    </Modal>
   );
 }
 
@@ -240,20 +246,12 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
   const bloqueadoNoInicio =
     acaoInicial === "enviar-gestor" && !!s && pendenciasParaGestor(s).length > 0;
 
-  // Analista abriu uma solicitação Submetido: ela passa a ser dele, Em análise.
-  const assumir = profile === "analista" && s?.status === "Submetido";
-  useEffect(() => {
-    if (assumir) assumirAnalise(numero, usuario);
-  }, [assumir, assumirAnalise, numero, usuario]);
-
   const [acao, setAcao] = useState<AcaoSolicitacao | null>(bloqueadoNoInicio ? null : (acaoInicial ?? null));
   const [aba, setAba] = useState<AbaDetalhe>("solicitacao");
   const [fichaAberta, setFichaAberta] = useState(false);
   /** Analista tentou enviar ao gestor com abas pendentes. */
   const [tentouEnviar, setTentouEnviar] = useState(bloqueadoNoInicio);
-  const [toast, setToast] = useState<{ message: string; detail?: string; tone?: "success" | "info" } | null>(
-    assumir ? { tone: "info", message: "Solicitação atribuída a você.", detail: "Ela agora está Em análise." } : null,
-  );
+  const [toast, setToast] = useState<{ message: string; detail?: string; tone?: "success" | "info" } | null>(null);
 
   // Cancelamento
   const [justificativa, setJustificativa] = useState("");
@@ -284,11 +282,17 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
     );
   }
 
-  const analistaPodeAgir = profile === "analista" && podeAgir(s, usuario);
+  /** Analista ou gestor GEVAM: quem assume a solicitação passa a agir como analista responsável. */
+  const ehGevam = profile === "analista" || profile === "gestor";
+  /** Submetido: analista e gestor veem "Assumir solicitação" no menu Ações. */
+  const podeAssumir = ehGevam && analistaPodeAssumir(s);
+  /** Gestor que assumiu a solicitação: faz tudo o que o analista responsável faz. */
+  const gestorResponsavel = profile === "gestor" && s.analistaResponsavel === usuario;
+  const analistaPodeAgir = ehGevam && podeAgir(s, usuario);
   /** Abas de análise: editáveis pelo analista responsável desde a atribuição (Em análise e Em complementação). */
-  const podeEditarAbas = profile === "analista" && analistaPodeEditarAbas(s, usuario);
+  const podeEditarAbas = ehGevam && analistaPodeEditarAbas(s, usuario);
   /** Acrescentar documentação: analista responsável, em qualquer status (o status não muda). */
-  const podeDocumentar = profile === "analista" && analistaPodeAcrescentarDoc(s, usuario);
+  const podeDocumentar = ehGevam && analistaPodeAcrescentarDoc(s, usuario);
   const comOutroAnalista =
     profile === "analista" && s.status === "Em análise" && s.analistaResponsavel !== usuario;
   const gestorPodeDecidir = profile === "gestor" && s.status === "Aguardando gestor";
@@ -311,6 +315,12 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
   const atribuidaEm = dataAtribuicao(s);
   const finalizadaEm = dataFinalizacaoAnalise(s);
   const diasAnalise = tempoAnaliseDias(s);
+
+  function assumirSolicitacao() {
+    if (!s) return;
+    assumirAnalise(s.numero, usuario);
+    setToast({ tone: "info", message: "Solicitação atribuída a você.", detail: "Ela agora está Em análise." });
+  }
 
   function abrirAcao(a: AcaoSolicitacao) {
     setAba("solicitacao");
@@ -393,19 +403,33 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
     description: "Encerra a solicitação. A justificativa fica visível para todos.",
   };
 
-  // ── Editar solicitação (analista responsável e gestor): dados e também o solicitante ──
+  // ── Editar solicitação (analista responsável e gestor): só trocar o solicitante ──
   const itensEdicaoGevam: ActionMenuItem[] = [
     {
       key: "alterar",
       label: "Editar solicitação",
       icon: "edit",
       separated: true,
-      description: "Corrija os dados ou troque o solicitante. O status não muda.",
+      description: "Troque o solicitante. Os dados do solicitante ficam só para leitura.",
     },
   ];
 
   // ── Ações do analista: menu "Ações" na aba Status de Acompanhamento ──
-  const acoesAnalista: ActionMenuItem[] = [
+  // Submetido: só "Assumir solicitação". As outras ações aparecem depois que o analista assume.
+  const itensAnalise: ActionMenuItem[] = [
+    ...(podeAssumir
+      ? [
+          {
+            key: "assumir",
+            label: "Assumir solicitação",
+            icon: "user" as const,
+            description:
+              profile === "gestor"
+                ? "Você mesmo analisa: passa a ser o responsável e a solicitação vai para Em análise."
+                : "Você passa a ser o analista responsável e a solicitação vai para Em análise.",
+          },
+        ]
+      : []),
     ...(podeDocumentar
       ? [
           {
@@ -434,6 +458,9 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
           },
         ]
       : []),
+  ];
+  const acoesAnalista: ActionMenuItem[] = [
+    ...itensAnalise,
     ...(podeEditarGevam ? itensEdicaoGevam : []),
     ...(podeCancelar ? [{ ...itemCancelar, separated: podeDocumentar || analistaPodeAgir || podeEditarGevam }] : []),
   ];
@@ -466,15 +493,21 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
   ];
 
   // ── Ações do gestor fora da decisão ──────────────────────────────────────
+  // Submetido: "Assumir solicitação" (ele mesmo analisa) ou "Atribuir a um analista".
+  // Se o gestor assumiu, ganha também as ações do analista responsável.
   const acoesGestor: ActionMenuItem[] = [
+    ...itensAnalise,
     {
       key: "atribuir",
+      separated: itensAnalise.length > 0,
       label: s.status === "Submetido" ? "Atribuir a um analista" : "Reatribuir analista",
       icon: "user",
       description:
         s.status === "Submetido"
           ? "A solicitação passa para Em análise com o analista escolhido."
-          : `Hoje com ${s.analistaResponsavel}.`,
+          : gestorResponsavel
+            ? "Hoje com você. Passe a análise para um analista."
+            : `Hoje com ${s.analistaResponsavel}.`,
     },
     ...(podeEditarGevam ? itensEdicaoGevam : []),
     { ...itemCancelar, description: "Encerra a solicitação. Informe o motivo." },
@@ -492,7 +525,8 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
           : [];
 
   function escolherAcao(key: string) {
-    if (key === "enviar-gestor") tentarEnviarParaGestor();
+    if (key === "assumir") assumirSolicitacao();
+    else if (key === "enviar-gestor") tentarEnviarParaGestor();
     else abrirAcao(key as AcaoSolicitacao);
   }
 
@@ -515,6 +549,16 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
         onBack={onVoltar}
         actions={headerActions}
       />
+
+      {podeAssumir && (
+        <InlineAlert tone="info" title="Esta solicitação ainda não tem analista responsável.">
+          <p>
+            {profile === "gestor"
+              ? "Para analisá-la você mesmo, clique em Ações > Assumir solicitação. Ou atribua a um analista."
+              : "Para analisá-la, clique em Ações > Assumir solicitação."}
+          </p>
+        </InlineAlert>
+      )}
 
       {comOutroAnalista && (
         <InlineAlert tone="info" title={`Esta solicitação está em análise com ${s.analistaResponsavel}.`}>
@@ -608,7 +652,6 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
               Gerar ficha do modelo
             </Button>
           }
-          onVoltar={() => setAba("matriz-risco")}
           onSalvar={(dados) => {
             salvarInformacoesModelo(s.numero, dados);
             const faltando = pendenciasParaGestor({ ...s, informacoesModelo: dados });
@@ -651,7 +694,6 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
               <Info label="Validado por">
                 {s.conclusao.gestor} · {formatDate(s.conclusao.data)}
               </Info>
-              <Info label="Nº do inventário">{s.conclusao.numeroInventario ?? VAZIO}</Info>
             </dl>
           </Panel>
         )}
@@ -688,16 +730,24 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
           <FormAlterarSolicitacao
             solicitacao={s}
             porGevam={podeEditarGevam}
+            soSolicitante={podeEditarGevam}
             onCancelar={() => setAcao(null)}
-            onConfirmar={(campos, novoRelatorio, novoSolicitante) => {
+            onConfirmar={(campos, anexos, novoSolicitante) => {
               // Um único registro no histórico, mesmo quando também troca o solicitante.
-              alterarSolicitacao(s.numero, { campos, novoRelatorio, solicitante: novoSolicitante, autor: usuario, perfil: perfilGevam });
+              alterarSolicitacao(s.numero, {
+                campos,
+                anexosRemovidos: anexos?.removidos,
+                novosAnexos: anexos?.novos,
+                solicitante: novoSolicitante,
+                autor: usuario,
+                perfil: perfilGevam,
+              });
               const trocou = perfilGevam && novoSolicitante && novoSolicitante !== s.solicitante;
               setAcao(null);
               setToast({
                 message: "Solicitação editada.",
-                detail: novoRelatorio
-                  ? "Relatório de desenvolvimento substituído. A edição foi registrada no histórico."
+                detail: anexos && (anexos.removidos.length || anexos.novos.length)
+                  ? "Anexos atualizados. A edição foi registrada no histórico."
                   : trocou
                     ? `Solicitante agora é ${novoSolicitante}. A edição foi registrada no histórico.`
                     : "A edição foi registrada no histórico.",
@@ -706,88 +756,92 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
           />
         )}
 
-        {/* ── Atribuir analista (gestor) ─────────────────────────────────── */}
-        {podeAtribuir && acao === "atribuir" && (
-          <Panel title={s.status === "Submetido" ? "Atribuir a um analista" : "Reatribuir analista"} className="border-info-line">
-            <div className="flex flex-col gap-5">
-              <p className="text-body text-ink-2">
-                {s.status === "Submetido" ? (
-                  <>
-                    A solicitação passa para <b className="text-ink">Em análise</b> com o analista escolhido.
-                  </>
-                ) : (
-                  <>
-                    Hoje com <b className="text-ink">{s.analistaResponsavel}</b>. O status não muda; só o analista
-                    responsável.
-                  </>
-                )}
-              </p>
-              <div className="max-w-sm">
-                <SelectField
-                  id="atribuir-analista"
-                  label="Analista"
-                  required
-                  value={analistaEscolhido}
-                  onChange={(v) => {
-                    setAnalistaEscolhido(v);
-                    setAnalistaErro(undefined);
-                  }}
-                  options={analistaOptions.filter((a) => a !== s.analistaResponsavel)}
-                  error={analistaErro}
-                />
-              </div>
-              <div className="flex justify-end gap-3 border-t border-line-soft pt-4">
-                <Button variant="secondary" onClick={() => setAcao(null)}>
-                  Cancelar
-                </Button>
-                <Button variant="primary" icon="user" onClick={confirmarAtribuicao}>
-                  Atribuir
-                </Button>
-              </div>
-            </div>
-          </Panel>
-        )}
+        {/* ── Atribuir / reatribuir analista (gestor): janela (popup) ──────── */}
+        <Modal
+          open={podeAtribuir && acao === "atribuir"}
+          title={s.status === "Submetido" ? "Atribuir a um analista" : "Reatribuir analista"}
+          onClose={() => setAcao(null)}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setAcao(null)}>
+                Cancelar
+              </Button>
+              <Button variant="primary" icon="user" onClick={confirmarAtribuicao}>
+                Atribuir
+              </Button>
+            </>
+          }
+        >
+          <div className="flex flex-col gap-5">
+            <p className="text-body text-ink-2">
+              {s.status === "Submetido" ? (
+                <>
+                  A solicitação passa para <b className="text-ink">Em análise</b> com o analista escolhido.
+                </>
+              ) : (
+                <>
+                  Hoje com <b className="text-ink">{s.analistaResponsavel}</b>. O status não muda; só o analista
+                  responsável.
+                </>
+              )}
+            </p>
+            <SelectField
+              id="atribuir-analista"
+              label="Analista"
+              required
+              value={analistaEscolhido}
+              onChange={(v) => {
+                setAnalistaEscolhido(v);
+                setAnalistaErro(undefined);
+              }}
+              options={analistaOptions.filter((a) => a !== s.analistaResponsavel)}
+              error={analistaErro}
+            />
+          </div>
+        </Modal>
 
-        {/* ── Cancelar solicitação (analista responsável ou solicitante) ─── */}
-        {podeCancelar && acao === "cancelar" && (
-          <Panel title="Cancelar solicitação" className="border-error-line">
-            <div className="flex flex-col gap-5">
-              <p className="text-body text-ink-2">
-                A solicitação sai de Em andamento e vai para a aba <b className="text-ink">Cancelado</b>.{" "}
-                {isSolicitante
-                  ? "A GEVAM verá a sua justificativa."
-                  : `${s.solicitante} verá a justificativa.`}{" "}
-                Esta ação não pode ser desfeita.
-              </p>
-              <TextareaField
-                id="cancelar-justificativa"
-                label="Justificativa"
-                required
-                value={justificativa}
-                onChange={(v) => {
-                  setJustificativa(v);
-                  setJustificativaErro(undefined);
-                }}
-                placeholder={
-                  isSolicitante
-                    ? "Ex.: O modelo foi descontinuado pela área."
-                    : "Ex.: Resultado da validação desfavorável."
-                }
-                rows={4}
-                maxLength={1000}
-                error={justificativaErro}
-              />
-              <div className="flex justify-end gap-3 border-t border-line-soft pt-4">
-                <Button variant="secondary" onClick={() => setAcao(null)}>
-                  Voltar
-                </Button>
-                <Button variant="danger" icon="trash" onClick={confirmarCancelamento}>
-                  Cancelar solicitação
-                </Button>
-              </div>
-            </div>
-          </Panel>
-        )}
+        {/* ── Cancelar solicitação (popup; analista responsável, gestor ou solicitante) ─── */}
+        <Modal
+          open={podeCancelar && acao === "cancelar"}
+          title="Cancelar solicitação"
+          onClose={() => setAcao(null)}
+          width="md"
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setAcao(null)}>
+                Voltar
+              </Button>
+              <Button variant="danger" icon="trash" onClick={confirmarCancelamento}>
+                Cancelar solicitação
+              </Button>
+            </>
+          }
+        >
+          <div className="flex flex-col gap-5">
+            <p className="text-body text-ink-2">
+              A solicitação <b className="text-ink">{s.numero}</b> sai de Em andamento e vai para a aba{" "}
+              <b className="text-ink">Cancelado</b>.{" "}
+              {isSolicitante ? "A GEVAM verá a sua justificativa." : `${s.solicitante} verá a justificativa.`} Esta ação
+              não pode ser desfeita.
+            </p>
+            <TextareaField
+              id="cancelar-justificativa"
+              label="Justificativa"
+              required
+              value={justificativa}
+              onChange={(v) => {
+                setJustificativa(v);
+                setJustificativaErro(undefined);
+              }}
+              placeholder={
+                isSolicitante ? "Ex.: O modelo foi descontinuado pela área." : "Ex.: Resultado da validação desfavorável."
+              }
+              rows={5}
+              maxLength={1000}
+              error={justificativaErro}
+            />
+          </div>
+        </Modal>
 
         {/* ── Aguardando decisão do gestor ───────────────────────────────── */}
         {!isSolicitante && s.status === "Aguardando gestor" && s.encaminhamento && (
@@ -822,48 +876,11 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
                 anexo={s.anexoPedidoComplementacao}
                 onAnexo={abrirAnexo}
               />
-              {solicitantePodeResponder && acao !== "responder" ? (
+              {solicitantePodeResponder ? (
                 <p className="text-body text-ink-2">
                   Para responder, clique em <b className="text-ink">Ações</b> &gt;{" "}
                   <b className="text-ink">Responder complementação</b>. A análise só continua depois da sua resposta.
                 </p>
-              ) : solicitantePodeResponder ? (
-                <>
-                  <p className="text-body text-ink-2">
-                    Anexe o documento solicitado e clique em <b className="text-ink">Enviar complementação</b>. A
-                    solicitação volta para <b className="text-ink">Em análise</b> com {s.analistaResponsavel}.
-                  </p>
-                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                    <FileUpload
-                      id="complementacao-anexo"
-                      label="Anexo da complementação"
-                      required
-                      file={arquivo}
-                      onChange={(f) => {
-                        setArquivo(f);
-                        if (f) setArquivoErro(undefined);
-                      }}
-                      error={arquivoErro}
-                    />
-                    <TextareaField
-                      id="complementacao-observacao"
-                      label="Observação para o analista"
-                      value={observacao}
-                      onChange={setObservacao}
-                      rows={4}
-                      maxLength={500}
-                      hint="Opcional. Até 500 caracteres."
-                    />
-                  </div>
-                  <div className="flex justify-end gap-3 border-t border-line-soft pt-4">
-                    <Button variant="secondary" onClick={() => setAcao(null)}>
-                      Cancelar
-                    </Button>
-                    <Button variant="primary" icon="upload" onClick={enviarResposta}>
-                      Enviar complementação
-                    </Button>
-                  </div>
-                </>
               ) : (
                 <p className="text-body text-ink-2">
                   A solicitação volta para <b className="text-ink">Em análise</b> assim que {s.solicitante} enviar o anexo.
@@ -872,6 +889,59 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
             </div>
           </Panel>
         )}
+
+        {/* ── Responder complementação (popup do solicitante) ─────────────── */}
+        <Modal
+          open={solicitantePodeResponder && acao === "responder"}
+          title="Responder complementação"
+          onClose={() => setAcao(null)}
+          width="lg"
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setAcao(null)}>
+                Cancelar
+              </Button>
+              <Button variant="primary" icon="upload" onClick={enviarResposta}>
+                Enviar complementação
+              </Button>
+            </>
+          }
+        >
+          <div className="flex flex-col gap-5">
+            <Recado
+              tone="warning"
+              autor={pedidoAtual?.autor ?? s.analistaResponsavel}
+              data={pedidoAtual?.data}
+              texto={s.complementacao}
+              anexo={s.anexoPedidoComplementacao}
+              onAnexo={abrirAnexo}
+            />
+            <p className="text-body text-ink-2">
+              Anexe o documento solicitado e clique em <b className="text-ink">Enviar complementação</b>. A solicitação
+              volta para <b className="text-ink">Em análise</b> com {s.analistaResponsavel}.
+            </p>
+            <FileUpload
+              id="complementacao-anexo"
+              label="Anexo da complementação"
+              required
+              file={arquivo}
+              onChange={(f) => {
+                setArquivo(f);
+                if (f) setArquivoErro(undefined);
+              }}
+              error={arquivoErro}
+            />
+            <TextareaField
+              id="complementacao-observacao"
+              label="Observação para o analista"
+              value={observacao}
+              onChange={setObservacao}
+              rows={4}
+              maxLength={500}
+              hint="Opcional. Até 500 caracteres."
+            />
+          </div>
+        </Modal>
 
         {/* ── Resposta do solicitante recebida ───────────────────────────── */}
         {!isSolicitante && s.status === "Em análise" && s.respostaComplementacao && (
@@ -912,33 +982,37 @@ export function SolicitacaoDetalhePage({ numero, acaoInicial, onVoltar }: Solici
           />
         )}
 
-        {analistaPodeAgir && acao === "enviar-gestor" && pendencias.length === 0 && (
-          <Panel title="Enviar para o gestor" className="border-info-line">
-            <div className="flex flex-col gap-5">
-              <p className="text-body text-ink-2">
-                Você está pedindo o <b className="text-ink">aval do gestor</b>. A solicitação passa para{" "}
-                <b className="text-ink">Aguardando gestor</b>; o gestor lê os documentos e as abas e finaliza a validação;
-                o modelo entra no inventário. Não é preciso anexar nada.
-              </p>
-              <div className="flex justify-end gap-3 border-t border-line-soft pt-4">
-                <Button variant="secondary" onClick={() => setAcao(null)}>
-                  Cancelar
-                </Button>
-                <Button
-                  variant="primary"
-                  icon="chev-right"
-                  onClick={() => {
-                    enviarParaGestor(s.numero, { autor: usuario });
-                    setAcao(null);
-                    setToast({ message: "Enviada para o gestor.", detail: "A solicitação está Aguardando gestor." });
-                  }}
-                >
-                  Enviar para o gestor
-                </Button>
-              </div>
-            </div>
-          </Panel>
-        )}
+        {/* ── Enviar para o gestor (popup) ─────────────────────────────────── */}
+        <Modal
+          open={analistaPodeAgir && acao === "enviar-gestor" && pendencias.length === 0}
+          title="Enviar para o gestor"
+          onClose={() => setAcao(null)}
+          width="md"
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setAcao(null)}>
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                icon="chev-right"
+                onClick={() => {
+                  enviarParaGestor(s.numero, { autor: usuario });
+                  setAcao(null);
+                  setToast({ message: "Enviada para o gestor.", detail: "A solicitação está Aguardando gestor." });
+                }}
+              >
+                Enviar para o gestor
+              </Button>
+            </>
+          }
+        >
+          <p className="text-body text-ink-2">
+            Você está pedindo o <b className="text-ink">aval do gestor</b> para a solicitação{" "}
+            <b className="text-ink">{s.numero}</b>. Ela passa para <b className="text-ink">Aguardando gestor</b>; o gestor
+            lê os documentos e as abas e finaliza a validação; o modelo entra no inventário. Não é preciso anexar nada.
+          </p>
+        </Modal>
 
         {/* ── Informações da solicitação ────────────────────────────────── */}
         <Panel title="Informações da solicitação">
