@@ -47,6 +47,25 @@ class Marcador:
     def novo(self, x, y, texto):
         self.etiqueta(x, y, "NOVO: " + texto, VERDE)
 
+    def substituida(self, texto):
+        """Tela inteira sai: X vermelho de canto a canto e uma faixa central com o aviso."""
+        w, h = self.im.size
+        véu = Image.new("RGBA", (w, h), (255, 255, 255, 110))
+        self.im = Image.alpha_composite(self.im.convert("RGBA"), véu).convert("RGB")
+        self.d = ImageDraw.Draw(self.im)
+        self.d.rectangle([0, 0, w - 1, h - 1], outline=VERM, width=10)
+        self.d.line([(0, 0), (w, h)], fill=VERM, width=12)
+        self.d.line([(0, h), (w, 0)], fill=VERM, width=12)
+        f = ImageFont.truetype(FONTE, 44)
+        linhas = texto.split("\n")
+        alt = 60
+        larg = max(self.d.textlength(l, font=f) for l in linhas) + 80
+        x0, y0 = (w - larg) / 2, (h - alt * len(linhas) - 40) / 2
+        self.d.rectangle([x0, y0, x0 + larg, y0 + alt * len(linhas) + 40], fill=VERM)
+        for i, l in enumerate(linhas):
+            tw = self.d.textlength(l, font=f)
+            self.d.text(((w - tw) / 2, y0 + 20 + i * alt), l, fill="white", font=f)
+
     def salvar(self, nome):
         self.im.save(os.path.join(IMG, nome), optimize=True)
         print(nome, self.im.size)
@@ -56,7 +75,7 @@ class Marcador:
 m = Marcador("00-hoje-novo-modelo-solicitacao.png")
 m.sai((205, 129, 362, 146), "abas Implantação e Metodologia e Monitoramento", onde=(367, 128))
 m.sai((164, 400, 1392, 576), "campo Observações", onde=(164, 377))
-m.muda((164, 585, 1390, 661), "vira “Relatório de desenvolvimento do modelo” · só 1 arquivo PDF", onde=(164, 663))
+m.muda((164, 585, 1390, 661), "vira “Anexo(s)” com ícone (i) · vários arquivos, qualquer tipo", onde=(164, 663))
 m.sai((1304, 661, 1390, 682), "Incluir outro anexo", onde=(1080, 662))
 m.sai((1294, 695, 1343, 719), "Cancelar", onde=(1150, 697))
 m.muda((1343, 695, 1390, 719), "vira Enviar", onde=(1300, 722))
@@ -64,33 +83,14 @@ m.salvar("00-hoje-novo-modelo-solicitacao-marcado.png")
 
 # ── Consultar modelo > Em andamento ──────────────────────────────────────────
 m = Marcador("00-hoje-em-andamento.png")
-m.muda((155, 244, 456, 277), "Status → “Status da solicitação”", onde=(155, 279))
-m.sai((466, 243, 769, 277), "Data da submissão (filtro)", onde=(470, 279))
-m.sai((160, 376, 335, 860), "coluna Detalhes (+)", onde=(160, 352))
-m.sai((828, 376, 988, 860), "Objetivo modelo", onde=(760, 352))
-m.sai((990, 376, 1140, 860), "Tipo modelo", onde=(990, 352))
-m.muda((1290, 376, 1395, 860), "olho → botão Abrir · clipe e lixeira saem (Responder e Cancelar ficam em Ações, dentro da solicitação)", onde=(560, 328))
-m.novo(560, 130, "aviso de complementação pendente no topo da lista")
-m.novo(560, 152, "filtro Analista responsável · colunas Solicitante, Data da submissão e Analista")
+# Quase tudo muda: em vez de marcar item a item, a tela inteira é substituída pela Figura 7.
+m.substituida("TELA SUBSTITUÍDA POR COMPLETO\nConstruir como na Figura 7.")
 m.salvar("00-hoje-em-andamento-marcado.png")
 
 # ── Consultar modelo > Inventariado (o solicitante também tem esta aba, com o mesmo nome) ──
 m = Marcador("00-hoje-inventariado.png")
-m.novo(325, 170, "o solicitante também vê esta aba: só a área dele e só leitura")
-m.muda((143, 198, 450, 246), "→ “Modelos inventariados”", onde=(230, 222))
-m.sai((464, 198, 768, 246), "Total de validados", onde=(560, 222))
-m.sai((781, 198, 1084, 246), "Total de não validados", onde=(870, 222))
-m.muda((1099, 198, 1403, 246), "vira quadro “Monitoramento 2ª Linha (GEVAM)”", onde=(1000, 176))
-m.muda((143, 254, 1403, 301), "os 3 totais viram um quadro “Situação do modelo” (Ativos, Inativos, Suspensos)", onde=(380, 270))
-m.sai((781, 359, 1079, 392), "filtro Status", onde=(781, 337))
-m.sai((1093, 359, 1394, 392), "filtro Data da submissão", onde=(1093, 337))
-m.sai((543, 488, 640, 838), "Área gestora", onde=(470, 466))
-m.sai((715, 488, 778, 838), "Público", onde=(640, 444))
-m.sai((780, 488, 845, 838), "Tier", onde=(780, 466))
-m.sai((850, 488, 985, 838), "Resultado da validação", onde=(850, 444))
-m.muda((988, 488, 1085, 838), "→ “Monitoramento 2ª Linha (GEVAM)” · sem “Não se aplica”", onde=(900, 422))
-m.muda((150, 488, 445, 838), "nº da solicitação + nome → coluna “Modelo” (nome e nº do inventário)", onde=(150, 422))
-m.novo(560, 130, "filtros Monitoramento 2ª Linha (GEVAM) e Situação do modelo · coluna “Validado em”")
+# Quase tudo muda: a tela inteira é substituída pela Figura 22.
+m.substituida("TELA SUBSTITUÍDA POR COMPLETO\nConstruir como na Figura 22.")
 m.salvar("00-hoje-inventariado-marcado.png")
 
 # ── Consultar modelo > Cancelado ─────────────────────────────────────────────
@@ -100,3 +100,27 @@ m.muda((726, 305, 885, 330), "→ “Analista responsável”", onde=(700, 334))
 m.muda((1330, 305, 1395, 330), "botão Abrir → página da solicitação", onde=(1100, 334))
 m.novo(560, 130, "coluna “Cancelada por” (Analista, Gestor GEVAM ou Solicitante)")
 m.salvar("00-hoje-cancelado-marcado.png")
+
+# ══ Documento do analista (EVOLUCOES-ANALISTA.md) ═══════════════════════════════
+
+# ── Consultar modelo > Em andamento (analista): tela inteira substituída pela Figura 2 ──
+m = Marcador("00-hoje-analista-em-andamento.png")
+m.substituida("TELA SUBSTITUÍDA POR COMPLETO\nConstruir como na Figura 2.")
+m.salvar("00-hoje-analista-em-andamento-marcado.png")
+
+# ── Consultar modelo > Inventariado (GEVAM): tela inteira substituída pela Figura 28 ──
+m = Marcador("00-hoje-inventariado.png")
+m.substituida("TELA SUBSTITUÍDA POR COMPLETO\nConstruir como na Figura 28.")
+m.salvar("00-hoje-analista-inventariado-marcado.png")
+
+# ── Consultar modelo > Cancelado (GEVAM): muda pouco ──
+m = Marcador("00-hoje-cancelado.png")
+m.muda((726, 305, 885, 330), "→ “Analista responsável”", onde=(700, 334))
+m.muda((1330, 305, 1395, 330), "botão Abrir → página da solicitação", onde=(1100, 334))
+m.novo(560, 130, "coluna “Cancelada por” (Analista, Gestor GEVAM ou Solicitante)")
+m.salvar("00-hoje-analista-cancelado-marcado.png")
+
+# ── Novo modelo > Inventariar (analista): tela inteira substituída pela Figura 35 ──
+m = Marcador("00-hoje-analista-inventariar.png")
+m.substituida("TELA SUBSTITUÍDA POR COMPLETO\nConstruir como na Figura 35.")
+m.salvar("00-hoje-analista-inventariar-marcado.png")

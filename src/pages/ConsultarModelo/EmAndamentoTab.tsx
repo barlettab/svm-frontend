@@ -16,7 +16,7 @@ import { Table, type TableColumn } from "../../components/ui/Table";
 import { StatusBadge } from "../../components/ui/Badge";
 import { InlineAlert } from "../../components/ui/ErrorState";
 import { Button } from "../../components/ui/Button";
-import type { Solicitacao, SolicitacaoStatus } from "../../types";
+import type { Solicitacao } from "../../types";
 import { type AcaoSolicitacao } from "./SolicitacaoDetalhePage";
 
 interface Filters {
@@ -131,12 +131,6 @@ export function EmAndamentoTab({ onAbrir }: EmAndamentoTabProps) {
   );
 
   /** Card de status = atalho do filtro "Status da solicitação" (aplica na hora; clicar de novo limpa). */
-  function toggleStatusFilter(status: SolicitacaoStatus) {
-    const novo = applied.status === status ? TODOS : status;
-    setDraft((f) => ({ ...f, status: novo }));
-    setApplied((f) => ({ ...f, status: novo }));
-  }
-  const statusFilter = applied.status;
 
   function handleSearch() {
     setApplied(draft);
@@ -183,26 +177,18 @@ export function EmAndamentoTab({ onAbrir }: EmAndamentoTabProps) {
           <StatCard
             label="Novas submissões"
             value={counts.Submetido}
-            active={statusFilter === "Submetido"}
-            onClick={() => toggleStatusFilter("Submetido")}
           />
           <StatCard
             label="Em análise"
             value={counts["Em análise"]}
-            active={statusFilter === "Em análise"}
-            onClick={() => toggleStatusFilter("Em análise")}
           />
           <StatCard
             label="Em complementação"
             value={counts["Em complementação"]}
-            active={statusFilter === "Em complementação"}
-            onClick={() => toggleStatusFilter("Em complementação")}
           />
           <StatCard
             label="Aguardando gestor"
             value={counts["Aguardando gestor"]}
-            active={statusFilter === "Aguardando gestor"}
-            onClick={() => toggleStatusFilter("Aguardando gestor")}
           />
         </div>
       )}
@@ -246,7 +232,7 @@ export function EmAndamentoTab({ onAbrir }: EmAndamentoTabProps) {
           label="Nº da solicitação"
           value={draft.numero}
           onChange={(value) => setDraft((f) => ({ ...f, numero: value }))}
-          placeholder="Ex.: REQ-2026-001"
+          placeholder="Ex.: 201"
         />
         <FilterSelectField
           id="filtro-status"

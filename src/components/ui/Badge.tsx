@@ -39,6 +39,7 @@ export const STATUS_TONE: Record<string, Tone> = {
   "Em complementação": "amber",
   "Aguardando gestor": "blue",
   Validado: "green",
+  "Não validado": "slate",
   Cancelado: "slate",
   Ativo: "green",
   Inativo: "slate",

@@ -125,7 +125,7 @@ export function CanceladoTab({ onAbrir }: { onAbrir: (numero: string) => void })
           label="Nº da solicitação"
           value={draft.numero}
           onChange={(value) => setDraft((f) => ({ ...f, numero: value }))}
-          placeholder="Ex.: REQ-2026-001"
+          placeholder="Ex.: 201"
         />
         {soDaArea ? (
           <ReadOnlyField label="Área gestora" value={currentSolicitante.areaGestora} />

@@ -3,7 +3,7 @@ import type { Solicitacao } from "../types";
 /** Solicitações canceladas antes desta sessão (aparecem na aba Cancelado e abrem em página própria). */
 export const mockCancelados: Solicitacao[] = [
   {
-    numero: "REQ-2026-010",
+    numero: "210",
     nomeModelo: "Modelo Segmentação de Clientes",
     areaGestora: "Marketing",
     assunto: "Desenvolvimento de modelo",
@@ -21,7 +21,7 @@ export const mockCancelados: Solicitacao[] = [
     ],
   },
   {
-    numero: "REQ-2026-011",
+    numero: "211",
     nomeModelo: "Modelo Aprovação Automática PJ",
     areaGestora: "Risco",
     assunto: "Revalidação",
@@ -39,7 +39,7 @@ export const mockCancelados: Solicitacao[] = [
     ],
   },
   {
-    numero: "REQ-2026-012",
+    numero: "212",
     nomeModelo: "Modelo Previsão de Churn",
     areaGestora: "Marketing",
     assunto: "Alteração de modelo existente",
@@ -57,7 +57,7 @@ export const mockCancelados: Solicitacao[] = [
     ],
   },
   {
-    numero: "REQ-2026-013",
+    numero: "213",
     nomeModelo: "Modelo Otimização de Rotas",
     areaGestora: "Operações",
     assunto: "Desenvolvimento de modelo",
@@ -73,7 +73,7 @@ export const mockCancelados: Solicitacao[] = [
     ],
   },
   {
-    numero: "REQ-2026-014",
+    numero: "214",
     nomeModelo: "Modelo Alocação de Vagas",
     areaGestora: "Recursos Humanos",
     assunto: "Outro",
@@ -91,7 +91,7 @@ export const mockCancelados: Solicitacao[] = [
     ],
   },
   {
-    numero: "REQ-2026-015",
+    numero: "215",
     nomeModelo: "Modelo Ajuste de Provisão",
     areaGestora: "Financeiro",
     assunto: "Alteração de modelo existente",

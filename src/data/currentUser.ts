@@ -8,5 +8,5 @@ export const currentSolicitante = {
 export const currentUserNameByProfile: Record<Profile, string> = {
   solicitante: currentSolicitante.nome,
   analista: "Maria Santos",
-  gestor: "Carlos Oliveira",
+  gestor: "Ricardo Mendes",
 };

@@ -6,8 +6,6 @@ import { CamposInformacoesModelo } from "../../components/modelo/CamposDadosMode
 import { ResumoInformacoesModelo } from "../../components/modelo/ResumoDadosModelo";
 import {
   INFORMACOES_MODELO_VAZIAS,
-  semErros,
-  validarInformacoesModelo,
   type ErrosInformacoesModelo,
 } from "../../components/modelo/dadosModelo";
 import type { InformacoesModelo } from "../../types";
@@ -20,7 +18,6 @@ export function AbaInformacoesModelo({
   dados,
   editavel,
   onSalvar,
-  onVoltar,
   acoes,
 }: {
   /** Botões no cabeçalho do painel (ex.: Gerar ficha do modelo). */
@@ -28,7 +25,6 @@ export function AbaInformacoesModelo({
   dados?: InformacoesModelo;
   editavel: boolean;
   onSalvar: (dados: InformacoesModelo) => void;
-  onVoltar: () => void;
 }) {
   const [valor, setValor] = useState<InformacoesModelo>(dados ?? INFORMACOES_MODELO_VAZIAS);
   const [erros, setErros] = useState<ErrosInformacoesModelo>({});
@@ -41,10 +37,13 @@ export function AbaInformacoesModelo({
     );
   }
 
+  /**
+   * Salvar grava mesmo com seções obrigatórias vazias. A exigência vale só para
+   * enviar ao gestor (pendenciasParaGestor).
+   */
   function salvar() {
-    const e = validarInformacoesModelo(valor);
-    setErros(e);
-    if (semErros(e)) onSalvar(valor);
+    setErros({});
+    onSalvar(valor);
   }
 
   return (
@@ -61,9 +60,6 @@ export function AbaInformacoesModelo({
         errors={erros}
       />
       <FormActions>
-        <Button variant="secondary" icon="chev-left" onClick={onVoltar}>
-          Voltar
-        </Button>
         <Button variant="primary" icon="check" onClick={salvar}>
           Salvar
         </Button>

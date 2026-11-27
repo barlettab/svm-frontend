@@ -4,8 +4,10 @@ import type { Profile, Solicitacao, SolicitacaoStatus } from "../../types";
  * Regras do fluxo da Validação Independente (processo 15.11.02):
  *
  *   Solicitante envia → Submetido
- *   Analista abre uma Submetido → atribuída a ele, Em análise
- *   Gestor pode atribuir/reatribuir a um analista (Submetido → Em análise)
+ *   Analista abre uma Submetido e clica em Ações > Assumir solicitação → atribuída a ele, Em análise
+ *     (antes de assumir, o menu Ações do analista só tem "Assumir solicitação")
+ *   Gestor pode atribuir/reatribuir a um analista (Submetido → Em análise) ou assumir ele mesmo
+ *     (Ações > Assumir solicitação); o gestor que assumiu age como o analista responsável
  *   Solicitante pode alterar os dados enquanto Submetido
  *   Analista responsável, gestor ou solicitante podem cancelar a qualquer momento, com justificativa
  *   Com analista responsável, as abas Cálculo do Tier, Matriz de Risco e Informações do Modelo
@@ -22,14 +24,24 @@ export const NAO_ATRIBUIDO = "Não atribuído";
 /** Status em que o analista age sobre a solicitação. */
 export const ANALISTA_PODE_AGIR: SolicitacaoStatus[] = ["Submetido", "Em análise"];
 
-/** Submetido: qualquer analista pode assumir. Em análise: só o responsável. */
+/** Submetido: qualquer analista pode assumir (Ações > Assumir solicitação). */
+export const analistaPodeAssumir = (s: Solicitacao) => s.status === "Submetido";
+
+/** Só o analista responsável age, e só depois de assumir (Em análise). */
 export function analistaPodeAgir(s: Solicitacao, analista: string) {
-  if (s.status === "Submetido") return true;
   return s.status === "Em análise" && s.analistaResponsavel === analista;
 }
 
-/** Relatório de desenvolvimento em vigor (o anexo da submissão, ou o que o substituiu na edição). */
-export const relatorioAtual = (s: Solicitacao) => s.relatorioDesenvolvimento ?? s.timeline[0]?.anexos?.[0];
+export const EDITADA_PELO_SOLICITANTE = "Solicitação editada pelo solicitante.";
+
+/**
+ * Anexo(s) da solicitação em vigor: os do envio mais os incluídos pelo solicitante ao editar.
+ * O que ele removeu na edição já saiu de todos os eventos.
+ */
+export const anexosDaSolicitacao = (s: Solicitacao) =>
+  s.timeline
+    .filter((e, i) => i === 0 || e.descricao === EDITADA_PELO_SOLICITANTE)
+    .flatMap((e) => e.anexos ?? []);
 
 /** Validado e Cancelado encerram a solicitação. */
 export const finalizada = (s: Solicitacao) => s.status === "Validado" || s.status === "Cancelado";
@@ -37,7 +49,7 @@ export const finalizada = (s: Solicitacao) => s.status === "Validado" || s.statu
 /** Analista cancela qualquer solicitação em andamento que seja dele (ou ainda sem analista). */
 export function analistaPodeCancelar(s: Solicitacao, analista: string) {
   if (finalizada(s)) return false;
-  return s.status === "Submetido" || s.analistaResponsavel === analista;
+  return s.analistaResponsavel === analista;
 }
 
 /** Solicitante cancela em qualquer status em andamento. */

@@ -167,11 +167,6 @@ export interface Solicitacao {
   solicitante: string;
   dataSubmissao: string;
   analistaResponsavel: string;
-  /**
-   * Nome do arquivo do relatório de desenvolvimento em vigor. Se o solicitante o substituir
-   * ao editar, o anterior é descartado. Sem o campo, vale o anexo do evento de submissão.
-   */
-  relatorioDesenvolvimento?: string;
   /** Data e hora ISO em que o analista assumiu ou foi atribuído (a mais recente). */
   dataAtribuicao?: string;
   /** Data e hora ISO em que o analista enviou ao gestor. */
@@ -222,8 +217,14 @@ export interface Solicitacao {
  */
 export type MonitoramentoInventario = "Em monitoramento" | "Não monitorado";
 export type SituacaoModeloInventario = "Ativo" | "Inativo" | "Suspenso";
+/**
+ * Validação GEVAM do modelo no inventário. Nem todo modelo do inventário foi validado: modelos antigos,
+ * inventariados sem passar pela avaliação da GEVAM, ficam como "Não validado" (e podem ser monitorados).
+ */
+export type ValidacaoInventario = "Validado" | "Não validado";
 
 export interface ModeloInventariado {
+  /** Nº do modelo no inventário: é o próprio nº da solicitação (não há numeração separada). */
   numero: string;
   /** Solicitação que deu origem ao modelo (histórico e arquivos ficam nela). */
   numeroSolicitacao?: string;
@@ -234,6 +235,7 @@ export interface ModeloInventariado {
   publico: string;
   monitoramento: MonitoramentoInventario;
   situacao: SituacaoModeloInventario;
+  validacao: ValidacaoInventario;
   analistaResponsavel: string;
   objetivo: string;
   dataInventario: string;

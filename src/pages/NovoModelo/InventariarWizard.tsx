@@ -33,6 +33,7 @@ const PASSOS: { key: Passo; label: string }[] = [
 
 const DADOS_VAZIOS: InventariarDados = {
   situacaoModelo: "Ativo",
+  validado: "",
   monitoramento: "Não monitorado",
   nomeModelo: "",
   tipoModelo: "",
@@ -41,9 +42,9 @@ const DADOS_VAZIOS: InventariarDados = {
   objetivo: "",
 };
 
+/** Modelo inventariado direto (sem solicitação) recebe um número da mesma sequência das solicitações (ex.: 244). */
 function gerarCodigoInventario() {
-  const year = new Date().getFullYear();
-  return `INV-${year}-${String(Math.floor(Math.random() * 900) + 100)}`;
+  return String(Math.floor(Math.random() * 900) + 100);
 }
 
 /** Botões fora de um painel: sem a linha e o espaço do rodapé de formulário. */
@@ -108,7 +109,7 @@ export function InventariarWizard() {
   const [liberado, setLiberado] = useState(0);
 
   const [dados, setDados] = useState<InventariarDados>(DADOS_VAZIOS);
-  const [arquivo, setArquivo] = useState<File | null>(null);
+  const [arquivos, setArquivos] = useState<File[]>([]);
   const [informacoesModelo, setInformacoesModelo] = useState<InformacoesModelo>(INFORMACOES_MODELO_VAZIAS);
   const [infoModeloErros, setInfoModeloErros] = useState<ErrosInformacoesModelo>({});
   const [calculos, setCalculos] = useState<CalculoTier[]>([]);
@@ -151,7 +152,7 @@ export function InventariarWizard() {
   function recomecar() {
     setCodigo(null);
     setDados(DADOS_VAZIOS);
-    setArquivo(null);
+    setArquivos([]);
     setInformacoesModelo(INFORMACOES_MODELO_VAZIAS);
     setInfoModeloErros({});
     setCalculos([]);
@@ -179,8 +180,8 @@ export function InventariarWizard() {
           <InventariarForm
             form={dados}
             onChange={setDados}
-            file={arquivo}
-            onFileChange={setArquivo}
+            files={arquivos}
+            onFilesChange={setArquivos}
             onAvancar={() => irPara(1)}
           />
         )}

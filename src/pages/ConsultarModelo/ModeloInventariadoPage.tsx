@@ -13,7 +13,8 @@ import { RadioGroupField } from "../../components/ui/RadioGroupField";
 import { ToggleField } from "../../components/ui/ToggleField";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { Toast } from "../../components/ui/Toast";
-import type { InformacoesModelo, SituacaoModeloInventario } from "../../types";
+import { Modal } from "../../components/ui/Modal";
+import type { InformacoesModelo, SituacaoModeloInventario, ValidacaoInventario } from "../../types";
 import { CamposInformacoesModelo } from "../../components/modelo/CamposDadosModelo";
 import {
   INFORMACOES_MODELO_VAZIAS,
@@ -29,17 +30,19 @@ const SITUACOES: SituacaoModeloInventario[] = ["Ativo", "Inativo", "Suspenso"];
 const ORIGENS = ["Teams", "E-mail", "Reunião", "Outro"];
 
 interface ModeloInventariadoPageProps {
-  /** Nº do inventário (INV-...). */
+  /** Nº do modelo no inventário (= nº da solicitação). */
   numero: string;
   onVoltar: () => void;
 }
 
 /**
  * Página do modelo inventariado: mesmas informações e histórico da solicitação de origem.
- * Analista inclui documentos recebidos por fora (Teams, e-mail…). Analista e gestor editam
+ * Analista e gestor incluem documentos recebidos por fora (Teams, e-mail…) e editam
  * a situação (Ativo / Inativo / Suspenso), o monitoramento pela GEVAM (toggle) e os textos
  * de Informações do Modelo; cada mudança vai para o histórico. O solicitante só consulta.
  */
+const VALIDACOES = ["Validado", "Não validado"];
+
 export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoPageProps) {
   const { profile } = useProfile();
   const { inventario, solicitacoes, editarModelo, adicionarDocumento } = useSolicitacoes();
@@ -50,7 +53,7 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
     ? solicitacoes.find((s) => s.numero === modelo.numeroSolicitacao)
     : undefined;
 
-  const podeAdicionarDocumento = profile === "analista" && solicitacao !== undefined;
+  const podeAdicionarDocumento = (profile === "analista" || profile === "gestor") && solicitacao !== undefined;
   const podeEditar = profile === "analista" || profile === "gestor";
 
   const [toast, setToast] = useState<{ message: string; detail?: string; tone?: "success" | "info" } | null>(null);
@@ -66,6 +69,7 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
   const [edicaoAberta, setEdicaoAberta] = useState(false);
   const [situacao, setSituacao] = useState<SituacaoModeloInventario>("Ativo");
   const [monitorado, setMonitorado] = useState(false);
+  const [validacao, setValidacao] = useState<ValidacaoInventario>("Validado");
   const [textos, setTextos] = useState<InformacoesModelo>(INFORMACOES_MODELO_VAZIAS);
   const [errosTextos, setErrosTextos] = useState<ErrosInformacoesModelo>({});
 
@@ -109,7 +113,13 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
       setErros(e);
       return;
     }
-    adicionarDocumento(solicitacao.numero, { anexo: anexo!.name, origem, texto: texto.trim() || undefined, autor: usuario });
+    adicionarDocumento(solicitacao.numero, {
+      anexo: anexo!.name,
+      origem,
+      texto: texto.trim() || undefined,
+      autor: usuario,
+      perfil: profile === "gestor" ? "gestor" : "analista",
+    });
     fecharForm();
     setToast({ message: "Documento adicionado ao histórico.", detail: anexo!.name });
   }
@@ -119,6 +129,7 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
   function abrirEdicao() {
     setSituacao(modelo!.situacao);
     setMonitorado(modelo!.monitoramento === "Em monitoramento");
+    setValidacao(modelo!.validacao);
     setTextos(informacoesModelo ?? INFORMACOES_MODELO_VAZIAS);
     setErrosTextos({});
     setFormAberto(false);
@@ -129,11 +140,11 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
     const e = validarInformacoesModelo(textos);
     setErrosTextos(e);
     if (!semErros(e)) return;
-    editarModelo(modelo!.numero, { situacao, monitorado, informacoesModelo: textos, autor: usuario });
+    editarModelo(modelo!.numero, { situacao, monitorado, validacao, informacoesModelo: textos, autor: usuario });
     setEdicaoAberta(false);
     setToast({
       message: "Modelo atualizado.",
-      detail: `${situacao} · ${monitorado ? "monitorado" : "não monitorado"} pela GEVAM. As alterações foram registradas no histórico.`,
+      detail: `${situacao} · ${validacao} · ${monitorado ? "monitorado" : "não monitorado"} pela GEVAM. As alterações foram registradas no histórico.`,
     });
   }
 
@@ -163,77 +174,78 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
     <div className="mx-auto max-w-6xl">
       <PageHeader
         title={modelo.nomeModelo}
-        description={`Inventário ${modelo.numero}${solicitacao ? ` · Solicitação ${solicitacao.numero}` : ""}`}
+        description={`Solicitação ${modelo.numero}`}
         crumbs={crumbs}
         onBack={onVoltar}
         actions={headerActions}
       />
 
       <div className="flex flex-col gap-5">
-        {/* ── Adicionar documento ao histórico (analista) ─────────────────── */}
-        {podeAdicionarDocumento && formAberto && (
-          <Panel title="Acrescentar documentação" className="border-info-line">
-            <div className="flex flex-col gap-5">
-              <p className="text-body text-ink-2">
-                Use para registrar um documento que chegou por fora do sistema (Teams, e-mail, reunião) e que o
-                solicitante não anexou. Ele entra no histórico e na lista de arquivos com o seu nome.
-              </p>
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                <FileUpload
-                  id="doc-anexo"
-                  label="Documento"
-                  required
-                  file={anexo}
-                  onChange={(f) => {
-                    setAnexo(f);
-                    if (f) setErros((x) => ({ ...x, anexo: undefined }));
-                  }}
-                  error={erros.anexo}
-                  hint="PDF, DOC, XLSX ou CSV até 20 MB"
-                />
-                <div className="flex flex-col gap-5">
-                  <SelectField
-                    id="doc-origem"
-                    label="Recebido por"
-                    required
-                    value={origem}
-                    onChange={(v) => {
-                      setOrigem(v);
-                      setErros((x) => ({ ...x, origem: undefined }));
-                    }}
-                    options={ORIGENS}
-                    error={erros.origem}
-                    fullWidth
-                  />
-                  <TextareaField
-                    id="doc-texto"
-                    label="Observações (opcional)"
-                    value={texto}
-                    onChange={setTexto}
-                    placeholder="Ex.: Relatório de backtesting enviado pelo solicitante no Teams em 12/08."
-                    rows={4}
-                    maxLength={1000}
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end gap-3 border-t border-line-soft pt-4">
-                <Button variant="secondary" onClick={fecharForm}>
-                  Cancelar
-                </Button>
-                <Button variant="primary" icon="upload" onClick={salvarDocumento}>
-                  Acrescentar
-                </Button>
-              </div>
-            </div>
-          </Panel>
-        )}
+        {/* ── Acrescentar documentação (popup; analista) ────────────────────── */}
+        <Modal
+          open={podeAdicionarDocumento && formAberto}
+          title="Acrescentar documentação"
+          onClose={fecharForm}
+          width="lg"
+          footer={
+            <>
+              <Button variant="secondary" onClick={fecharForm}>
+                Cancelar
+              </Button>
+              <Button variant="primary" icon="upload" onClick={salvarDocumento}>
+                Acrescentar
+              </Button>
+            </>
+          }
+        >
+          <div className="flex flex-col gap-5">
+            <p className="text-body text-ink-2">
+              Use para registrar um documento que chegou por fora do sistema (Teams, e-mail, reunião) e que o solicitante
+              não anexou. Ele entra no histórico e na lista de arquivos com o seu nome.
+            </p>
+            <FileUpload
+              id="doc-anexo"
+              label="Documento"
+              required
+              file={anexo}
+              onChange={(f) => {
+                setAnexo(f);
+                if (f) setErros((x) => ({ ...x, anexo: undefined }));
+              }}
+              error={erros.anexo}
+              hint="PDF, DOC, XLSX ou CSV até 20 MB"
+            />
+            <SelectField
+              id="doc-origem"
+              label="Recebido por"
+              required
+              value={origem}
+              onChange={(v) => {
+                setOrigem(v);
+                setErros((x) => ({ ...x, origem: undefined }));
+              }}
+              options={ORIGENS}
+              error={erros.origem}
+              fullWidth
+            />
+            <TextareaField
+              id="doc-texto"
+              label="Observações (opcional)"
+              value={texto}
+              onChange={setTexto}
+              placeholder="Ex.: Relatório de backtesting enviado pelo solicitante no Teams em 12/08."
+              rows={4}
+              maxLength={1000}
+            />
+          </div>
+        </Modal>
 
         {/* ── Editar modelo (analista e gestor) ───────────────────────────── */}
         {podeEditar && edicaoAberta && (
           <Panel title="Editar modelo" className="border-info-line">
             <div className="flex flex-col gap-6">
               <p className="text-body text-ink-2">
-                Altere a situação, o monitoramento pela GEVAM e os textos de Informações do Modelo. Cada alteração fica
+                Altere a situação, a validação GEVAM, o monitoramento pela GEVAM e os textos de Informações do Modelo. Cada alteração fica
                 registrada no histórico com o seu nome.
               </p>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -244,6 +256,14 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
                   value={situacao}
                   onChange={(v) => setSituacao(v as SituacaoModeloInventario)}
                   options={SITUACOES}
+                />
+                <RadioGroupField
+                  id="editar-validacao"
+                  label="Validação GEVAM"
+                  required
+                  value={validacao}
+                  onChange={(v) => setValidacao(v as ValidacaoInventario)}
+                  options={VALIDACOES}
                 />
                 <ToggleField
                   id="editar-monitorado"
@@ -280,7 +300,7 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
         {/* ── Informações ─────────────────────────────────────────────────── */}
         <Panel title="Informações do modelo">
           <dl className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
-            <Info label="Nº do inventário">{modelo.numero}</Info>
+            <Info label="Nº da solicitação">{modelo.numero}</Info>
             <Info label="Nome do modelo">{modelo.nomeModelo}</Info>
             <Info label="Situação do modelo">
               <StatusBadge status={modelo.situacao} />
@@ -288,12 +308,14 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
             <Info label="Monitoramento 2ª Linha (GEVAM)">
               <StatusBadge status={modelo.monitoramento} />
             </Info>
+            <Info label="Validação GEVAM">
+              <StatusBadge status={modelo.validacao} />
+            </Info>
             <Info label="Área gestora">{modelo.areaGestora}</Info>
             <Info label="Analista responsável">{modelo.analistaResponsavel}</Info>
             <Info label="Tipo de modelo">{modelo.tipoModelo}</Info>
             <Info label="Assunto">{modelo.assunto}</Info>
             <Info label="Público">{modelo.publico}</Info>
-            {solicitacao && <Info label="Nº da solicitação">{solicitacao.numero}</Info>}
             {solicitacao && <Info label="Solicitante">{solicitacao.solicitante}</Info>}
             {solicitacao && <Info label="Data da submissão">{formatDate(solicitacao.dataSubmissao)}</Info>}
             <Info label="Data do inventário">{formatDate(modelo.dataInventario)}</Info>
@@ -314,7 +336,8 @@ export function ModeloInventariadoPage({ numero, onVoltar }: ModeloInventariadoP
             <ResumoInformacoesAdicionais dados={(modelo.informacoesAdicionais ?? solicitacao?.informacoesAdicionais)!} />
           </Panel>
         )}
-        {informacoesModelo && !edicaoAberta && (
+        {/* Informações do Modelo é só da GEVAM (analista e gestor): o solicitante não vê. */}
+        {informacoesModelo && !edicaoAberta && profile !== "solicitante" && (
           <Panel title="Informações do Modelo">
             <ResumoInformacoesModelo dados={informacoesModelo} />
           </Panel>

@@ -3,7 +3,7 @@ import { exemploCalculos, exemploInformacoesAdicionais, exemploInformacoesModelo
 
 export const mockSolicitacoes: Solicitacao[] = [
   {
-    numero: "REQ-2026-001",
+    numero: "201",
     nomeModelo: "Modelo Score de Crédito PF",
     areaGestora: "Risco",
     assunto: "Desenvolvimento de modelo",
@@ -21,7 +21,7 @@ export const mockSolicitacoes: Solicitacao[] = [
     ],
   },
   {
-    numero: "REQ-2026-002",
+    numero: "202",
     nomeModelo: "Modelo Anti-Fraude Cartões",
     areaGestora: "Financeiro",
     assunto: "Revalidação",
@@ -41,7 +41,7 @@ export const mockSolicitacoes: Solicitacao[] = [
       "Necessário anexar o documento de validação estatística do modelo atualizado.",
   },
   {
-    numero: "REQ-2026-003",
+    numero: "203",
     nomeModelo: "Modelo Propensão a Compra",
     areaGestora: "Marketing",
     assunto: "Desenvolvimento de modelo",
@@ -57,7 +57,7 @@ export const mockSolicitacoes: Solicitacao[] = [
     ],
   },
   {
-    numero: "REQ-2026-004",
+    numero: "204",
     nomeModelo: "Modelo Previsão de Demanda",
     areaGestora: "Operações",
     assunto: "Alteração de modelo existente",
@@ -81,13 +81,13 @@ export const mockSolicitacoes: Solicitacao[] = [
         descricao: "Documentação acrescentada pelo analista.",
         detalhe: "TAP sem pendências.",
         autor: "Maria Santos",
-        anexos: ["TAP REQ-2026-004.pdf"],
+        anexos: ["TAP 204.pdf"],
         tipo: "documento-adicionado",
       },
     ],
   },
   {
-    numero: "REQ-2026-005",
+    numero: "205",
     nomeModelo: "Modelo Rotatividade de Pessoal",
     areaGestora: "Recursos Humanos",
     assunto: "Desenvolvimento de modelo",
@@ -103,7 +103,7 @@ export const mockSolicitacoes: Solicitacao[] = [
     ],
   },
   {
-    numero: "REQ-2026-006",
+    numero: "206",
     nomeModelo: "Modelo Limite de Crédito PJ",
     areaGestora: "Risco",
     assunto: "Revalidação",
@@ -123,7 +123,7 @@ export const mockSolicitacoes: Solicitacao[] = [
       "Pendente envio da base de dados utilizada para o retreinamento do modelo.",
   },
   {
-    numero: "REQ-2026-007",
+    numero: "207",
     nomeModelo: "Modelo Recomendação de Produtos",
     areaGestora: "Financeiro",
     assunto: "Outro",
@@ -159,7 +159,7 @@ export const mockSolicitacoes: Solicitacao[] = [
         descricao: "Documentação acrescentada pelo analista.",
         detalhe: "TAP sem pendências.",
         autor: "Fernanda Alves",
-        anexos: ["TAP REQ-2026-007.pdf"],
+        anexos: ["TAP 207.pdf"],
         tipo: "documento-adicionado",
       },
       {
@@ -171,7 +171,7 @@ export const mockSolicitacoes: Solicitacao[] = [
     ],
   },
   {
-    numero: "REQ-2026-008",
+    numero: "208",
     nomeModelo: "Modelo Score de Cobrança",
     areaGestora: "Financeiro",
     assunto: "Alteração de modelo existente",
@@ -183,11 +183,11 @@ export const mockSolicitacoes: Solicitacao[] = [
     tipoModelo: "Estatístico",
     objetivo: "Priorizar a cobrança de clientes em atraso conforme a chance de recuperação.",
     timeline: [
-      { data: "2026-08-05", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Documentação técnica do modelo.pdf"] },
+      { data: "2026-08-05", descricao: "Solicitação submetida pelo solicitante.", anexos: ["Relatório de desenvolvimento do modelo.pdf", "score_cobranca.py", "Base de treino e teste.xlsx"] },
     ],
   },
   {
-    numero: "REQ-2026-009",
+    numero: "209",
     nomeModelo: "Modelo Detecção de Anomalias Operacionais",
     areaGestora: "Operações",
     assunto: "Desenvolvimento de modelo",
